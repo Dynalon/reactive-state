@@ -48,13 +48,25 @@ function createState<S>(stateMutators: Observable<StateMutation<S>>, initialStat
     return mutators;
 }
 
-export class Store<R, S = R> {
+export class Store<S> {
 
     private readonly state: Observable<S>;
-    private readonly stateMutators: Subject<StateMutation<R>>;
+
+    /**
+     * All reducers always produce a state mutation of the original root store type R;
+     * However, we only now type R for the root store; all other stores may have different type
+     * so we use any here as the root type.
+     */
+
+    private readonly stateMutators: Subject<StateMutation<any>>;
+
+    /**
+     * A list of strings that represenet property names that lead to a given slice
+     * i.e. if keyChain = [ 'a', 'b', 'c' ] the slice points to ROOT['a']['b']['c']
+     */
     private readonly keyChain: string[];
 
-    private constructor(state: Observable<S>, stateMutators: Subject<StateMutation<R>>, keyChain: string[] = []) {
+    private constructor(state: Observable<S>, stateMutators: Subject<StateMutation<any>>, keyChain: string[] = []) {
         this.state = state;
         this.stateMutators = stateMutators;
         this.keyChain = keyChain;
@@ -63,10 +75,10 @@ export class Store<R, S = R> {
     /**
      * Create a new Store based on an initial state
      */
-    static create<R>(initialState: R): Store<R, R> {
-        const stateMutators = new Subject<StateMutation<R>>();
+    static create<S>(initialState: S): Store<S> {
+        const stateMutators = new Subject<StateMutation<S>>();
         const state = createState(stateMutators, initialState);
-        const store = new Store<R, R>(state, stateMutators, []);
+        const store = new Store<S>(state, stateMutators, []);
 
         // emit a single state mutation so that we emit the initial state on subscription
         stateMutators.next(s => s);
@@ -76,22 +88,22 @@ export class Store<R, S = R> {
     /**
      * Creates a new linked store, that Selects a slice on the main store.
      */
-    createSlice<K>(key: keyof S): Store<R, K> {
+    createSlice<K>(key: keyof S): Store<K> {
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
         const state: Observable<K> = this.state.map(s => <K><any>s[key]);
         const keyChain = [...this.keyChain, key];
 
-        return new Store<R, K>(state, this.stateMutators, keyChain);
+        return new Store<K>(state, this.stateMutators, keyChain);
     }
 
     addReducer<P>(action: Observable<P>, reducer: Reducer<S, P>): Subscription {
-        const rootReducer: RootReducer<R, P> = (payload: P) => (state: R) => {
+        const rootReducer: RootReducer<any, P> = (payload: P) => (state) => {
             if (this.keyChain.length === 0) {
                 // assume R = S; reducer transforms the root state; this is a runtime assumption
-                const typedReducer: Reducer<R, P> = <any>reducer;
+                const typedReducer: Reducer<any, P> = <any>reducer;
                 state = typedReducer(state, payload);
             } else {
-                let slice = <any>state;
+                let slice = state;
                 for (let i = 0; i < this.keyChain.length - 1; i++) {
                     slice = slice[this.keyChain[i]];
                 }

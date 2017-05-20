@@ -64,7 +64,7 @@ describe("Basic counter state tests", () => {
 
 describe("Store slicing tests", () => {
     let store: Store<CounterState>;
-    let counterStore: Store<CounterState, number>;
+    let counterStore: Store<number>;
     let incrementAction: Action<void>;
     let incrementReducer: Reducer<number, void>;
     let incrementSubscription: Subscription;

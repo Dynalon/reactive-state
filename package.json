@@ -10,7 +10,7 @@
     "watch-tests": "tsc -w -p test",
     "develop": "concurrently \"npm run watch\" \"npm run watch-tests\" ",
     "run-tests": "mocha test/test.js",
-    "test": "npm run build-tests && npm run run-tests"
+    "test": "npm run build && npm run build-tests && npm run run-tests"
   },
   "repository": {
     "type": "git",
