@@ -9,6 +9,7 @@ Features
   * wrist-friendly with no boilerplate code, string constants or endless switch statements
   * typed Actions based on RxJS Subjects
   * dynamically add and remove reducers during runtime (usefull in lazy-loaded application modules)
+  * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed asynchronously leveraging RxJS built-in operators
   * single Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and sub-tree notifications
 
 Example Usage
@@ -128,7 +129,7 @@ deleteToDoAction.next(2);
 Documentation
 ----
 
-TBD.
+TBD. In the meantime, checkout out the [example.ts file](https://github.com/Dynalon/reactive-state/blob/master/src/example.ts) included in the source code as well the [unit tests](https://github.com/Dynalon/reactive-state/tree/master/test).
 
 License
 ----
