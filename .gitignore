@@ -4,6 +4,8 @@ src/**/*.js.map
 test/**/*.js
 test/**/*.js.map
 
+dist/
+
 # Logs
 *.log
 npm-debug.log*
