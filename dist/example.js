@@ -20,16 +20,18 @@ var initialState = {
 };
 // create our root store
 var store = index_1.Store.create(initialState);
-// Log all state changes using the .select function
-store.select(function (state) { return state; }).subscribe(function (newState) { return console.log("State changed: ", JSON.stringify(newState)); });
+// Log all state changes using the .select() function
+store.select(function (state) { return state; }).subscribe(function (newState) { return console.log(JSON.stringify(newState)); });
 // wire up counter
+// Actions are just extended RxJS Subjects
 var incrementAction = new index_1.Action();
 var incrementReducer = function (state, payload) { return state + 1; };
 // actions can have optional names to identify them for logging, debugging, replaying etc.
 var decrementAction = new index_1.Action('DECREMENT');
 var decrementReducer = function (state, payload) { return state - 1; };
-// while it looks like a magic string, it is NOT: 'counter' is of type keyof AppState; so putting any non-property
-// name of AppState here is actually a compilation error! This makes it safe during refactorings
+// while it looks like a magic string, it is NOT: 'counter' is of type "keyof AppState"; so putting
+// any non-property name of AppState here is actually a compilation error! This makes it safe during
+// refactorings!
 var counterStore = store.createSlice('counter');
 counterStore.addReducer(incrementAction, incrementReducer);
 counterStore.addReducer(decrementAction, decrementReducer);
@@ -44,7 +46,7 @@ var deleteToDoReducer = function (state, payload) {
     return __assign({}, state, { todos: filteredTodos });
 };
 var markTodoAsDoneAction = new index_1.Action('MARK_AS_DONE');
-// This reducer purposely is more complicated that it needs to be, but shows how you would do it in redux
+// This reducer purposely is more complicated than it needs to be, but shows how you would do it in Redux
 // where you need to create immutable copies for all nested fields - see further below how this can be done
 // easier using a more specific slice.
 var markTodoAsDoneReducer = function (state, payload) {

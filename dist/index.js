@@ -90,10 +90,11 @@ var Store = (function () {
     /**
      * Selects a part of the state using a selector function. If no selector function is given, the identity function
      * is used (which returns the state of type S).
-     * Note: The returned observable only emits when the selected object changes. This only works when you make sure
-     *       that your reducers update all nested properties in an immutable way, which is required practice
+     * Note: The returned observable always emits when the root state changes - evne when the selected subtree has
+     *       no changes. You can use .distinctUntilChanges() on the returned observable to only get updates
+     *       when the selected subtree changes. This requires that your reducers update all nested properties in
+     *       an immutable way, which is required practice with Redux and also with Reactive-State.
      *       (see http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects)
-     *       the part selected by the selection function.
      *
      * @param selectorFn    A selector function which returns a nested property of the state
      * @returns             An observable that emits any time the state changes
@@ -101,7 +102,7 @@ var Store = (function () {
     Store.prototype.select = function (selectorFn) {
         if (!selectorFn)
             selectorFn = function (state) { return state; };
-        return this.state.map(selectorFn).distinctUntilChanged();
+        return this.state.map(selectorFn);
     };
     return Store;
 }());

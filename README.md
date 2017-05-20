@@ -1,4 +1,21 @@
-import { Store, Reducer, Action } from "./index";
+Reactive State
+====
+
+A typed, wrist-friendly state container aimed as an alternative to Redux when using RxJS. Written in TypeScript but usable from plain JavaScript. Originally inspired by the blog posting from [Michael Zalecki](http://michalzalecki.com/use-rxjs-with-react/) but heavily modified and extended since.
+
+Features
+----
+
+  * wrist-friendly with no boilerplate code, string constants or endless switch statements
+  * typed Actions based on RxJS Subjects
+  * dynamically add and remove reducers during runtime (usefull in lazy-loaded application modules)
+  * single Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and sub-tree notifications
+
+Example Usage
+----
+
+```typescript
+import { Store, Reducer, Action } from "reactive-state";
 
 // The main (root) state for our example app
 interface AppState {
@@ -38,12 +55,13 @@ store.select(state => state).subscribe(newState => console.log(JSON.stringify(ne
 
 // Actions are just extended RxJS Subjects
 const incrementAction = new Action<void>();
-const incrementReducer: Reducer<number, void> = (state: number, payload: void) => state + 1;
+const incrementReducer: Reducer<number, void> = (state, payload) => state + 1;
 
 // actions can have optional names to identify them for logging, debugging, replaying etc.
 const decrementAction = new Action<void>('DECREMENT');
-const decrementReducer: Reducer<number, void> = (state: number, payload: void) => state - 1;
+const decrementReducer: Reducer<number, void> = (state, payload) => state - 1;
 
+// Select a slice on the root state and create a linked sub-store
 // while it looks like a magic string, it is NOT: 'counter' is of type "keyof AppState"; so putting
 // any non-property name of AppState here is actually a compilation error! This makes it safe during
 // refactorings!
@@ -105,3 +123,14 @@ const markTodoAsDoneSimpleReducer: Reducer<Todo[], number> = (state: Todo[], pay
 todosArraySlice.addReducer(markTodoAsDoneAction, markTodoAsDoneSimpleReducer);
 markTodoAsDoneAction.next(2);
 deleteToDoAction.next(2);
+```
+
+Documentation
+----
+
+TBD.
+
+License
+----
+
+MIT
