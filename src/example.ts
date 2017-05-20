@@ -2,7 +2,7 @@ import { Store, Reducer, Action } from "./index";
 
 // The main (root) state for our example app
 interface AppState {
-    counter: 0;
+    counter: number;
 
     // Example of a typed substate/slice
     todoState: TodoState;
