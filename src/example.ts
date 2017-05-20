@@ -1,0 +1,110 @@
+import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
+import { Subscription } from "rxjs/Subscription";
+
+import { Store, Reducer, Action } from "./index";
+
+/**
+ * The main (root) state for our example app
+ */
+interface AppState {
+    counter: 0;
+
+    /* Example of a typed substate/slice */
+    todoState: TodoState;
+}
+
+interface Todo {
+    id: number;
+    title: string;
+    done: boolean;
+}
+
+interface TodoState {
+    todos: Todo[];
+}
+
+const initialState: AppState = {
+    counter: 0,
+    todoState: {
+        todos: [
+            { id: 1, title: 'Homework', done: false },
+            { id: 2, title: 'Walk dog', done: false }
+        ]
+    },
+};
+
+// create our root store
+const store = Store.create(initialState);
+
+// Log all state changes using the .select function
+store.select(state => state).subscribe(newState => console.log("State changed: ", JSON.stringify(newState)));
+
+// wire up counter
+const incrementAction = new Action<void>();
+const incrementReducer: Reducer<number, void> = (state: number, payload: void) => state + 1;
+
+// actions can have optional names to identify them for logging, debugging, replaying etc.
+const decrementAction = new Action<void>('DECREMENT');
+const decrementReducer: Reducer<number, void> = (state: number, payload: void) => state - 1;
+
+// while it looks like a magic string, it is NOT: 'counter' is of type keyof AppState; so putting any non-property
+// name of AppState here is actually a compilation error! This makes it safe during refactorings
+const counterStore = store.createSlice<number>('counter');
+
+counterStore.addReducer(incrementAction, incrementReducer);
+counterStore.addReducer(decrementAction, decrementReducer);
+
+// disaptch some actions - we just call .next() (here with no payload)
+incrementAction.next();
+incrementAction.next();
+decrementAction.next();
+
+// wire up ToDos
+const deleteToDoAction = new Action<number>('DELETE_TODO');
+const deleteToDoReducer: Reducer<TodoState, number> = (state, payload) => {
+    const filteredTodos = state.todos.filter(todo => todo.id != payload);
+    return { ...state, todos: filteredTodos };
+};
+
+const markTodoAsDoneAction = new Action<number>('MARK_AS_DONE');
+// This reducer purposely is more complicated that it needs to be, but shows how you would do it in redux
+// where you need to create immutable copies for all nested fields - see further below how this can be done
+// easier using a more specific slice.
+const markTodoAsDoneReducer: Reducer<TodoState, number> = (state: TodoState, payload: number) => {
+    const todo = state.todos.filter(t => t.id == payload)[0];
+    const index = state.todos.indexOf(todo);
+    const newTodo = { ...todo, done: true };
+    state.todos[index] = newTodo;
+    // we need to create immutable copy of the array, too
+    const todos = [ ...state.todos ];
+    return { ...state, todos };
+};
+
+const todoStore = store.createSlice<TodoState>('todoState');
+todoStore.addReducer(deleteToDoAction, deleteToDoReducer);
+const reducerSubscription = todoStore.addReducer(markTodoAsDoneAction, markTodoAsDoneReducer);
+
+markTodoAsDoneAction.next(1);
+deleteToDoAction.next(1);
+
+// now, using .createSlice() can be used to select the todos array directly and our reducer becomes less complex
+
+// first, disable the previous complex reducer
+reducerSubscription.unsubscribe();
+
+// create a slice pointing directly to the todos array
+const todosArraySlice = store.createSlice<TodoState>('todoState').createSlice<Todo[]>('todos');
+
+// create simpler reducer
+const markTodoAsDoneSimpleReducer: Reducer<Todo[], number> = (state: Todo[], payload: number) => {
+    const todo = state.filter(t => t.id == payload)[0];
+    const newTodo = { ...todo, done: true};
+    const index = state.indexOf(todo);
+    state[index] = newTodo;
+    return [ ...state ];
+}
+
+todosArraySlice.addReducer(markTodoAsDoneAction, markTodoAsDoneSimpleReducer);
+markTodoAsDoneAction.next(2);
+deleteToDoAction.next(2);
