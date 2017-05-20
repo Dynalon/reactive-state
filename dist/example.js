@@ -35,7 +35,7 @@ var decrementReducer = function (state, payload) { return state - 1; };
 var counterStore = store.createSlice('counter');
 counterStore.addReducer(incrementAction, incrementReducer);
 counterStore.addReducer(decrementAction, decrementReducer);
-// disaptch some actions - we just call .next() (here with no payload)
+// dispatch some actions - we just call .next() (here with no payload)
 incrementAction.next();
 incrementAction.next();
 decrementAction.next();

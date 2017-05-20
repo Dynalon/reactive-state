@@ -70,7 +70,7 @@ const counterStore = store.createSlice<number>('counter');
 counterStore.addReducer(incrementAction, incrementReducer);
 counterStore.addReducer(decrementAction, decrementReducer);
 
-// disaptch some actions - we just call .next() (here with no payload)
+// dispatch some actions - we just call .next() (here with no payload)
 incrementAction.next();
 incrementAction.next();
 decrementAction.next();

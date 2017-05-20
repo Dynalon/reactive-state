@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "target": "ES5",
-        "outDir": "dist",
         "sourceMap": true,
         "declaration": true,
         "module": "commonjs",
@@ -9,9 +8,6 @@
         "lib": [ "dom", "es5", "es2015.promise", "es2015.core" ]
     },
     "include": [
-        "src/**/*.ts"
-    ],
-    "exclude": [
-        "test/"
+        "*.ts"
     ]
 }

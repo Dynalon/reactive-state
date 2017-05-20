@@ -10,11 +10,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var Subject_1 = require("rxjs/Subject");
-require("rxjs/add/operator/scan");
-require("rxjs/add/operator/map");
-require("rxjs/add/operator/publishReplay");
-require("rxjs/add/operator/distinctUntilChanged");
+var Rx_1 = require("rxjs/Rx");
 /**
  * Actions basically just extend Subject that emit a Payload P and can have a string name to identify
  * the action. This can be used in future versions to produce action logs, replay them from a log/storage, etc.
@@ -28,7 +24,7 @@ var Action = (function (_super) {
         return _this;
     }
     return Action;
-}(Subject_1.Subject));
+}(Rx_1.Subject));
 exports.Action = Action;
 /**
  * Creates a state based on a stream of StateMutation functions and an initial state. The returned observable
@@ -37,10 +33,14 @@ exports.Action = Action;
  * @param initialState
  */
 function createState(stateMutators, initialState) {
-    return stateMutators
+    var mutators = stateMutators
         .scan(function (state, reducer) { return reducer(state); }, initialState)
         .publishReplay(1)
         .refCount();
+    // to make publishReplay become effective, we need a subscription that lasts
+    // TODO unsubscribe somewhere?
+    mutators.subscribe();
+    return mutators;
 }
 var Store = (function () {
     function Store(state, stateMutators, keyChain) {
@@ -53,9 +53,11 @@ var Store = (function () {
      * Create a new Store based on an initial state
      */
     Store.create = function (initialState) {
-        var stateMutators = new Subject_1.Subject();
+        var stateMutators = new Rx_1.Subject();
         var state = createState(stateMutators, initialState);
         var store = new Store(state, stateMutators, []);
+        // emit a single state mutation so that we emit the initial state on subscription
+        stateMutators.next(function (s) { return s; });
         return store;
     };
     /**

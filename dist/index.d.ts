@@ -1,10 +1,4 @@
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import { Subscription } from "rxjs/Subscription";
-import "rxjs/add/operator/scan";
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/publishReplay";
-import "rxjs/add/operator/distinctUntilChanged";
+import { Observable, Subject, Subscription } from "rxjs/Rx";
 /**
  * A function which takes a State S and performs a transformation into a new state. The state mutation must be pure.
  * @returns A new state of type S
@@ -23,7 +17,7 @@ export declare class Action<P> extends Subject<P> {
     name: string | undefined;
     constructor(name?: string | undefined);
 }
-export declare class Store<R, S> {
+export declare class Store<R, S = R> {
     private readonly state;
     private readonly stateMutators;
     private readonly keyChain;

@@ -1,6 +1,9 @@
 src/**/*.js
 src/**/*.js.map
 
+test/**/*.js
+test/**/*.js.map
+
 # Logs
 *.log
 npm-debug.log*

@@ -1,10 +1,4 @@
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import { Subscription } from "rxjs/Subscription";
-import "rxjs/add/operator/scan";
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/publishReplay";
-import "rxjs/add/operator/distinctUntilChanged";
+import { Observable, Subject, Subscription } from "rxjs/Rx";
 
 /**
  * A function which takes a State S and performs a transformation into a new state. The state mutation must be pure.
@@ -40,15 +34,21 @@ export class Action<P> extends Subject<P> {
  * @param initialState
  */
 function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
-    return stateMutators
+    const mutators = stateMutators
         .scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState)
         // these two lines make our observable hot and have it emit the last state
         // upon subscription
         .publishReplay(1)
-        .refCount();
+        .refCount()
+
+    // to make publishReplay become effective, we need a subscription that lasts
+    // TODO unsubscribe somewhere?
+    mutators.subscribe();
+
+    return mutators;
 }
 
-export class Store<R, S> {
+export class Store<R, S = R> {
 
     private readonly state: Observable<S>;
     private readonly stateMutators: Subject<StateMutation<R>>;
@@ -67,6 +67,9 @@ export class Store<R, S> {
         const stateMutators = new Subject<StateMutation<R>>();
         const state = createState(stateMutators, initialState);
         const store = new Store<R, R>(state, stateMutators, []);
+
+        // emit a single state mutation so that we emit the initial state on subscription
+        stateMutators.next(s => s);
         return store;
     }
 
