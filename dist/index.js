@@ -14,6 +14,7 @@ var Subject_1 = require("rxjs/Subject");
 require("rxjs/add/operator/scan");
 require("rxjs/add/operator/map");
 require("rxjs/add/operator/publishReplay");
+require("rxjs/add/operator/distinctUntilChanged");
 /**
  * Actions basically just extend Subject that emit a Payload P and can have a string name to identify
  * the action. This can be used in future versions to produce action logs, replay them from a log/storage, etc.
@@ -89,16 +90,18 @@ var Store = (function () {
     /**
      * Selects a part of the state using a selector function. If no selector function is given, the identity function
      * is used (which returns the state of type S).
-     * Note: The returned observable emits every time the state changes, even if the state does not affect
+     * Note: The returned observable only emits when the selected object changes. This only works when you make sure
+     *       that your reducers update all nested properties in an immutable way, which is required practice
+     *       (see http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects)
      *       the part selected by the selection function.
      *
-     * @param fn
-     * @returns An observable that emits any time the state changes
+     * @param selectorFn    A selector function which returns a nested property of the state
+     * @returns             An observable that emits any time the state changes
      */
     Store.prototype.select = function (selectorFn) {
         if (!selectorFn)
             selectorFn = function (state) { return state; };
-        return this.state.map(selectorFn);
+        return this.state.map(selectorFn).distinctUntilChanged();
     };
     return Store;
 }());
