@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "description": "Redux-like state management using RxJS and TypeScript",
   "main": "dist/index.js",
-  "files": "dist/",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "build-tests": "tsc -p test",
