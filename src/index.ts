@@ -28,24 +28,25 @@ export class Action<P> extends Subject<P> {
 }
 
 /**
+ * Type of a "cleanup" state object that will be set to the slice when the sliceStore gets destroyed
+ */
+export type CleanupState<K> = K |  null | "undefined";
+
+/**
  * Creates a state based on a stream of StateMutation functions and an initial state. The returned observable
  * is hot and caches the last emitted value (will emit the last emitted value immediately upon subscription).
  * @param stateMutators
  * @param initialState
  */
 function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
-    const mutators = stateMutators
+    const state = stateMutators
         .scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState)
         // these two lines make our observable hot and have it emit the last state
         // upon subscription
         .publishReplay(1)
         .refCount()
 
-    // to make publishReplay become effective, we need a subscription that lasts
-    // TODO unsubscribe somewhere?
-    mutators.subscribe();
-
-    return mutators;
+    return state;
 }
 
 export class Store<S> {
@@ -66,19 +67,41 @@ export class Store<S> {
      */
     private readonly keyChain: string[];
 
-    private constructor(state: Observable<S>, stateMutators: Subject<StateMutation<any>>, keyChain: string[] = []) {
+    /**
+     * Is completed when the slice is unsubscribed and no longer needed.
+     */
+    private readonly destroyed = new Subject<void>();
+
+    private constructor(
+        state: Observable<S>,
+        stateMutators: Subject<StateMutation<any>>,
+        keyChain: string[] = [],
+        onDestroy?: () => void) {
+
         this.state = state;
         this.stateMutators = stateMutators;
         this.keyChain = keyChain;
+
+        if (onDestroy !== undefined) {
+            this.destroyed.subscribe(undefined, undefined, onDestroy);
+        }
     }
 
     /**
      * Create a new Store based on an initial state
      */
-    static create<S>(initialState: S): Store<S> {
+    static create<S>(initialState?: S): Store<S> {
+        if (initialState === undefined)
+            initialState = <S>{};
+
         const stateMutators = new Subject<StateMutation<S>>();
         const state = createState(stateMutators, initialState);
-        const store = new Store<S>(state, stateMutators, []);
+
+        // to make publishReplay become effective, we need a subscription that lasts
+        const stateSubscription = state.subscribe();
+        const onDestroy = () => { stateSubscription.unsubscribe(); };
+
+        const store = new Store<S>(state, stateMutators, [], onDestroy);
 
         // emit a single state mutation so that we emit the initial state on subscription
         stateMutators.next(s => s);
@@ -88,12 +111,24 @@ export class Store<S> {
     /**
      * Creates a new linked store, that Selects a slice on the main store.
      */
-    createSlice<K>(key: keyof S): Store<K> {
+    createSlice<K>(key: keyof S, initialState?: K, cleanupState?: CleanupState<K>): Store<K> {
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
         const state: Observable<K> = this.state.map(s => <K><any>s[key]);
         const keyChain = [...this.keyChain, key];
 
-        return new Store<K>(state, this.stateMutators, keyChain);
+        if (initialState !== undefined) {
+            this.stateMutators.next(s => { s[key] = initialState; return s; });
+        }
+
+        const onDestroy = this.getOnDestroyFunctionForSlice(key, cleanupState);
+        const sliceStore = new Store<K>(state, this.stateMutators, keyChain, onDestroy);
+
+        // destroy the slice if the parent gets destroyed
+        this.destroyed.subscribe(undefined, undefined, () => {
+            sliceStore.destroy();
+        });
+
+        return sliceStore;
     }
 
     addReducer<P>(action: Observable<P>, reducer: Reducer<S, P>): Subscription {
@@ -112,7 +147,9 @@ export class Store<S> {
             }
             return state;
         }
-        return action.map(rootReducer).subscribe(rootStateMutation => this.stateMutators.next(rootStateMutation));
+       return action.map(rootReducer)
+            .takeUntil(this.destroyed)
+            .subscribe(rootStateMutation => this.stateMutators.next(rootStateMutation));
     }
 
     /**
@@ -131,6 +168,27 @@ export class Store<S> {
         if (!selectorFn)
             selectorFn = (state: S) => <T><any>state;
 
-        return this.state.map(selectorFn);
+        return this.state.takeUntil(this.destroyed).map(selectorFn)
+    }
+
+    destroy(): void {
+        this.destroyed.next();
+        this.destroyed.complete();
+    }
+
+    private getOnDestroyFunctionForSlice<K>(key: string, cleanupState?: CleanupState<K>): () => void {
+        let onDestroy;
+        if (cleanupState || cleanupState === null) {
+            onDestroy = () => {
+                if (cleanupState === "undefined")
+                    this.stateMutators.next(s => { delete s[key]; return s; });
+                else {
+                    this.stateMutators.next(s => { s[key] = cleanupState; return s; });
+                }
+            }
+        } else {
+            onDestroy = () => { };
+        }
+        return onDestroy;
     }
 }

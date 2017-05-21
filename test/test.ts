@@ -1,11 +1,18 @@
 import "mocha";
 import { expect } from "chai";
 
-import { Observable, Subscription } from "rxjs/Rx";
+import { Observable, Subscription, Subject } from "rxjs/Rx";
 import { Store, Action, Reducer } from "../dist/index";
 
 interface CounterState {
     counter: number;
+}
+
+interface SliceState {
+    foo: string;
+}
+interface RootState {
+    slice?: SliceState;
 }
 
 describe("Basic counter state tests", () => {
@@ -151,6 +158,143 @@ describe("Store slicing tests", () => {
         simpleAction.next();
 
         done();
+    })
+})
+
+describe("initial state chaining", () => {
+
+
+    let store: Store<RootState>;
+    beforeEach(() => {
+        store = Store.create<RootState>();
+    })
+
+    it("should accept an initial state of undefined and create and empty object as root state", done => {
+        const store = Store.create<object>();
+
+        store.select().take(1).subscribe(state => {
+            expect(state).to.be.an("Object");
+            expect(Object.getOwnPropertyNames(state)).to.have.lengthOf(0);
+            done();
+        })
+    })
+
+    it("should accept an initial state object when creating a slice", () => {
+
+        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" });
+
+        sliceStore.select(s => s).take(1).subscribe(slice => {
+            expect(slice).to.be.an("Object");
+            expect(Object.getOwnPropertyNames(slice)).to.deep.equal(["foo"]);
+            expect(slice.foo).to.equal("bar");
+        })
+    })
+
+    it("should trigger a state change on the root store when the initial state on the slice is created", done => {
+        store.select(s => s).skip(1).take(1).subscribe(state => {
+            expect(state.slice).not.to.be.undefined;
+            expect(state.slice).to.have.property("foo");
+            if (state.slice) {
+                expect(state.slice.foo).to.equal("bar");
+                done();
+            }
+        })
+
+        store.createSlice("slice", { foo: "bar" });
+    });
+
+    it("should set the state to the cleanup value when the slice store is unsubscribed for case 'undefined'", done => {
+        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, "undefined");
+        sliceStore.destroy();
+
+        store.select(s => s).subscribe(state => {
+            expect(Object.getOwnPropertyNames(state)).to.deep.equal([]);
+            done();
+        })
+    })
+
+    it("should set the state to the cleanup value when the slice store is unsubscribed for case null", done => {
+        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, null);
+        sliceStore.destroy();
+
+        store.select(s => s).subscribe(state => {
+            expect(state.slice).to.be.null;
+            done();
+        })
+    })
+
+    it("should set the state to the cleanup value when the slice store is unsubscribed for case any object", done => {
+        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, { foo: "baz" });
+        sliceStore.destroy();
+
+        store.select(s => s).subscribe(state => {
+            expect(state.slice).to.be.deep.equal({ foo: "baz" });
+            done();
+        })
+    })
+});
+
+describe("destroy logic", () => {
+    interface SliceState {
+        foo: string;
+    }
+    interface RootState {
+        slice?: SliceState;
+    }
+    let store: Store<RootState>;
+
+    beforeEach(() => {
+        store = Store.create<RootState>();
+    })
+
+    it("should trigger the onCompleted subscription for the state observable returned by .select() when the store is destroyed", done => {
+        store.select(s => s).subscribe(undefined, undefined, done);
+
+        store.destroy();
+    })
+
+    it("should trigger the onCompleted on the state observable returned by select for any child slice when the parent store is destroyed", done => {
+        const sliceStore = store.createSlice("slice");
+
+        sliceStore.select(s => s).subscribe(undefined, undefined, done);
+
+        store.destroy();
+    });
+
+    it("should unsubscribe any reducer subscription when the store is destroyed for the root store", done => {
+        const store = Store.create<CounterState>({ counter: 0 });
+        const incrementAction = new Action<void>();
+        const incrementReducer: Reducer<CounterState, void> =
+            (state, payload) => ({ ...state, counter: state.counter + 1});
+
+        const subscription = store.addReducer(incrementAction, incrementReducer);
+        subscription.add(done);
+
+        store.destroy();
+    })
+
+    it("should unsubscribe any reducer subscription when a sliceStore is destroyed", done => {
+        const store = Store.create<CounterState>({ counter: 0 });
+        const sliceStore = store.createSlice("counter");
+        const incrementReducer: Reducer<number, void> = (state) => state + 1;
+
+        const subscription = sliceStore.addReducer(new Action<void>(), incrementReducer);
+        subscription.add(done);
+
+        sliceStore.destroy();
+    })
+
+    it("should unsubscribe any reducer subscription for a sliceStore when the root store is destroyed", done => {
+        const store = Store.create<CounterState>({ counter: 0 });
+        const sliceStore = store.createSlice<number>("counter");
+        const incrementAction = new Action<void>();
+        const incrementReducer: Reducer<number, void> = (state) => state + 1;
+
+        const subscription = sliceStore.addReducer(incrementAction, incrementReducer);
+        subscription.add(done);
+
+        store.destroy();
+
     })
 })
 
