@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Redux-like state management using RxJS and TypeScript",
   "main": "dist/index.js",
+  "files": "dist/",
   "scripts": {
     "build": "tsc",
     "build-tests": "tsc -p test",
@@ -29,7 +30,7 @@
   "bugs": {
     "url": "https://github.com/Dynalon/reactive-state/issues"
   },
-  "homepage": "https://github.com/Dynalon/reactive-state#readme",
+  "homepage": "https://github.com/Dynalon/reactive-state",
   "devDependencies": {
     "@types/chai": "^3.5.2",
     "@types/mocha": "^2.2.41",
