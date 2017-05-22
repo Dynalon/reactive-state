@@ -12,6 +12,12 @@ Features
   * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed asynchronously leveraging RxJS built-in operators
   * single Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and sub-tree notifications
 
+Installation
+----
+```
+npm install --save-dev reactive-state
+```
+
 Example Usage
 ----
 
