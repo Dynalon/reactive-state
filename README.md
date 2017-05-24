@@ -88,9 +88,9 @@ incrementAction.next(1);
 Documentation
 ----
 
-TBD. In the meantime, checkout out the [example.ts file](https://github.com/Dynalon/reactive-state/blob/master/src/example.ts) for more complex examples, and see the included [unit tests](https://github.com/Dynalon/reactive-state/tree/master/test) as well.
+See the [wiki](https://github.com/Dynalon/reactive-state/wiki). Additionally, there is a small [example.ts file](https://github.com/Dynalon/reactive-state/blob/master/src/example.ts) and see also see the included [unit tests](https://github.com/Dynalon/reactive-state/tree/master/test) as well.
 
 License
 ----
 
-MIT
+MIT.
