@@ -1,10 +1,10 @@
 import "mocha";
-
+import { Observable } from "rxjs/Rx";
 import { Store, Action, Reducer } from "../dist/index";
 
 // make sure the example in the README.md actually works and compiles
 // use this test as playground
-function testExample() {
+export function testExample() {
 
     // The main (root) state for our example app
     interface AppState {
@@ -67,4 +67,66 @@ function testExample() {
     // linked to a single root store. The slice is just a "view" on the state, and replace reducer composition.
 }
 
-testExample();
+// testExample();
+
+export function testComputedValuesExample() {
+    interface Todo {
+        id: number;
+        title: string;
+        done: boolean;
+    }
+
+    interface TodoState {
+        todos: Todo[];
+    }
+
+    const store: Store<TodoState> = Store.create({
+        todos: [
+            {
+                id: 0,
+                title: "Walk the dog",
+                done: false
+            },
+            {
+                id: 1,
+                title: "Homework",
+                done: false
+            },
+            {
+                id: 2,
+                title: "Do laundry",
+                done: false
+            }
+        ]
+    });
+
+    const markTodoAsDone = new Action<number>();
+    const markTodoAsDoneReducer: Reducer<Todo[], number> = (state, id) => {
+        let todo = state.filter(t => t.id === id)[0];
+        todo = { ...todo, done: true };
+        return [...state.filter(t => t.id !== id), todo];
+    };
+
+    const todoStore = store.createSlice<Todo[]>("todos");
+    todoStore.addReducer(markTodoAsDone, markTodoAsDoneReducer);
+
+    const todos = todoStore.select(s => s)
+        // only update when the todo list has changed (i.e. a reducer became active)
+        .distinctUntilChanged();
+
+    // create an auto computed observables using RxJS basic operators
+
+    const openTodos = todos.map(todos => todos.filter(t => t.done == false).length);
+    const completedTodos = todos.map(todos => todos.filter(t => t.done == true).length);
+
+    // whenever the number of open or completed todos changes, log a message
+    console.log("foo");
+    Observable.zip(openTodos, completedTodos)
+        .subscribe(([open, completed]) => console.log(`I have ${open} open todos and ${completed} completed todos`));
+
+    markTodoAsDone.next(0);
+    markTodoAsDone.next(1);
+    markTodoAsDone.next(2);
+}
+
+testComputedValuesExample();

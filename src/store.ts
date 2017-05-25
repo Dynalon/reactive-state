@@ -92,7 +92,10 @@ export class Store<S> {
         const keyChain = [...this.keyChain, key];
 
         if (initialState !== undefined) {
-            this.stateMutators.next(s => { s[key] = initialState; return s; });
+            this.stateMutators.next(s => {
+                setNestedPropertyToValue(s, initialState, keyChain);
+                return s;
+            });
         }
 
         const onDestroy = this.getOnDestroyFunctionForSlice(key, cleanupState);
@@ -122,7 +125,7 @@ export class Store<S> {
             }
             return state;
         }
-       return action.map(rootReducer)
+        return action.map(rootReducer)
             .takeUntil(this.destroyed)
             .subscribe(rootStateMutation => this.stateMutators.next(rootStateMutation));
     }
@@ -166,4 +169,19 @@ export class Store<S> {
         }
         return onDestroy;
     }
+}
+
+/**
+ * Updates a nested property in an object graph with a value
+ *
+ * @param s The object to apply the value to
+ * @param keychain A list of keys that are used to walk down the object graph from 0..n
+ */
+function setNestedPropertyToValue(obj: any, value: any, keyChain: string[]): void {
+    let s = obj;
+    for (let i = 0; i < keyChain.length - 1; i++) {
+        s = s[keyChain[i]];
+    }
+    let lastKey = keyChain.slice(-1)[0];
+    s[lastKey] = value;
 }
