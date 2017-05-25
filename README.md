@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/reactive-state.svg)](https://badge.fury.io/js/reactive-state)
+
 Reactive State
 ====
 
