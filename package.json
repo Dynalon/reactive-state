@@ -40,7 +40,9 @@
     "chai": "^3.5.0",
     "concurrently": "^3.4.0",
     "mocha": "^3.4.1",
-    "rxjs": "^5.4.0",
     "typescript": "^2.3.2"
+  },
+  "dependencies": {
+    "rxjs": "^5.4.0"
   }
 }
