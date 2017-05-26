@@ -42,6 +42,7 @@
     "concurrently": "^3.4.0",
     "istanbul": "^0.4.5",
     "mocha": "^3.4.1",
+    "tslib": "^1.7.1",
     "typescript": "^2.3.2"
   },
   "dependencies": {
