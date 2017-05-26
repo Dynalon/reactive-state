@@ -11,5 +11,4 @@ before_script:
 script:
   - npm run build
   - npm run build-tests
-  - npm run coverage
-  - npm run codecov
+  - npm run test
