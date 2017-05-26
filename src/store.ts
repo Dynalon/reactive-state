@@ -50,16 +50,15 @@ export class Store<S> {
     private constructor(
         state: Observable<S>,
         stateMutators: Subject<StateMutation<any>>,
-        keyChain: string[] = [],
-        onDestroy?: () => void) {
+        keyChain: string[],
+        onDestroy: () => void
+    ) {
 
         this.state = state;
         this.stateMutators = stateMutators;
         this.keyChain = keyChain;
 
-        if (onDestroy !== undefined) {
-            this.destroyed.subscribe(undefined, undefined, onDestroy);
-        }
+        this.destroyed.subscribe(undefined, undefined, onDestroy);
     }
 
     /**

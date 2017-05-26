@@ -1,5 +1,6 @@
 import "mocha";
 import { expect } from "chai";
+import { Observable } from "rxjs/Rx";
 
 import { Store } from "../dist/index";
 
@@ -49,7 +50,20 @@ describe("initial state chaining", () => {
         })
 
         sliceStore.createSlice("slice", { foo: "baz" });
+    })
 
+    it.only("should be possible to create a lot of nested slices", done => {
+        const nestingLevel = 100;
+        const rootStore = Store.create<SliceState>({ foo: "0", slice: undefined });
+
+        let currentStore = rootStore;
+        Observable.range(1, nestingLevel).subscribe(n => {
+            const nestedStore = currentStore.createSlice<SliceState>("slice", { foo: n.toString() });
+            nestedStore.select(s => s).take(1).subscribe(state => {
+                expect(state.foo).to.equal(n.toString());
+            });
+            currentStore = nestedStore;
+        }, undefined, done);
     })
 
 
