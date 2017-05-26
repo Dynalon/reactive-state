@@ -52,7 +52,7 @@ describe("initial state chaining", () => {
         sliceStore.createSlice("slice", { foo: "baz" });
     })
 
-    it.only("should be possible to create a lot of nested slices", done => {
+    it("should be possible to create a lot of nested slices", done => {
         const nestingLevel = 100;
         const rootStore = Store.create<SliceState>({ foo: "0", slice: undefined });
 
