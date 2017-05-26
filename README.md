@@ -1,4 +1,6 @@
+[![Build Status](https://travis-ci.org/Dynalon/reactive-state.svg?branch=master)](https://travis-ci.org/Dynalon/reactive-state)
 [![npm version](https://badge.fury.io/js/reactive-state.svg)](https://badge.fury.io/js/reactive-state)
+[![codecov](https://codecov.io/gh/Dynalon/reactive-state/branch/master/graph/badge.svg)](https://codecov.io/gh/Dynalon/reactive-state)
 
 Reactive State
 ====

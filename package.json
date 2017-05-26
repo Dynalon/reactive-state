@@ -10,11 +10,12 @@
   "scripts": {
     "build": "tsc",
     "build-tests": "tsc -p test",
+    "coverage": "node node_modules/.bin/istanbul cover _mocha -- test/test",
     "watch": "tsc -w",
     "watch-tests": "tsc -w -p test",
     "develop": "concurrently \"npm run watch\" \"npm run watch-tests\" ",
     "run-tests": "mocha test/test.js",
-    "test": "npm run build && npm run build-tests && npm run run-tests"
+    "test": "npm run build-tests && npm run coverage"
   },
   "repository": {
     "type": "git",
@@ -39,6 +40,7 @@
     "@types/mocha": "^2.2.41",
     "chai": "^3.5.0",
     "concurrently": "^3.4.0",
+    "istanbul": "^0.4.5",
     "mocha": "^3.4.1",
     "typescript": "^2.3.2"
   },
