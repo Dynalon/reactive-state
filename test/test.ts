@@ -3,6 +3,7 @@ import "./test_destroy";
 import "./test_slicing";
 import "./test_basic_counter";
 import "./test_action";
+import "./test_reducer";
 
 // Uncomment for testing the README.md example or other doc examples
 // import "./test_example";

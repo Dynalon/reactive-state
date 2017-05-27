@@ -5,6 +5,7 @@
         "declaration": true,
         "module": "commonjs",
         "strict": true,
+        "noImplicitAny": false,
         "noUnusedLocals": true,
         "lib": [ "dom", "es5", "es2015.promise", "es2015.core" ]
     },
