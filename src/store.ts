@@ -125,10 +125,6 @@ export class Store<S> {
 
     addReducer<P>(action: NamedObservable<P>, reducer: Reducer<S, P>): Subscription {
         const rootReducer: RootReducer<any, P> = (payload: P) => (state) => {
-
-            if (isObject(payload) && !isArray(payload) && !isPlainObject(payload))
-                throw new Error("FATAL: Action dispatched an object which was not a plain object, array or primitive type");
-
             if (this.keyChain.length === 0) {
                 // assume R = S; reducer transforms the root state; this is a runtime assumption
                 const typedReducer: Reducer<any, P> = <any>reducer;

@@ -31,21 +31,16 @@ describe("Action tests", () => {
         expect(action.name).to.equal(name);
     });
 
-    it("should throw an error when an action emits a non-plain object", () => {
-        expect(() => genericAction.next(new Foo())).to.throw();
+    it("should not throw an error when an action emits a non-plain object", () => {
+        expect(() => genericAction.next(new Foo())).not.to.throw();
     });
 
-    // TODO: recursive plainObject checks for actions and state? probably to expensive...
-    // it("should throw an error when an action emits a basic object with a member that is non-plain object", () => {
-    //     expect(() => genericAction.next({ foo: new Foo() })).to.throw();
-    // });
-
     // Should be ok for primitive types
-    it("should throw an error when an action emits a plain object", () => {
+    it("should not throw an error when an action emits a plain object", () => {
         expect(() => genericAction.next({})).not.to.throw();
     });
 
-    it("should throw an error when an action emits an array", () => {
+    it("should not throw an error when an action emits an array", () => {
         expect(() => genericAction.next([])).not.to.throw();
     });
 
