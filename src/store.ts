@@ -1,5 +1,5 @@
 import { Observable, Subject, Subscription } from "rxjs/Rx";
-import { StateMutation, Reducer, CleanupState } from "./types";
+import { StateMutation, Reducer, CleanupState, NamedObservable } from "./types";
 import { cloneDeep, isPlainObject, isObject, isArray } from "lodash";
 
 /**
@@ -123,7 +123,7 @@ export class Store<S> {
         return sliceStore;
     }
 
-    addReducer<P>(action: Observable<P>, reducer: Reducer<S, P>): Subscription {
+    addReducer<P>(action: NamedObservable<P>, reducer: Reducer<S, P>): Subscription {
         const rootReducer: RootReducer<any, P> = (payload: P) => (state) => {
 
             if (isObject(payload) && !isArray(payload) && !isPlainObject(payload))
