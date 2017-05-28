@@ -154,13 +154,22 @@ export class Store<S> {
      *       (see http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects)
      *
      * @param selectorFn    A selector function which returns a nested property of the state
+     * @param forceEmitEveryChange  A flag to have updates emitted even if the select'ed
+     *                              element is not changed (But i.e. a parent prop on global state)
      * @returns             An observable that emits any time the state changes
      */
-    select<T>(selectorFn?: (state: S) => T): Observable<T> {
+    select<T>(selectorFn?: (state: S) => T, forceEmitEveryChange = false): Observable<T> {
         if (!selectorFn)
             selectorFn = (state: S) => <T><any>state;
 
-        return this.state.takeUntil(this.destroyed).map(selectorFn)
+        const mapped = this.state
+            .takeUntil(this.destroyed)
+            .map(selectorFn);
+
+        if (forceEmitEveryChange)
+            return mapped;
+        else
+            return mapped.distinctUntilChanged();
     }
 
     destroy(): void {

@@ -49,18 +49,33 @@ describe("Store slicing tests", () => {
         done();
     })
 
-    it("should emit a state change on the slice if the root store changes even when the subtree is not affected", done => {
+    it("should emit a state change on the slice if the root store changes even when the subtree is not affected and forceEmitEveryChange is set", done => {
         const simpleAction = new Action<void>();
         const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
-        counterStore.select().skip(1).take(1).subscribe(counter => {
+        counterStore.select(s => s, true).skip(1).take(1).subscribe(counter => {
             expect(counter).to.equal(0);
             done();
         });
 
         simpleAction.next();
     })
+
+    it("should not emit a state change on the slice if the root store changes and forceEmitEveryChange is not set", done => {
+        const simpleAction = new Action<void>();
+        const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
+        store.addReducer(simpleAction, simpleMutation);
+
+        counterStore.select(s => s, false).skip(1).toArray().subscribe(changes => {
+            expect(changes).to.deep.equal([]);
+            done();
+        });
+
+        simpleAction.next();
+        store.destroy();
+    })
+
 
     it("should not emit a state change on the slice if we use .distinctUntilChanged() on the select", done => {
 
