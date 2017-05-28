@@ -4,14 +4,21 @@ import { Observable } from "rxjs/Rx";
 
 import { Store, Action, Reducer } from "../dist/index";
 
-import { RootState, SliceState, CounterState } from "./test_common_types";
+import { RootState, SliceState, GenericState, CounterState } from "./test_common_types";
 
 describe("initial state chaining", () => {
 
-    class Foo {};
+    class Foo { };
     let store: Store<RootState>;
+    let genericStore: Store<GenericState>
+    let genericAction: Action<any>;
+    const genericReducer: Reducer<GenericState, any> = (state, payload) => ({ ...state, value: payload });
+
     beforeEach(() => {
         store = Store.create<RootState>();
+        genericStore = Store.create();
+        genericAction = new Action<any>();
+        genericStore.addReducer(genericAction, genericReducer);
     })
 
     it("should accept an initial state of undefined and create and empty object as root state", done => {
@@ -52,17 +59,47 @@ describe("initial state chaining", () => {
         sliceStore.createSlice("slice", { foo: "baz" });
     })
 
-    it("should only allow plain objects for the root store creation as initialState", () => {
+    it("should not allow non-plain objects for the root store creation as initialState", () => {
         expect(() => Store.create(new Foo())).to.throw();
     })
 
-    it("should only allow plain objects for the slice store as initialState", () => {
-        expect(() => store.createSlice("slice", new Foo())).to.throw();
+    it("should not allow non-plain objects for the slice store as initialState", () => {
+        expect(() => genericStore.createSlice("value", new Foo())).to.throw();
     })
 
-    it("should only allow plain objects for the slice store as cleanupState", () => {
+    it("should not allow non-plain objects for the slice store as cleanupState", () => {
         // we have to trick TypeScript compiler for this test
-        expect(() => store.createSlice<SliceState>("slice", { foo: "bar" }, <SliceState>new Foo())).to.throw();
+        expect(() => genericStore.createSlice<SliceState>("value", undefined, <SliceState>new Foo())).to.throw();
+    })
+
+    it("should allow primitive types, plain object and array as initial state for root store creation", () => {
+        expect(() => Store.create(null)).not.to.throw;
+        expect(() => Store.create(undefined)).not.to.throw;
+        expect(() => Store.create("foobar")).not.to.throw;
+        expect(() => Store.create(5)).not.to.throw;
+        expect(() => Store.create(false)).not.to.throw;
+        expect(() => Store.create({})).not.to.throw;
+        expect(() => Store.create([])).not.to.throw;
+    })
+
+    it("should allow primitive types, plain object and array as initial state for slice store creation", () => {
+        expect(() => genericStore.createSlice("value", null)).not.to.throw;
+        expect(() => genericStore.createSlice("value", undefined)).not.to.throw;
+        expect(() => genericStore.createSlice("value", "foobar")).not.to.throw;
+        expect(() => genericStore.createSlice("value", 5)).not.to.throw;
+        expect(() => genericStore.createSlice("value", false)).not.to.throw;
+        expect(() => genericStore.createSlice("value", {})).not.to.throw;
+        expect(() => genericStore.createSlice("value", [])).not.to.throw;
+    })
+
+    it("should allow primitive types, plain object and array as cleanup state for slice store creation", () => {
+        expect(() => genericStore.createSlice("value", undefined, null)).not.to.throw;
+        expect(() => genericStore.createSlice("value", undefined, undefined)).not.to.throw;
+        expect(() => genericStore.createSlice("value", undefined, "foobar")).not.to.throw;
+        expect(() => genericStore.createSlice("value", undefined, 5)).not.to.throw;
+        expect(() => genericStore.createSlice("value", undefined, false)).not.to.throw;
+        expect(() => genericStore.createSlice("value", undefined, {})).not.to.throw;
+        expect(() => genericStore.createSlice("value", undefined, [])).not.to.throw;
     })
 
     it("should not modify the original initialState object when creating the root store", done => {

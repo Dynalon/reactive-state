@@ -1,6 +1,6 @@
 import { Observable, Subject, Subscription } from "rxjs/Rx";
 import { StateMutation, Reducer, CleanupState } from "./types";
-import { cloneDeep, isPlainObject, isObject } from "lodash";
+import { cloneDeep, isPlainObject, isObject, isArray } from "lodash";
 
 /**
  * A function which takes a Payload and return a state mutation function.
@@ -69,8 +69,8 @@ export class Store<S> {
         if (initialState === undefined)
             initialState = <S>{};
         else {
-            if (isObject(initialState) && !isPlainObject(initialState))
-                throw new Error("initialState must be a plain object or a primitive type");
+            if (isObject(initialState) && !isArray(initialState) && !isPlainObject(initialState))
+                throw new Error("initialState must be a plain object, an array, or a primitive type");
             initialState = cloneDeep(initialState);
         }
 
@@ -94,9 +94,9 @@ export class Store<S> {
     createSlice<K>(key: keyof S, initialState?: K, cleanupState?: CleanupState<K>): Store<K> {
 
         if (isObject(initialState) && !isPlainObject(initialState))
-            throw new Error("initialState must be a plain object or a primitive type");
+            throw new Error("initialState must be a plain object, an array, or a primitive type");
         if (isObject(cleanupState) && !isPlainObject(cleanupState))
-            throw new Error("cleanupState must be a plain object or a primitive type");
+            throw new Error("cleanupState must be a plain object, an array, or a primitive type");
 
         initialState = cloneDeep(initialState);
         cleanupState = cloneDeep(cleanupState);
@@ -125,6 +125,10 @@ export class Store<S> {
 
     addReducer<P>(action: Observable<P>, reducer: Reducer<S, P>): Subscription {
         const rootReducer: RootReducer<any, P> = (payload: P) => (state) => {
+
+            if (isObject(payload) && !isArray(payload) && !isPlainObject(payload))
+                throw new Error("FATAL: Action dispatched an object which was not a plain object, array or primitive type");
+
             if (this.keyChain.length === 0) {
                 // assume R = S; reducer transforms the root state; this is a runtime assumption
                 const typedReducer: Reducer<any, P> = <any>reducer;

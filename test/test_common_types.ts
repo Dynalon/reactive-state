@@ -10,3 +10,7 @@ export interface SliceState {
 export interface RootState {
     slice?: SliceState;
 }
+
+export interface GenericState {
+    value: any
+}
