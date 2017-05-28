@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { Observable } from "rxjs/Rx";
 
 import { Action, Reducer, Store } from "../dist/index";
-import { CounterState } from "./test_common_types";
+import { CounterState, SliceState } from "./test_common_types";
 
 describe("Reducer tests", () => {
     let store: Store<CounterState>;
@@ -44,5 +44,33 @@ describe("Reducer tests", () => {
         slice.addReducer(addAction, addReducer);
 
     });
+
+    it("should be possible to have reducers on lots of slices", done => {
+        const nestingLevel = 100;
+        const rootStore = Store.create<SliceState>({ foo: "0", slice: undefined });
+
+        let left = nestingLevel;
+        const allDone = () => {
+            left--;
+            if (left == 1) done();
+        }
+
+        let currentStore = rootStore;
+        Observable.range(1, nestingLevel).subscribe(n => {
+            const nestedStore = currentStore.createSlice<SliceState>("slice", { foo: "" });
+
+            const nAsString = n.toString();
+            const fooAction = new Action<string>();
+            const fooReducer: Reducer<SliceState, string> = (state, payload) => ({ ...state, foo: payload });
+            nestedStore.addReducer(fooAction, fooReducer);
+            nestedStore.select(s => s).skip(1).take(1).subscribe(s => {
+                expect(s.foo).to.equal(nAsString);
+                allDone();
+            })
+
+            fooAction.next(nAsString);
+            currentStore = nestedStore;
+        });
+    })
 
 })
