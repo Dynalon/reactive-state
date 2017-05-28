@@ -93,9 +93,9 @@ export class Store<S> {
      */
     createSlice<K>(key: keyof S, initialState?: K, cleanupState?: CleanupState<K>): Store<K> {
 
-        if (isObject(initialState) && !isPlainObject(initialState))
+        if (isObject(initialState) && !isArray(initialState) && !isPlainObject(initialState))
             throw new Error("initialState must be a plain object, an array, or a primitive type");
-        if (isObject(cleanupState) && !isPlainObject(cleanupState))
+        if (isObject(cleanupState) && !isArray(cleanupState) && !isPlainObject(cleanupState))
             throw new Error("cleanupState must be a plain object, an array, or a primitive type");
 
         initialState = cloneDeep(initialState);

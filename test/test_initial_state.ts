@@ -73,33 +73,33 @@ describe("initial state chaining", () => {
     })
 
     it("should allow primitive types, plain object and array as initial state for root store creation", () => {
-        expect(() => Store.create(null)).not.to.throw;
-        expect(() => Store.create(undefined)).not.to.throw;
-        expect(() => Store.create("foobar")).not.to.throw;
-        expect(() => Store.create(5)).not.to.throw;
-        expect(() => Store.create(false)).not.to.throw;
-        expect(() => Store.create({})).not.to.throw;
-        expect(() => Store.create([])).not.to.throw;
+        expect(() => Store.create(null)).not.to.throw();
+        expect(() => Store.create(undefined)).not.to.throw();
+        expect(() => Store.create("foobar")).not.to.throw();
+        expect(() => Store.create(5)).not.to.throw();
+        expect(() => Store.create(false)).not.to.throw();
+        expect(() => Store.create({})).not.to.throw();
+        expect(() => Store.create([])).not.to.throw();
     })
 
     it("should allow primitive types, plain object and array as initial state for slice store creation", () => {
-        expect(() => genericStore.createSlice("value", null)).not.to.throw;
-        expect(() => genericStore.createSlice("value", undefined)).not.to.throw;
-        expect(() => genericStore.createSlice("value", "foobar")).not.to.throw;
-        expect(() => genericStore.createSlice("value", 5)).not.to.throw;
-        expect(() => genericStore.createSlice("value", false)).not.to.throw;
-        expect(() => genericStore.createSlice("value", {})).not.to.throw;
-        expect(() => genericStore.createSlice("value", [])).not.to.throw;
+        expect(() => genericStore.createSlice("value", null)).not.to.throw();
+        expect(() => genericStore.createSlice("value", undefined)).not.to.throw();
+        expect(() => genericStore.createSlice("value", "foobar")).not.to.throw();
+        expect(() => genericStore.createSlice("value", 5)).not.to.throw();
+        expect(() => genericStore.createSlice("value", false)).not.to.throw();
+        expect(() => genericStore.createSlice("value", {})).not.to.throw();
+        expect(() => genericStore.createSlice("value", [])).not.to.throw();
     })
 
     it("should allow primitive types, plain object and array as cleanup state for slice store creation", () => {
-        expect(() => genericStore.createSlice("value", undefined, null)).not.to.throw;
-        expect(() => genericStore.createSlice("value", undefined, undefined)).not.to.throw;
-        expect(() => genericStore.createSlice("value", undefined, "foobar")).not.to.throw;
-        expect(() => genericStore.createSlice("value", undefined, 5)).not.to.throw;
-        expect(() => genericStore.createSlice("value", undefined, false)).not.to.throw;
-        expect(() => genericStore.createSlice("value", undefined, {})).not.to.throw;
-        expect(() => genericStore.createSlice("value", undefined, [])).not.to.throw;
+        expect(() => genericStore.createSlice("value", undefined, null)).not.to.throw();
+        expect(() => genericStore.createSlice("value", undefined, undefined)).not.to.throw();
+        expect(() => genericStore.createSlice("value", undefined, "foobar")).not.to.throw();
+        expect(() => genericStore.createSlice("value", undefined, 5)).not.to.throw();
+        expect(() => genericStore.createSlice("value", undefined, false)).not.to.throw();
+        expect(() => genericStore.createSlice("value", undefined, {})).not.to.throw();
+        expect(() => genericStore.createSlice("value", undefined, [])).not.to.throw();
     })
 
     it("should not modify the original initialState object when creating the root store", done => {
