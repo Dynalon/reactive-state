@@ -45,7 +45,7 @@ describe("Reducer tests", () => {
 
     });
 
-    it("should be possible to have reducers on lots of slices", done => {
+    it("should be possible to have reducers on lots of slices and have each reducer act on a slice", done => {
         const nestingLevel = 100;
         const rootStore = Store.create<SliceState>({ foo: "0", slice: undefined });
 

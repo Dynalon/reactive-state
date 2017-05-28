@@ -1,5 +1,6 @@
 import { Observable, Subject, Subscription } from "rxjs/Rx";
 import { StateMutation, Reducer, CleanupState } from "./types";
+import { cloneDeep, isPlainObject, isObject } from "lodash";
 
 /**
  * A function which takes a Payload and return a state mutation function.
@@ -67,6 +68,11 @@ export class Store<S> {
     static create<S>(initialState?: S): Store<S> {
         if (initialState === undefined)
             initialState = <S>{};
+        else {
+            if (isObject(initialState) && !isPlainObject(initialState))
+                throw new Error("initialState must be a plain object or a primitive type");
+            initialState = cloneDeep(initialState);
+        }
 
         const stateMutators = new Subject<StateMutation<S>>();
         const state = createState(stateMutators, initialState);
@@ -86,6 +92,15 @@ export class Store<S> {
      * Creates a new linked store, that Selects a slice on the main store.
      */
     createSlice<K>(key: keyof S, initialState?: K, cleanupState?: CleanupState<K>): Store<K> {
+
+        if (isObject(initialState) && !isPlainObject(initialState))
+            throw new Error("initialState must be a plain object or a primitive type");
+        if (isObject(cleanupState) && !isPlainObject(cleanupState))
+            throw new Error("cleanupState must be a plain object or a primitive type");
+
+        initialState = cloneDeep(initialState);
+        cleanupState = cloneDeep(cleanupState);
+
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
         const state: Observable<K> = this.state.map(s => <K><any>s[key]);
         const keyChain = [...this.keyChain, key];

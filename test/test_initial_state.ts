@@ -2,13 +2,13 @@ import "mocha";
 import { expect } from "chai";
 import { Observable } from "rxjs/Rx";
 
-import { Store } from "../dist/index";
+import { Store, Action, Reducer } from "../dist/index";
 
-import { RootState, SliceState } from "./test_common_types";
+import { RootState, SliceState, CounterState } from "./test_common_types";
 
 describe("initial state chaining", () => {
 
-
+    class Foo {};
     let store: Store<RootState>;
     beforeEach(() => {
         store = Store.create<RootState>();
@@ -39,17 +39,69 @@ describe("initial state chaining", () => {
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" });
 
         store.select(s => s).skip(1).subscribe(s => {
-            if (!s.slice || !s.slice.slice) {
+            if (!s.slice || !s.slice.slice) {
                 done("Error");
                 return;
             }
             expect(s.slice.slice.foo).to.equal("baz");
-            expect(Object.getOwnPropertyNames(s.slice)).to.deep.equal([ "foo", "slice"]);
-            expect(Object.getOwnPropertyNames(s.slice.slice)).to.deep.equal([ "foo" ]);
+            expect(Object.getOwnPropertyNames(s.slice)).to.deep.equal(["foo", "slice"]);
+            expect(Object.getOwnPropertyNames(s.slice.slice)).to.deep.equal(["foo"]);
             done();
         })
 
         sliceStore.createSlice("slice", { foo: "baz" });
+    })
+
+    it("should only allow plain objects for the root store creation as initialState", () => {
+        expect(() => Store.create(new Foo())).to.throw();
+    })
+
+    it("should only allow plain objects for the slice store as initialState", () => {
+        expect(() => store.createSlice("slice", new Foo())).to.throw();
+    })
+
+    it("should only allow plain objects for the slice store as cleanupState", () => {
+        // we have to trick TypeScript compiler for this test
+        expect(() => store.createSlice<SliceState>("slice", { foo: "bar" }, <SliceState>new Foo())).to.throw();
+    })
+
+    it("should not modify the original initialState object when creating the root store", done => {
+        const initialState: CounterState = {
+            counter: 0
+        }
+
+        const store = Store.create(initialState);
+        const counterAction = new Action<number>();
+        const counterReducer: Reducer<CounterState, number> =
+            (state, payload = 1) => ({ ...state, counter: state.counter });
+
+        store.addReducer(counterAction, counterReducer);
+        counterAction.next();
+
+        store.select(s => s).subscribe(s => {
+            expect(initialState.counter).to.equal(0);
+            done();
+        });
+    });
+
+    it("should not modify the original initialState object when creating a slice store", done => {
+        const initialState: CounterState = {
+            counter: 0
+        }
+        const store = Store.create(initialState);
+        const counterAction = new Action<number>();
+        const counterReducer: Reducer<number, number> =
+            (state, payload = 1) => state + payload;
+
+        const slice = store.createSlice("counter");
+        slice.addReducer(counterAction, counterReducer);
+        counterAction.next();
+
+        slice.select(s => s).take(2).subscribe(s => {
+            expect(initialState.counter).to.equal(0);
+            done();
+        });
+
     })
 
     it("should be possible to create a lot of nested slices", done => {
