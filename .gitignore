@@ -2,6 +2,10 @@ src/**/*.js
 src/**/*.js.map
 src/**/*.d.ts
 
+test/*.d.ts
+test/*.js
+test/*.js.map
+
 test/**/*.js
 test/**/*.js.map
 test/**/*.d.ts

@@ -27,6 +27,8 @@ function createState<S>(stateMutators: Observable<StateMutation<S>>, initialStat
 
 export class Store<S> {
 
+    public readonly destroyed: Observable<void>;
+
     private readonly state: Observable<S>;
 
     /**
@@ -46,7 +48,7 @@ export class Store<S> {
     /**
      * Is completed when the slice is unsubscribed and no longer needed.
      */
-    private readonly destroyed = new Subject<void>();
+    private readonly _destroyed = new Subject<void>();
 
     private constructor(
         state: Observable<S>,
@@ -59,7 +61,8 @@ export class Store<S> {
         this.stateMutators = stateMutators;
         this.keyChain = keyChain;
 
-        this.destroyed.subscribe(undefined, undefined, onDestroy);
+        this._destroyed.subscribe(undefined, undefined, onDestroy);
+        this.destroyed = this._destroyed.asObservable();
     }
 
     /**
@@ -116,7 +119,7 @@ export class Store<S> {
         const sliceStore = new Store<K>(state, this.stateMutators, keyChain, onDestroy);
 
         // destroy the slice if the parent gets destroyed
-        this.destroyed.subscribe(undefined, undefined, () => {
+        this._destroyed.subscribe(undefined, undefined, () => {
             sliceStore.destroy();
         });
 
@@ -140,7 +143,7 @@ export class Store<S> {
             return state;
         }
         return action.map(rootReducer)
-            .takeUntil(this.destroyed)
+            .takeUntil(this._destroyed)
             .subscribe(rootStateMutation => this.stateMutators.next(rootStateMutation));
     }
 
@@ -163,7 +166,7 @@ export class Store<S> {
             selectorFn = (state: S) => <T><any>state;
 
         const mapped = this.state
-            .takeUntil(this.destroyed)
+            .takeUntil(this._destroyed)
             .map(selectorFn);
 
         if (forceEmitEveryChange)
@@ -173,12 +176,12 @@ export class Store<S> {
     }
 
     destroy(): void {
-        this.destroyed.next();
-        this.destroyed.complete();
+        this._destroyed.next();
+        this._destroyed.complete();
     }
 
     private getOnDestroyFunctionForSlice<K>(key: string, cleanupState?: CleanupState<K>): () => void {
-        let onDestroy;
+        let onDestroy = () => { };
         if (cleanupState || cleanupState === null) {
             onDestroy = () => {
                 if (cleanupState === "undefined")
@@ -187,8 +190,6 @@ export class Store<S> {
                     this.stateMutators.next(s => { s[key] = cleanupState; return s; });
                 }
             }
-        } else {
-            onDestroy = () => { };
         }
         return onDestroy;
     }

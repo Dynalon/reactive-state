@@ -66,4 +66,12 @@ describe("destroy logic", () => {
         store.destroy();
 
     })
+
+    it("should trigger the public destoyed observable when destroyed", done => {
+        const sliceStore = store.createSlice("slice");
+
+        sliceStore.destroyed.subscribe(done);
+
+        store.destroy();
+    });
 })
