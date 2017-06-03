@@ -4,7 +4,7 @@ import { Subscription } from "rxjs/Rx";
 
 import { Store, Action, Reducer } from "../dist/index";
 
-import { CounterState } from "./test_common_types";
+import { CounterState, RootState, SliceState } from "./test_common_types";
 
 describe("Store slicing tests", () => {
     let store: Store<CounterState>;
@@ -79,14 +79,6 @@ describe("Store slicing tests", () => {
 
     it("should not emit a state change on the slice if we use .distinctUntilChanged() on the select", done => {
 
-        // this is a very usefull pattern: By default every state mutation to the root state triggers subscriptions
-        // on ALL slices, even if nothing changed on that slice. To only be notified if the specific slice changes,
-        // we use RxJS built-in .distinctUntilChanged() operator.
-
-        // Note that this only works if you correctly imjplement your Reducers to update every nested entry upon
-        // modification. See the Redux docs on this topic for more info:
-        // http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects)
-
         const simpleAction = new Action<void>();
         const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
@@ -101,5 +93,42 @@ describe("Store slicing tests", () => {
         simpleAction.next();
 
         done();
+    });
+
+    it("should trigger state changes on slice siblings", done => {
+        const siblingStore = store.createSlice("counter");
+
+        siblingStore.select(s => s).skip(1).subscribe(n => {
+            expect(n).to.equal(1);
+            done();
+        })
+
+        incrementAction.next();
+    })
+
+    it("should trigger state changes on slice siblings for complex states", done => {
+        const rootStore: Store<RootState> = Store.create<RootState>({
+            slice:  { foo: "bar" }
+        });
+        const action = new Action<void>();
+        const reducer: Reducer<SliceState, void> = (state, payload) => {
+            return { ...state, foo: "baz" }
+        };
+
+        const slice1 = rootStore.createSlice<SliceState>("slice", { foo: "bar" });
+        slice1.addReducer(action, reducer);
+
+        const slice2 = rootStore.createSlice<SliceState>("slice", { foo: "bar2" });
+        slice2.select(s => s).skip(1).subscribe(slice => {
+            if (!slice) {
+                done("ERROR");
+                return;
+            } else {
+                expect(slice.foo).to.equal("baz");
+                done();
+            }
+        })
+
+        action.next();
     })
 })
