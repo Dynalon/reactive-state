@@ -19,3 +19,7 @@ export type CleanupState<K> = K |  null | "undefined";
 export interface NamedObservable<T> extends Observable<T> {
     name?: string;
 }
+
+export interface DevTool {
+    notifyStateChange: (actionName: string, newState: any) => void;
+}
