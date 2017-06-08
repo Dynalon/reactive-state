@@ -85,4 +85,24 @@ describe("Devtool notification tests", () => {
         store.addReducer(incrementAction, incrementReducer, "CUSTOM_ACTION_NAME");
         incrementAction.next();
     });
+
+    it("should trigger a state change notification if a slice changes", done => {
+
+        store.devTool = {
+            notifyStateChange: (actionName, payload, state) => {
+                expect(actionName).to.equal("INCREMENT_ACTION");
+                expect(payload).to.equal(1);
+                expect(state).to.deep.equal({ counter: 1 });
+                done();
+            }
+        }
+
+        const slice = store.createSlice<number>("counter");
+
+        const incrementAction = new Action<number>("INCREMENT_ACTION");
+        const incrementReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
+        slice.addReducer(incrementAction, incrementReducer);
+
+        incrementAction.next(1);
+    })
 });

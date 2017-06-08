@@ -63,7 +63,8 @@ export class Store<S> {
         state: Observable<S>,
         stateMutators: Subject<StateMutation<any>>,
         keyChain: string[],
-        onDestroy: () => void
+        onDestroy: () => void,
+        devTool?: DevTool
     ) {
 
         this.state = state;
@@ -72,6 +73,7 @@ export class Store<S> {
 
         this._destroyed.subscribe(undefined, undefined, onDestroy);
         this.destroyed = this._destroyed.asObservable();
+        this.devTool = devTool;
     }
 
     /**
@@ -125,7 +127,7 @@ export class Store<S> {
         }
 
         const onDestroy = this.getOnDestroyFunctionForSlice(key, cleanupState);
-        const sliceStore = new Store<K>(state, this.stateMutators, keyChain, onDestroy);
+        const sliceStore = new Store<K>(state, this.stateMutators, keyChain, onDestroy, this.devTool);
 
         // destroy the slice if the parent gets destroyed
         this._destroyed.subscribe(undefined, undefined, () => {
