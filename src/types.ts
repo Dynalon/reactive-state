@@ -21,5 +21,5 @@ export interface NamedObservable<T> extends Observable<T> {
 }
 
 export interface DevTool {
-    notifyStateChange: (actionName: string, newState: any) => void;
+    notifyStateChange: (actionName: string, payload: any, newState: any) => void;
 }

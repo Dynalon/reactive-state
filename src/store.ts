@@ -156,8 +156,8 @@ export class Store<S> {
             }
 
             if (this.devTool !== undefined) {
-                const name = actionName || action.name || "UNKNOWN";
-                this.devTool.notifyStateChange(name, state);
+                const name = actionName || action.name || '';
+                this.devTool.notifyStateChange(name, payload, state);
             }
 
             return state;
