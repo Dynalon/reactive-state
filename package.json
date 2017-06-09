@@ -49,5 +49,8 @@
   },
   "dependencies": {
     "rxjs": "^5.4.0"
+  },
+  "optionalDependencies": {
+    "redux": "^3.6.0"
   }
 }
