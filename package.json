@@ -45,7 +45,7 @@
     "lodash": "^4.17.4",
     "mocha": "^3.4.1",
     "tslib": "^1.7.1",
-    "typescript": "^2.3.2"
+    "typescript": "2.4.x"
   },
   "dependencies": {
     "rxjs": "^5.4.0"

@@ -3,6 +3,8 @@
         "target": "ES5",
         "outDir": "dist",
         "sourceMap": true,
+        // due to a bug in rxjs with TS 2.4.1: https://github.com/ReactiveX/rxjs/issues/2539
+        "noStrictGenericChecks": true,
         "declaration": true,
         "module": "commonjs",
         "strict": true,
