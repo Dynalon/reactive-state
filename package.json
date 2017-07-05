@@ -48,7 +48,7 @@
     "typescript": "2.4.x"
   },
   "dependencies": {
-    "rxjs": "^5.4.0"
+    "rxjs": "^5.4.2"
   },
   "optionalDependencies": {
     "redux": "^3.6.0"
