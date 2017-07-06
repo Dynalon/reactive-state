@@ -14,7 +14,7 @@
     "watch": "tsc -w",
     "watch-tests": "tsc -w -p test",
     "develop": "concurrently \"npm run watch\" \"npm run watch-tests\" ",
-    "run-tests": "mocha test/test.js",
+    "run-tests": "mocha --timeout 10000 test/test.js",
     "test": "npm run build-tests && npm run coverage"
   },
   "repository": {
@@ -48,6 +48,8 @@
     "typescript": "2.4.x"
   },
   "dependencies": {
+    "@types/node-fetch": "^1.6.7",
+    "node-fetch": "^1.7.1",
     "rxjs": "^5.4.2"
   },
   "optionalDependencies": {
