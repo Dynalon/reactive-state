@@ -43,7 +43,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
         }
 
         createStore(
-            reduxReducer,
+            reduxReducer as any,
             initialState,
             compose(enhancer, devtoolExtension)
         );
