@@ -1,6 +1,20 @@
-import { Observable, Subject, Subscription } from "rxjs/Rx";
+import { Observable } from "rxjs/Observable";
+import { Subject } from "rxjs/Subject";
+import { Subscription } from "rxjs/Subscription";
 import { StateMutation, Reducer, CleanupState, NamedObservable, DevTool } from "./types";
-import { cloneDeep, isPlainObject, isObject, isArray } from "lodash";
+
+// TODO use typings here
+declare var require: any;
+const cloneDeep = require("lodash.clonedeep");
+const isPlainObject = require("lodash.isplainobject");
+const isObject = require("lodash.isobject");
+const isArray = require("lodash.isarray");
+
+import "rxjs/add/operator/scan";
+import "rxjs/add/operator/map";
+import "rxjs/add/operator/publishReplay";
+import "rxjs/add/operator/takeUntil";
+import "rxjs/add/operator/distinctUntilChanged";
 
 /**
  * A function which takes a Payload and return a state mutation function.
@@ -89,7 +103,8 @@ export class Store<S> {
         }
 
         const stateMutators = new Subject<StateMutation<S>>();
-        const state = createState(stateMutators, initialState);
+        // TODO remove any casts when typings for lodash kicks in
+        const state: any = createState(stateMutators as any, initialState);
 
         // to make publishReplay become effective, we need a subscription that lasts
         const stateSubscription = state.subscribe();

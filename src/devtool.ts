@@ -2,6 +2,8 @@ import { createStore, StoreEnhancer, compose, Action as ReduxAction } from "redu
 import { Store } from "./store";
 import { Subject } from "rxjs/Subject";
 
+import "rxjs/add/operator/take";
+
 /* istanbul ignore next */
 export function enableDevTool<S extends object>(store: Store<S>) {
 
