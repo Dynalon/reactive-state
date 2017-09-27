@@ -2,7 +2,7 @@ import { createStore, StoreEnhancer, compose, Action as ReduxAction } from "redu
 import { Store } from "./store";
 import { Subject } from "rxjs/Subject";
 
-import { take } from "rxjs/operators";
+import "rxjs/add/operator/take";
 
 /* istanbul ignore next */
 export function enableDevTool<S extends object>(store: Store<S>) {
@@ -19,7 +19,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     const reactiveStateUpdate = new Subject<any>();
 
     // TODO get typing when s=> is undefined
-    store.select(s => s, true).pipe(take(1)).subscribe(initialState => {
+    store.select(s => s, true).take(1).subscribe(initialState => {
         let currentState: S = initialState;
 
         const enhancer = (next: any) => {

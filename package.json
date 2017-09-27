@@ -32,9 +32,6 @@
     "React"
   ],
   "author": "Timo Dörr",
-  "contributors": [
-    "Ron Holmström <ron.holmstrom@gmail.com>"
-  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Dynalon/reactive-state/issues"
@@ -52,18 +49,18 @@
     "istanbul": "^0.4.5",
     "mocha": "^3.4.1",
     "tslib": "^1.7.1",
-    "typescript": "2.4.x",
+    "typescript": "2.5.x",
     "uglify-js": "^3.0.27",
     "webpack": "^3.4.1"
   },
   "dependencies": {
     "@types/node-fetch": "^1.6.7",
-    "node-fetch": "^1.7.1",
-    "rxjs": "^5.5.0-beta.0",
     "lodash.clonedeep": "^4.5.0",
     "lodash.isarray": "^4.0.0",
     "lodash.isobject": "^3.0.2",
-    "lodash.isplainobject": "^4.0.6"
+    "lodash.isplainobject": "^4.0.6",
+    "node-fetch": "^1.7.1",
+    "rxjs": "^5.4.3"
   },
   "optionalDependencies": {
     "redux": "^3.6.0"
