@@ -8,7 +8,6 @@ declare var require: any;
 const cloneDeep = require("lodash.clonedeep");
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
-const isArray = require("lodash.isarray");
 
 import "rxjs/add/operator/scan";
 import "rxjs/add/operator/map";
@@ -97,7 +96,7 @@ export class Store<S> {
         if (initialState === undefined)
             initialState = <S>{};
         else {
-            if (isObject(initialState) && !isArray(initialState) && !isPlainObject(initialState))
+            if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
                 throw new Error("initialState must be a plain object, an array, or a primitive type");
             initialState = cloneDeep(initialState);
         }
@@ -122,9 +121,9 @@ export class Store<S> {
      */
     createSlice<K>(key: keyof S, initialState?: K, cleanupState?: CleanupState<K>): Store<K> {
 
-        if (isObject(initialState) && !isArray(initialState) && !isPlainObject(initialState))
+        if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
             throw new Error("initialState must be a plain object, an array, or a primitive type");
-        if (isObject(cleanupState) && !isArray(cleanupState) && !isPlainObject(cleanupState))
+        if (isObject(cleanupState) && !Array.isArray(cleanupState) && !isPlainObject(cleanupState))
             throw new Error("cleanupState must be a plain object, an array, or a primitive type");
 
         initialState = cloneDeep(initialState);
