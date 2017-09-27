@@ -1,6 +1,6 @@
 {
   "name": "reactive-state",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Redux-like state management using RxJS and TypeScript",
   "main": "dist/index.js",
   "files": [
