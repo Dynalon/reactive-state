@@ -72,20 +72,6 @@ describe("Devtool notification tests", () => {
         incrementAction.next();
     });
 
-    it("should use the overriden action name when one is given to addReducer", done => {
-        incrementReducerSubscription.unsubscribe();
-
-        store.devTool = {
-            notifyStateChange: (actionName, payload, state) => {
-                expect(actionName).to.equal("CUSTOM_ACTION_NAME");
-                done();
-            }
-        };
-
-        store.addReducer(incrementAction, incrementReducer, "CUSTOM_ACTION_NAME");
-        incrementAction.next();
-    });
-
     it("should trigger a state change notification if a slice changes", done => {
 
         store.devTool = {
