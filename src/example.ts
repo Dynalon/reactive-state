@@ -1,5 +1,7 @@
 import { Store, Reducer, Action } from "./index";
 
+// you can run this example with node: "node dist/example" from the project root.
+
 // The main (root) state for our example app
 interface AppState {
     counter: number;
@@ -32,7 +34,9 @@ const initialState: AppState = {
 const store = Store.create(initialState);
 
 // Log all state changes using the .select() function
-store.select(state => state).subscribe(newState => console.log(JSON.stringify(newState)));
+// the second boolean flag indicates that we wan't to get notified on EVERY change, even if there
+// is only a change on a subtree or nested property
+store.select(state => state, true).subscribe(newState => console.log(JSON.stringify(newState)));
 
 // wire up counter
 
@@ -66,15 +70,15 @@ const deleteToDoReducer: Reducer<TodoState, number> = (state, payload) => {
 
 const markTodoAsDoneAction = new Action<number>('MARK_AS_DONE');
 // This reducer purposely is more complicated than it needs to be, but shows how you would do it in Redux
-// where you need to create immutable copies for all nested fields - see further below how this can be done
-// easier using a more specific slice.
+// you will find a little easier solution using a more specific slice below
 const markTodoAsDoneReducer: Reducer<TodoState, number> = (state: TodoState, payload: number) => {
-    const todo = state.todos.filter(t => t.id == payload)[0];
-    const index = state.todos.indexOf(todo);
-    const newTodo = { ...todo, done: true };
-    state.todos[index] = newTodo;
-    // we need to create immutable copy of the array, too
-    const todos = [ ...state.todos ];
+    const todos = state.todos.map(todo => {
+        if (todo.id != payload)
+            return todo;
+        return {
+            ...todo, done: true
+        };
+    })
     return { ...state, todos };
 };
 
@@ -95,11 +99,14 @@ const todosArraySlice = store.createSlice<TodoState>('todoState').createSlice<To
 
 // create simpler reducer
 const markTodoAsDoneSimpleReducer: Reducer<Todo[], number> = (state: Todo[], payload: number) => {
-    const todo = state.filter(t => t.id == payload)[0];
-    const newTodo = { ...todo, done: true};
-    const index = state.indexOf(todo);
-    state[index] = newTodo;
-    return [ ...state ];
+    return state.map(todo => {
+        if (todo.id != payload)
+            return todo;
+        return {
+            ...todo,
+            done: true
+        }
+    })
 }
 
 todosArraySlice.addReducer(markTodoAsDoneAction, markTodoAsDoneSimpleReducer);
