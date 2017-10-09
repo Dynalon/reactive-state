@@ -3,9 +3,10 @@ import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 import { StateMutation, Reducer, CleanupState, NamedObservable, DevTool } from "./types";
 
+import * as clone from "clone";
+
 // TODO use typings here
 declare var require: any;
-const cloneDeep = require("lodash.clonedeep");
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
@@ -98,7 +99,7 @@ export class Store<S> {
         else {
             if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
                 throw new Error("initialState must be a plain object, an array, or a primitive type");
-            initialState = cloneDeep(initialState);
+            initialState = clone(initialState);
         }
 
         const stateMutators = new Subject<StateMutation<S>>();
@@ -126,8 +127,8 @@ export class Store<S> {
         if (isObject(cleanupState) && !Array.isArray(cleanupState) && !isPlainObject(cleanupState))
             throw new Error("cleanupState must be a plain object, an array, or a primitive type");
 
-        initialState = cloneDeep(initialState);
-        cleanupState = cloneDeep(cleanupState);
+        initialState = clone(initialState);
+        cleanupState = clone(cleanupState);
 
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
         const state: Observable<K> = this.state.map(s => <K><any>s[key]);

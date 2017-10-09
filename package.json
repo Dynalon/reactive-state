@@ -39,26 +39,26 @@
   "homepage": "https://github.com/Dynalon/reactive-state",
   "devDependencies": {
     "@types/chai": "^3.5.2",
-    "@types/lodash.clonedeep": "^4.5.3",
+    "@types/clone": "^0.1.30",
     "@types/lodash.isarray": "^4.0.3",
     "@types/lodash.isobject": "^3.0.3",
     "@types/lodash.isplainobject": "^4.0.3",
     "@types/mocha": "^2.2.41",
+    "@types/node-fetch": "^1.6.7",
     "chai": "^3.5.0",
     "concurrently": "^3.4.0",
     "istanbul": "^0.4.5",
     "mocha": "^3.4.1",
+    "node-fetch": "^1.7.1",
     "tslib": "^1.7.1",
     "typescript": "2.5.x",
     "uglify-js": "^3.0.27",
     "webpack": "^3.4.1"
   },
   "dependencies": {
-    "@types/node-fetch": "^1.6.7",
-    "lodash.clonedeep": "^4.5.0",
+    "clone": "^2.1.1",
     "lodash.isobject": "^3.0.2",
     "lodash.isplainobject": "^4.0.6",
-    "node-fetch": "^1.7.1",
     "rxjs": "^5.4.3"
   },
   "optionalDependencies": {

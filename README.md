@@ -95,6 +95,18 @@ Documentation
 
 Additionally, there is a small [example.ts file](https://github.com/Dynalon/reactive-state/blob/master/src/example.ts) and see also see the included [unit tests](https://github.com/Dynalon/reactive-state/tree/master/test) as well.
 
+Note for Webpack Users
+----
+For reduced filesize when creating webpack bundles for the web, add these lines to your webpack.config.js in order to reduce filesize of the output bundle:
+
+```javascript
+node: {
+    Buffer: false
+}
+```
+
+This will tell webpack not to include any `Buffer` implementation used in our [deep clone implementation](https://github.com/pvorb/clone) which is not required for web bundles. The bundles provided in this library already include this optimization.
+
 License
 ----
 

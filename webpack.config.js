@@ -20,6 +20,9 @@ module.exports = {
     },
     plugins: [
     ],
+    node: {
+        Buffer: false
+    },
     context: __dirname,
     target: "web"
 }
