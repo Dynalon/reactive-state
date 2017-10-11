@@ -14,6 +14,10 @@ describe("Reducer tests", () => {
         slice = store.createSlice("counter", 0);
     })
 
+    afterEach(() => {
+        store.destroy();
+    })
+
     it("should be possible to add a reducer", done => {
         // This is a compile time test: we do not want to give a generic type argument to addReducer
         // but compiling with a incompatible reducer will result in compile errors
