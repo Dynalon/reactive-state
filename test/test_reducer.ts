@@ -49,6 +49,19 @@ describe("Reducer tests", () => {
 
     });
 
+    it("should be possible to omit the payload type argument in reducers", done => {
+        // This is a compile-time only test to verify the API works nicely.
+
+        const incrementReducer: Reducer<number> = (state) => state + 1;
+        const incrementAction = new Action<void>();
+        slice.addReducer(incrementAction, incrementReducer);
+        slice.select(s => s).skip(1).subscribe(n => {
+            expect(n).to.equal(1);
+            done();
+        });
+        incrementAction.next();
+    })
+
     it("should be possible to have reducers on lots of slices and have each reducer act on a slice", done => {
         const nestingLevel = 100;
         const rootStore = Store.create<SliceState>({ foo: "0", slice: undefined });

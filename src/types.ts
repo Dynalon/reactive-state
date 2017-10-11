@@ -9,7 +9,7 @@ export type StateMutation<S> = (state: S) => S;
  * A reducer takes a state S, a payload P, applies a transformation using the payload to the state and
  * returns a new State. Reducers must be pure.
  */
-export type Reducer<S, P> = (state: S, actionPayload: P) => S;
+export type Reducer<S, P = void> = (state: S, actionPayload: P) => S;
 
 /**
  * Type of a "cleanup" state object that will be set to the slice when the sliceStore gets destroyed
