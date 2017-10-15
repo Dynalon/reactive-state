@@ -21,12 +21,21 @@ describe("initial state chaining", () => {
         genericStore.addReducer(genericAction, genericReducer);
     })
 
-    it("should accept an initial state of undefined and create and empty object as root state", done => {
+    it("should accept an initial state of undefined and create and empty object as initial root state", done => {
         const store = Store.create<object>();
 
         store.select().take(1).subscribe(state => {
             expect(state).to.be.an("Object");
             expect(Object.getOwnPropertyNames(state)).to.have.lengthOf(0);
+            done();
+        })
+    })
+
+    it("should accept an initial state of undefined and use undefined as initial state", done => {
+        const sliceStore = store.createSlice<SliceState>("slice", undefined);
+
+        sliceStore.select(s => s).take(1).subscribe(initialState => {
+            expect(initialState).to.be.undefined;
             done();
         })
     })
