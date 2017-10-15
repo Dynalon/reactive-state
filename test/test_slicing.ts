@@ -86,25 +86,6 @@ describe("Store slicing tests", () => {
         store.destroy();
     })
 
-
-    it("should not emit a state change on the slice if we use .distinctUntilChanged() on the select", done => {
-
-        const simpleAction = new Action<void>();
-        const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
-        store.addReducer(simpleAction, simpleMutation);
-
-        // Note that the first time subscribe is called is the initialState that we skip
-        counterStore.select().distinctUntilChanged().skip(1).subscribe(counter => {
-            done("This should have not been called");
-        });
-
-        simpleAction.next();
-        simpleAction.next();
-        simpleAction.next();
-
-        done();
-    });
-
     it("should trigger state changes on slice siblings", done => {
         const siblingStore = store.createSlice("counter");
 
