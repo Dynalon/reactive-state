@@ -34,7 +34,7 @@ describe("initial state chaining", () => {
     it("should accept an initial state of undefined and use undefined as initial state", done => {
         const sliceStore = store.createSlice<SliceState>("slice", undefined);
 
-        sliceStore.select(s => s).take(1).subscribe(initialState => {
+        sliceStore.select().take(1).subscribe(initialState => {
             expect(initialState).to.be.undefined;
             done();
         })
@@ -44,7 +44,7 @@ describe("initial state chaining", () => {
 
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" });
 
-        sliceStore.select(s => s).take(1).subscribe(slice => {
+        sliceStore.select().take(1).subscribe(slice => {
             expect(slice).to.be.an("Object");
             expect(Object.getOwnPropertyNames(slice)).to.deep.equal(["foo"]);
             expect(slice.foo).to.equal("bar");
@@ -124,7 +124,7 @@ describe("initial state chaining", () => {
         store.addReducer(counterAction, counterReducer);
         counterAction.next();
 
-        store.select(s => s).subscribe(s => {
+        store.select().subscribe(s => {
             expect(initialState.counter).to.equal(0);
             done();
         });
@@ -143,7 +143,7 @@ describe("initial state chaining", () => {
         slice.addReducer(counterAction, counterReducer);
         counterAction.next();
 
-        slice.select(s => s).take(2).subscribe(s => {
+        slice.select().take(2).subscribe(s => {
             expect(initialState.counter).to.equal(0);
             done();
         });
@@ -157,7 +157,7 @@ describe("initial state chaining", () => {
         let currentStore = rootStore;
         Observable.range(1, nestingLevel).subscribe(n => {
             const nestedStore = currentStore.createSlice<SliceState>("slice", { foo: n.toString() });
-            nestedStore.select(s => s).take(1).subscribe(state => {
+            nestedStore.select().take(1).subscribe(state => {
                 expect(state.foo).to.equal(n.toString());
             });
             currentStore = nestedStore;
@@ -182,7 +182,7 @@ describe("initial state chaining", () => {
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, "undefined");
         sliceStore.destroy();
 
-        store.select(s => s).subscribe(state => {
+        store.select().subscribe(state => {
             expect(state.hasOwnProperty('slice')).to.equal(true);
             expect(state.slice).to.be.undefined;
             done();
@@ -193,7 +193,7 @@ describe("initial state chaining", () => {
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, "delete");
         sliceStore.destroy();
 
-        store.select(s => s).subscribe(state => {
+        store.select().subscribe(state => {
             expect(state.hasOwnProperty('slice')).to.equal(false);
             expect(Object.getOwnPropertyNames(state)).to.deep.equal([]);
             done();
@@ -204,7 +204,7 @@ describe("initial state chaining", () => {
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, null);
         sliceStore.destroy();
 
-        store.select(s => s).subscribe(state => {
+        store.select().subscribe(state => {
             expect(state.slice).to.be.null;
             done();
         })
@@ -214,7 +214,7 @@ describe("initial state chaining", () => {
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, { foo: "baz" });
         sliceStore.destroy();
 
-        store.select(s => s).subscribe(state => {
+        store.select().subscribe(state => {
             expect(state.slice).to.be.deep.equal({ foo: "baz" });
             done();
         })

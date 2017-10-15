@@ -24,7 +24,7 @@ describe("Basic counter state tests", () => {
     });
 
     it("should apply incrementReducer with incrementAction", done => {
-        store.select(state => state).skip(1).take(1).subscribe(state => {
+        store.select().skip(1).take(1).subscribe(state => {
             expect(state.counter).to.equal(1);
             done();
         });
@@ -32,7 +32,7 @@ describe("Basic counter state tests", () => {
     });
 
     it("should use identity function as default if no selector is passed to default", done => {
-        store.select<CounterState>().skip(1).take(1).subscribe(state => {
+        store.select().skip(1).take(1).subscribe(state => {
             expect(state).to.be.an("Object");
             expect(state.counter).not.to.be.undefined;
             done();
@@ -42,7 +42,7 @@ describe("Basic counter state tests", () => {
     })
 
     it("should emit the initial state for first subscription", done => {
-        store.select(state => state).take(1).subscribe(state => {
+        store.select().take(1).subscribe(state => {
             expect(state.counter).to.equal(0);
             done();
         })
@@ -51,7 +51,7 @@ describe("Basic counter state tests", () => {
     it("should emit the last state immediately when selecting", done => {
         incrementAction.next();
 
-        store.select(state => state).take(1).subscribe(state => {
+        store.select().take(1).subscribe(state => {
             expect(state.counter).to.equal(1);
             done();
         })
@@ -60,7 +60,7 @@ describe("Basic counter state tests", () => {
     it("should not invoke reducers which have been unsubscribed", done => {
         incrementReducerSubscription.unsubscribe();
 
-        store.select(state => state).skip(1).subscribe(state => {
+        store.select().skip(1).subscribe(state => {
             done("Error: This should have not been called");
         })
 

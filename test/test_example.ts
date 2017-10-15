@@ -18,7 +18,9 @@ export function testExample() {
     const store = Store.create(initialState);
 
     // The .select() function returns an Observable that emits every state change; we can subscribe to it
-    store.select(state => state).subscribe(newState => console.log("ROOT STATE:", JSON.stringify(newState)));
+    // the second argument true will - for the sake of this example force output - every state change even
+    // to nested properties
+    store.select(state => state, true).subscribe(newState => console.log("ROOT STATE:", JSON.stringify(newState)));
 
     // the state Observable always caches the last emitted state, so we will immediately get printed the inital state:
     // [CONSOLE.LOG] ROOT STATE: {"counter":0}
@@ -110,9 +112,7 @@ export function testComputedValuesExample() {
     const todoStore = store.createSlice<Todo[]>("todos");
     todoStore.addReducer(markTodoAsDone, markTodoAsDoneReducer);
 
-    const todos = todoStore.select(s => s)
-        // only update when the todo list has changed (i.e. a reducer became active)
-        .distinctUntilChanged();
+    const todos = todoStore.select()
 
     // create an auto computed observables using RxJS basic operators
 
@@ -120,7 +120,6 @@ export function testComputedValuesExample() {
     const completedTodos = todos.map(todos => todos.filter(t => t.done == true).length);
 
     // whenever the number of open or completed todos changes, log a message
-    console.log("foo");
     Observable.zip(openTodos, completedTodos)
         .subscribe(([open, completed]) => console.log(`I have ${open} open todos and ${completed} completed todos`));
 

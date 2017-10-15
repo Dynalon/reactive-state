@@ -29,19 +29,29 @@ describe("Store slicing tests", () => {
     });
 
     it("should select a slice and emit the slice value", done => {
-
         incrementAction.next();
 
-        counterStore.select(n => n).subscribe(counter => {
+        counterStore.select().subscribe(counter => {
             expect(counter).to.equal(1);
             done();
         })
     })
 
+    it("should be possible to pass a projection function to .select()", done => {
+        store.select(state => state.counter).take(4).toArray().subscribe(values => {
+            expect(values).to.deep.equal([0, 1, 2, 3]);
+            done();
+        })
+
+        incrementAction.next();
+        incrementAction.next();
+        incrementAction.next();
+    })
+
     it("should not invoke reducers which have been unsubscribed", done => {
         incrementSubscription.unsubscribe();
 
-        counterStore.select(state => state).skip(1).subscribe(state => {
+        counterStore.select().skip(1).subscribe(state => {
             done("Error: This should have not been called");
         })
 
@@ -98,7 +108,7 @@ describe("Store slicing tests", () => {
     it("should trigger state changes on slice siblings", done => {
         const siblingStore = store.createSlice("counter");
 
-        siblingStore.select(s => s).skip(1).subscribe(n => {
+        siblingStore.select().skip(1).subscribe(n => {
             expect(n).to.equal(1);
             done();
         })
@@ -108,7 +118,7 @@ describe("Store slicing tests", () => {
 
     it("should trigger state changes on slice siblings for complex states", done => {
         const rootStore: Store<RootState> = Store.create<RootState>({
-            slice:  { foo: "bar" }
+            slice: { foo: "bar" }
         });
         const action = new Action<void>();
         const reducer: Reducer<SliceState, void> = (state, payload) => {
@@ -119,7 +129,7 @@ describe("Store slicing tests", () => {
         slice1.addReducer(action, reducer);
 
         const slice2 = rootStore.createSlice<SliceState>("slice", { foo: "bar2" });
-        slice2.select(s => s).skip(1).subscribe(slice => {
+        slice2.select().skip(1).subscribe(slice => {
             if (!slice) {
                 done("ERROR");
                 return;

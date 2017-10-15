@@ -18,7 +18,7 @@ describe("destroy logic", () => {
     })
 
     it("should trigger the onCompleted subscription for the state observable returned by .select() when the store is destroyed", done => {
-        store.select(s => s).subscribe(undefined, undefined, done);
+        store.select().subscribe(undefined, undefined, done);
 
         store.destroy();
     })
@@ -26,7 +26,7 @@ describe("destroy logic", () => {
     it("should trigger the onCompleted on the state observable returned by select for any child slice when the parent store is destroyed", done => {
         const sliceStore = store.createSlice("slice");
 
-        sliceStore.select(s => s).subscribe(undefined, undefined, done);
+        sliceStore.select().subscribe(undefined, undefined, done);
 
         store.destroy();
     });

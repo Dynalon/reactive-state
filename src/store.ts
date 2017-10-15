@@ -199,7 +199,7 @@ export class Store<S> {
      *                              element is not changed (But i.e. a parent prop on global state)
      * @returns             An observable that emits any time the state changes
      */
-    select<T>(selectorFn?: (state: S) => T, forceEmitEveryChange = false): Observable<T> {
+    select<T = S>(selectorFn?: (state: S) => T, forceEmitEveryChange = false): Observable<T> {
         if (!selectorFn)
             selectorFn = (state: S) => <T><any>state;
 

@@ -26,7 +26,7 @@ describe("Reducer tests", () => {
         const addReducer = (state, n) => state + n;
         slice.addReducer(addAction, addReducer);
 
-        slice.select(s => s).take(2).toArray().subscribe(s => {
+        slice.select().take(2).toArray().subscribe(s => {
             expect(s).to.deep.equal([0, 1]);
             done();
         })
@@ -40,7 +40,7 @@ describe("Reducer tests", () => {
         const addAction = Observable.of(1);
         const addReducer: Reducer<number, number> = (state, n) => state + n;
 
-        slice.select(s => s).take(2).toArray().subscribe(s => {
+        slice.select().take(2).toArray().subscribe(s => {
             expect(s).to.deep.equal([0, 1]);
             done();
         });
@@ -55,7 +55,7 @@ describe("Reducer tests", () => {
         const incrementReducer: Reducer<number> = (state) => state + 1;
         const incrementAction = new Action<void>();
         slice.addReducer(incrementAction, incrementReducer);
-        slice.select(s => s).skip(1).subscribe(n => {
+        slice.select().skip(1).subscribe(n => {
             expect(n).to.equal(1);
             done();
         });
@@ -80,7 +80,7 @@ describe("Reducer tests", () => {
             const fooAction = new Action<string>();
             const fooReducer: Reducer<SliceState, string> = (state, payload) => ({ ...state, foo: payload });
             nestedStore.addReducer(fooAction, fooReducer);
-            nestedStore.select(s => s).skip(1).take(1).subscribe(s => {
+            nestedStore.select().skip(1).take(1).subscribe(s => {
                 expect(s.foo).to.equal(nAsString);
                 allDone();
             })
