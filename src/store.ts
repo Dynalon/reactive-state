@@ -239,10 +239,10 @@ export class Store<S> {
  * passed as argument.
  *
  * @param obj The object to apply the value to
- * @updateFn Function whose return value is set to the prop. Receives the currentValue as first argument.
+ * @param updateFn Function whose return value is set to the prop. Receives the currentValue as first argument.
  * @param keychain A list of keys that are used to walk down the object graph from 0..n
  */
-function setNestedProperty(obj: any, updateFn: (currentValue: any, cb?: Function) => any, keyChain: string[]): void {
+function setNestedProperty(obj: any, updateFn: (currentValue: any) => any, keyChain: string[]): void {
     let s = obj;
     for (let i = 0; i < keyChain.length - 1; i++) {
         s = s[keyChain[i]];
