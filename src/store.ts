@@ -220,9 +220,11 @@ export class Store<S> {
 
     private getOnDestroyFunctionForSlice<K>(key: string, cleanupState?: CleanupState<K>): () => void {
         let onDestroy = () => { };
-        if (cleanupState || cleanupState === null) {
+        if (cleanupState !== undefined) {
             onDestroy = () => {
                 if (cleanupState === "undefined")
+                    this.stateMutators.next(s => { s[key] = undefined; return s; });
+                else if (cleanupState === "delete")
                     this.stateMutators.next(s => { delete s[key]; return s; });
                 else {
                     this.stateMutators.next(s => { s[key] = cleanupState; return s; });

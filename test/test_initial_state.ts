@@ -178,11 +178,23 @@ describe("initial state chaining", () => {
         store.createSlice("slice", { foo: "bar" });
     });
 
-    it("should set the state to the cleanup value when the slice store is unsubscribed for case 'undefined'", done => {
+    it("should set the state to the cleanup value undefined but keep the property on the object, when the slice store is destroyed for case 'undefined'", done => {
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, "undefined");
         sliceStore.destroy();
 
         store.select(s => s).subscribe(state => {
+            expect(state.hasOwnProperty('slice')).to.equal(true);
+            expect(state.slice).to.be.undefined;
+            done();
+        })
+    })
+
+    it("should remove the slice property on parent state altogether when the slice store is destroyed for case 'delete'", done => {
+        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, "delete");
+        sliceStore.destroy();
+
+        store.select(s => s).subscribe(state => {
+            expect(state.hasOwnProperty('slice')).to.equal(false);
             expect(Object.getOwnPropertyNames(state)).to.deep.equal([]);
             done();
         })

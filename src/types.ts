@@ -13,8 +13,11 @@ export type Reducer<S, P = void> = (state: S, actionPayload: P) => S;
 
 /**
  * Type of a "cleanup" state object that will be set to the slice when the sliceStore gets destroyed
+ *
+ * The special string "undefined" means the slice prop should be set to undefined (but the props remains there)
+ * Using "delete" will remove the whole prop key from the state object (use this to leave no traces)
  */
-export type CleanupState<K> = K |  null | "undefined";
+export type CleanupState<K> = K |  null | "undefined" | "delete";
 
 export interface NamedObservable<T> extends Observable<T> {
     name?: string;
