@@ -1,4 +1,9 @@
-Unreleased
+v0.2.2
+
+* Fixed tslib only being a dev dependency, although it is needed as runtime dep
+  when included from another project
+
+v0.2.1
 
 * Fixed .select() not correctly infering the type when given no arguments
 * Fixed behaviour of special cleanup state string "undefined" which would delete they key -
