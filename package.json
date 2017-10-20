@@ -55,11 +55,13 @@
     "webpack": "^3.4.1"
   },
   "dependencies": {
+    "@types/react": "^16.0.15",
     "clone": "^2.1.1",
     "lodash.isobject": "^3.0.2",
     "lodash.isplainobject": "^4.0.6",
-    "tslib": "^1.7.1",
-    "rxjs": "^5.4.3"
+    "react": "^16.0.0",
+    "rxjs": "^5.4.3",
+    "tslib": "^1.7.1"
   },
   "optionalDependencies": {
     "redux": "^3.6.0"
