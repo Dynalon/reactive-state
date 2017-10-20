@@ -3,7 +3,6 @@ import { Subscription } from "rxjs/Subscription";
 import { Observer } from "rxjs/Observer";
 
 import { Store } from "./store";
-import { Action } from "./action";
 
 function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOriginalProps>): Partial<TOriginalProps> {
     const actionProps: any = {};
@@ -22,13 +21,13 @@ function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOriginalProps
 }
 
 // This will be a function that dispatches actions, but should not return anything
-type ActionFunction = (...args: any[]) => any;
+export type ActionFunction = (...args: any[]) => any;
 
 export type ActionMap<TProps> = {
     [P in keyof TProps]?: ActionFunction | Observer<any>
 }
 
-type ComponentConstructor<TProps, TState> = new (...args: any[]) => React.Component<TProps, TState>;
+export type ComponentConstructor<TProps, TState> = new (...args: any[]) => React.Component<TProps, TState>;
 
 // if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
@@ -40,7 +39,6 @@ export function connect<TOriginalProps, TAppState>(
     actionMap: ActionMap<TOriginalProps> = {}
 ): React.ComponentClass<TOriginalProps> {
 
-    type MapStateToProps = (store: Store<TAppState>) => TOriginalProps
     return class ConnectedComponent extends React.Component<TOriginalProps, object> {
 
         private subscription: Subscription

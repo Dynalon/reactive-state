@@ -8,10 +8,12 @@
         "strict": true,
         "importHelpers": true,
         "noUnusedLocals": true,
+        "jsx": "react",
         "lib": [ "dom", "es5", "es2015.promise", "es2015.core" ]
     },
     "include": [
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "src/**/*.tsx"
     ],
     "exclude": [
         "test/"
