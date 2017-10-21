@@ -94,6 +94,7 @@ Documentation
 ----
 
   * [Wiki](https://github.com/Dynalon/reactive-state/wiki)
+  * [Demo App with annotated source](https://github.com/Dynalon/reactive-state-react-example)
 
 Additionally, there is a small [example.ts file](https://github.com/Dynalon/reactive-state/blob/master/src/example.ts) and see also see the included [unit tests](https://github.com/Dynalon/reactive-state/tree/master/test) as well.
 
