@@ -58,8 +58,7 @@ export class Store<S> {
      * However, we only now type R for the root store; all other stores may have different type
      * so we use any here as the root type.
      */
-
-    private readonly stateMutators: Subject<StateMutation<any>>;
+    private readonly stateMutators: Subject<StateMutation<S>>;
 
     /**
      * A list of strings that represenet property names that lead to a given slice
@@ -95,7 +94,7 @@ export class Store<S> {
      */
     static create<S>(initialState?: S): Store<S> {
         if (initialState === undefined)
-            initialState = <S>{};
+            initialState = {} as S;
         else {
             if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
                 throw new Error("initialState must be a plain object, an array, or a primitive type");
@@ -103,8 +102,7 @@ export class Store<S> {
         }
 
         const stateMutators = new Subject<StateMutation<S>>();
-        // TODO remove any casts when typings for lodash kicks in
-        const state: any = createState(stateMutators as any, initialState);
+        const state = createState(stateMutators, initialState);
 
         // to make publishReplay become effective, we need a subscription that lasts
         const stateSubscription = state.subscribe();
@@ -188,16 +186,18 @@ export class Store<S> {
     /**
      * Selects a part of the state using a selector function. If no selector function is given, the identity function
      * is used (which returns the state of type S).
-     * Note: The returned observable always emits when the root state changes - evne when the selected subtree has
-     *       no changes. You can use .distinctUntilChanged() on the returned observable to only get updates
-     *       when the selected subtree changes. This requires that your reducers update all nested properties in
-     *       an immutable way, which is required practice with Redux and also with Reactive-State.
-     *       (see http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects)
+     * Note: The returned observable does not only update the root state changes (=is a new object instance)
+     *       This requires that your reducers update all nested properties in
+     *       an immutable way, which is required practice with Redux and also with reactive-state. To make the
+     *       observable emit any time, every if only a subtree item changes, pass true as forceEmitEveryChange second
+     *       argument to this function.
+     *       For correct nested reducer updates, see:
+     *         http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects
      *
-     * @param selectorFn    A selector function which returns a nested property of the state
+     * @param selectorFn    A selector function which returns a mapped/transformed object based on the state
      * @param forceEmitEveryChange  A flag to have updates emitted even if the select'ed
      *                              element is not changed (But i.e. a parent prop on global state)
-     * @returns             An observable that emits any time the state changes
+     * @returns             An observable that emits when the state changes
      */
     select<T = S>(selectorFn?: (state: S) => T, forceEmitEveryChange = false): Observable<T> {
         if (!selectorFn)
@@ -218,16 +218,16 @@ export class Store<S> {
         this._destroyed.complete();
     }
 
-    private getOnDestroyFunctionForSlice<K>(key: string, cleanupState?: CleanupState<K>): () => void {
+    private getOnDestroyFunctionForSlice<K>(key: keyof S, cleanupState?: CleanupState<K>): () => void {
         let onDestroy = () => { };
         if (cleanupState !== undefined) {
             onDestroy = () => {
                 if (cleanupState === "undefined")
-                    this.stateMutators.next(s => { s[key] = undefined; return s; });
+                    this.stateMutators.next(s => { (s as any)[key] = undefined; return s; });
                 else if (cleanupState === "delete")
-                    this.stateMutators.next(s => { delete s[key]; return s; });
+                    this.stateMutators.next(s => { delete (s as any)[key]; return s; });
                 else {
-                    this.stateMutators.next(s => { s[key] = cleanupState; return s; });
+                    this.stateMutators.next(s => { (s as any)[key] = cleanupState; return s; });
                 }
             }
         }
