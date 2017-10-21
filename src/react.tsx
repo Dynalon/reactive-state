@@ -114,3 +114,14 @@ export function observablesToState<TComponentState extends {}>(
         }
     }
 }
+
+export function mapToState<T, TComponentState, TComponentProps>(
+    component: React.Component<TComponentProps, TComponentState>,
+    observable: Observable<T>,
+    setStateFn: (item: T, prevState: TComponentState, props: TComponentProps) => TComponentState) {
+        return observable.subscribe(item => {
+            component.setState((prevState: any, props) => {
+                return setStateFn(item, prevState, props);
+            })
+        })
+}
