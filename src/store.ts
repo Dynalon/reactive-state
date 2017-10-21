@@ -16,6 +16,10 @@ import "rxjs/add/operator/publishReplay";
 import "rxjs/add/operator/takeUntil";
 import "rxjs/add/operator/distinctUntilChanged";
 
+// TODO: We currently do not allow Symbol properties on the root state. This types assets als properties
+// of the objects are strings (numbers get transformed to strings anyway)
+export type SObject = { [key: string]: any};
+
 /**
  * A function which takes a Payload and return a state mutation function.
  */
@@ -58,7 +62,7 @@ export class Store<S> {
      * However, we only now type R for the root store; all other stores may have different type
      * so we use any here as the root type.
      */
-    private readonly stateMutators: Subject<StateMutation<S>>;
+    private readonly stateMutators: Subject<StateMutation<any>>;
 
     /**
      * A list of strings that represenet property names that lead to a given slice
@@ -74,7 +78,7 @@ export class Store<S> {
 
     private constructor(
         state: Observable<S>,
-        stateMutators: Subject<StateMutation<any>>,
+        stateMutators: Subject<StateMutation<S>>,
         keyChain: string[],
         onDestroy: () => void,
         devTool?: DevTool
@@ -129,7 +133,7 @@ export class Store<S> {
         cleanupState = clone(cleanupState);
 
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
-        const state: Observable<K> = this.state.map(s => <K><any>s[key]);
+        const state: Observable<K> = this.state.map((s: SObject) => <K>s[key]);
         const keyChain = [...this.keyChain, key];
 
         if (initialState !== undefined) {
@@ -160,13 +164,13 @@ export class Store<S> {
      */
     addReducer<P>(action: NamedObservable<P>, reducer: Reducer<S, P>, actionName?: string): Subscription {
 
-        const rootReducer: RootReducer<any, P> = (payload: P) => (state) => {
+        const rootReducer: RootReducer<S, P> = (payload: P) => (state) => {
             if (this.keyChain.length === 0) {
                 // assume R = S; reducer transforms the root state; this is a runtime assumption
                 state = reducer(state, payload);
 
             } else {
-                const updateFn = (currentValue: any) => reducer(currentValue, payload);
+                const updateFn = (currentValue: S) => reducer(currentValue, payload);
                 setNestedProperty(state, updateFn, this.keyChain);
             }
 
@@ -223,11 +227,11 @@ export class Store<S> {
         if (cleanupState !== undefined) {
             onDestroy = () => {
                 if (cleanupState === "undefined")
-                    this.stateMutators.next(s => { (s as any)[key] = undefined; return s; });
+                    this.stateMutators.next(s => { s[key] = undefined; return s; });
                 else if (cleanupState === "delete")
-                    this.stateMutators.next(s => { delete (s as any)[key]; return s; });
+                    this.stateMutators.next(s => { delete s[key]; return s; });
                 else {
-                    this.stateMutators.next(s => { (s as any)[key] = cleanupState; return s; });
+                    this.stateMutators.next(s => { s[key] = cleanupState; return s; });
                 }
             }
         }
@@ -244,13 +248,12 @@ export class Store<S> {
  * @param updateFn Function whose return value is set to the prop. Receives the currentValue as first argument.
  * @param keychain A list of keys that are used to walk down the object graph from 0..n
  */
-function setNestedProperty(obj: any, updateFn: (currentValue: any) => any, keyChain: string[]): void {
-    let s = obj;
+function setNestedProperty(obj: SObject, updateFn: (currentValue: any) => any, keyChain: string[]): void {
     for (let i = 0; i < keyChain.length - 1; i++) {
-        s = s[keyChain[i]];
+        obj = obj[keyChain[i]];
     }
     let lastKey = keyChain.slice(-1)[0];
-    s[lastKey] = updateFn(s[lastKey]);
+    obj[lastKey] = updateFn(obj[lastKey]);
 }
 
 /**
@@ -260,6 +263,6 @@ function setNestedProperty(obj: any, updateFn: (currentValue: any) => any, keyCh
  * @param value The value that is assigned to the nested property
  * @param keychain A list of keys that are used to walk down the object graph from 0..n
  */
-function setNestedPropertyToValue(obj: any, value: any, keyChain: string[]): void {
+function setNestedPropertyToValue(obj: SObject, value: any, keyChain: string[]): void {
     return setNestedProperty(obj, () => value, keyChain);
 }
