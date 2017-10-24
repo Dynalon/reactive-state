@@ -18,7 +18,7 @@ Features
 Installation
 ----
 ```
-npm install --save-dev reactive-state
+npm install --save reactive-state
 ```
 
 Example Usage
