@@ -9,17 +9,28 @@ A typed, wrist-friendly state container aimed as an alternative to Redux when us
 Features
 ----
 
-  * wrist-friendly with no boilerplate code, string constants or endless switch statements
-  * typed Actions based on RxJS Subjects
+  * wrist-friendly with no boilerplate code, no string constants, and not a single switch statement
+  * Actions are just Observables, so are Subjects. Call `.next()` to dispatch an action.
   * dynamically add and remove reducers during runtime (usefull in lazy-loaded application modules)
   * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed asynchronously leveraging RxJS built-in operators
-  * single Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and sub-tree notifications
+  * single, application-wide Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and sub-tree notifications
+  * Strictly typed to find errors during compile time
+  * Heavily tested, 50+ tests for ~100 lines of code
 
 Installation
 ----
 ```
 npm install --save reactive-state
 ```
+
+Documentation
+----
+
+  * [Wiki](https://github.com/Dynalon/reactive-state/wiki)
+  * [Demo App with annotated source](https://github.com/Dynalon/reactive-state-react-example)
+
+Additionally, there is a small [example.ts file](https://github.com/Dynalon/reactive-state/blob/master/src/example.ts) and see also see the included [unit tests](https://github.com/Dynalon/reactive-state/tree/master/test) as well.
+
 
 Example Usage
 ----
@@ -89,14 +100,6 @@ incrementAction.next(1);
 // Note how the ROOT STATE change subscription still is active; even if we operate on a slice, it is still
 // linked to a single root store. The slice is just a "view" on the state, and replace reducer composition.
 ```
-
-Documentation
-----
-
-  * [Wiki](https://github.com/Dynalon/reactive-state/wiki)
-  * [Demo App with annotated source](https://github.com/Dynalon/reactive-state-react-example)
-
-Additionally, there is a small [example.ts file](https://github.com/Dynalon/reactive-state/blob/master/src/example.ts) and see also see the included [unit tests](https://github.com/Dynalon/reactive-state/tree/master/test) as well.
 
 Note for Webpack Users
 ----
