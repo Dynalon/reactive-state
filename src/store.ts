@@ -84,15 +84,6 @@ export class Store<S> {
         devTool?: DevTool
     ) {
 
-        // dummy branch just to test coveralls code coverage tool
-        let a: number = 5;
-        if(new Date().getTime() < a) {
-            a = (a * a) + 5;
-            let b = a;
-            b = a * a + b;
-            a = b;
-        }
-
         this.state = state;
         this.stateMutators = stateMutators;
         this.keyChain = keyChain;
