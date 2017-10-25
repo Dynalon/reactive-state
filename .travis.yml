@@ -11,4 +11,5 @@ before_script:
 script:
   - npm run build
   - npm run build-tests
-  - npm run test
+   # - npm run test
+  - npm run coveralls
