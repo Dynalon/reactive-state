@@ -10,12 +10,7 @@ declare var require: any;
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
-import "rxjs/add/operator/scan";
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/publishReplay";
-import "rxjs/add/operator/takeUntil";
-import "rxjs/add/operator/distinctUntilChanged";
-
+import { scan, map, takeUntil, distinctUntilChanged, publishReplay, refCount } from "rxjs/operators";
 // TODO: We currently do not allow Symbol properties on the root state. This types assets als properties
 // of the objects are strings (numbers get transformed to strings anyway)
 export type SObject = { [key: string]: any};
@@ -32,13 +27,13 @@ type RootReducer<R, P> = (payload: P) => StateMutation<R>
  * @param initialState
  */
 function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
-    const state = stateMutators
-        .scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState)
+    const state = stateMutators.pipe(
+        scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState),
         // these two lines make our observable hot and have it emit the last state
         // upon subscription
-        .publishReplay(1)
-        .refCount()
-
+        publishReplay(1),
+        refCount()
+    )
     return state;
 }
 
@@ -133,7 +128,7 @@ export class Store<S> {
         cleanupState = clone(cleanupState);
 
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
-        const state: Observable<K> = this.state.map((s: SObject) => <K>s[key]);
+        const state: Observable<K> = this.state.pipe(map((s: SObject) => <K>s[key]));
         const keyChain = [...this.keyChain, key];
 
         if (initialState !== undefined) {
@@ -182,9 +177,10 @@ export class Store<S> {
             return state;
         }
 
-        return action.map(rootReducer)
-            .takeUntil(this._destroyed)
-            .subscribe(rootStateMutation => this.stateMutators.next(rootStateMutation));
+        return action.pipe(
+            map(rootReducer),
+            takeUntil(this._destroyed)
+        ).subscribe(rootStateMutation => this.stateMutators.next(rootStateMutation));
     }
 
     /**
@@ -207,14 +203,15 @@ export class Store<S> {
         if (!selectorFn)
             selectorFn = (state: S) => <T><any>state;
 
-        const mapped = this.state
-            .takeUntil(this._destroyed)
-            .map(selectorFn);
+        const mapped = this.state.pipe(
+            takeUntil(this._destroyed),
+            map(selectorFn)
+        )
 
         if (forceEmitEveryChange)
             return mapped;
         else
-            return mapped.distinctUntilChanged();
+            return mapped.pipe(distinctUntilChanged())
     }
 
     destroy(): void {
