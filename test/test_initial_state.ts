@@ -51,7 +51,7 @@ describe("initial state chaining", () => {
         })
     })
 
-    it("should set the initial state for a slice of a slice on the sliced state", done => {
+    it("should set the initial state for a slice-of-a-slice on the sliced state", done => {
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" });
 
         store.select(s => s, true).skip(1).subscribe(s => {
@@ -89,6 +89,7 @@ describe("initial state chaining", () => {
         expect(() => Store.create(false)).not.to.throw();
         expect(() => Store.create({})).not.to.throw();
         expect(() => Store.create([])).not.to.throw();
+        expect(() => Store.create(Symbol())).not.to.throw();
     })
 
     it("should allow primitive types, plain object and array as initial state for slice store creation", () => {
@@ -99,6 +100,7 @@ describe("initial state chaining", () => {
         expect(() => genericStore.createSlice("value", false)).not.to.throw();
         expect(() => genericStore.createSlice("value", {})).not.to.throw();
         expect(() => genericStore.createSlice("value", [])).not.to.throw();
+        expect(() => genericStore.createSlice("value", Symbol())).not.to.throw();
     })
 
     it("should allow primitive types, plain object and array as cleanup state for slice store creation", () => {
@@ -109,6 +111,7 @@ describe("initial state chaining", () => {
         expect(() => genericStore.createSlice("value", undefined, false)).not.to.throw();
         expect(() => genericStore.createSlice("value", undefined, {})).not.to.throw();
         expect(() => genericStore.createSlice("value", undefined, [])).not.to.throw();
+        expect(() => genericStore.createSlice("value", undefined, Symbol())).not.to.throw();
     })
 
     it("should not modify the original initialState object when creating the root store", done => {
