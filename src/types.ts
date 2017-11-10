@@ -23,6 +23,24 @@ export interface NamedObservable<T> extends Observable<T> {
     name?: string;
 }
 
-export interface DevTool {
-    notifyStateChange: (actionName: string, payload: any, newState: any) => void;
+export interface RootStateChangeNotification {
+    actionName: string | undefined;
+    actionPayload: any;
+
+    // always the rootState object
+    newState: any;
+
+    // path on the state object relative to the root (an array of property names)
+    path: string[]
+}
+
+export interface StateChangeNotification<S> {
+    actionName: string | undefined;
+    actionPayload: any;
+
+    // NOTE: This is not necessarily the same slice state as the slice which triggered the state change!
+    // if unsure, use the rootState and path to obtain your slices state
+    sliceState: S;
+    rootState: any;
+    path: string[];
 }

@@ -1,7 +1,10 @@
 import { Observable } from "rxjs/Observable";
 import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
-import { StateMutation, Reducer, CleanupState, NamedObservable, DevTool } from "./types";
+import {
+    StateMutation, StateChangeNotification, RootStateChangeNotification, Reducer,
+    CleanupState, NamedObservable
+} from "./types";
 
 import * as clone from "clone";
 
@@ -11,9 +14,10 @@ const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
 import { scan, map, takeUntil, distinctUntilChanged, publishReplay, refCount } from "rxjs/operators";
+
 // TODO: We currently do not allow Symbol properties on the root state. This types assets als properties
 // of the objects are strings (numbers get transformed to strings anyway)
-export type SObject = { [key: string]: any};
+export type SObject = { [key: string]: any };
 
 /**
  * A function which takes a Payload and return a state mutation function.
@@ -45,11 +49,6 @@ export class Store<S> {
      */
     public readonly destroyed: Observable<void>;
 
-    /**
-     * When set, we signal special debugging/development callbacks to the devtool.
-     */
-    public devTool?: DevTool;
-
     private readonly state: Observable<S>;
 
     /**
@@ -70,22 +69,24 @@ export class Store<S> {
      */
     private readonly _destroyed = new Subject<void>();
 
+    private readonly rootStateChangedNotificationSubject: Subject<RootStateChangeNotification>;
 
     private constructor(
         state: Observable<S>,
         stateMutators: Subject<StateMutation<S>>,
         keyChain: string[],
         onDestroy: () => void,
-        devTool?: DevTool
+        notifyRootStateChangedSubject: Subject<RootStateChangeNotification>
     ) {
-
         this.state = state;
         this.stateMutators = stateMutators;
         this.keyChain = keyChain;
 
         this._destroyed.subscribe(undefined, undefined, onDestroy);
         this.destroyed = this._destroyed.asObservable();
-        this.devTool = devTool;
+
+        this.rootStateChangedNotificationSubject = notifyRootStateChangedSubject;
+        this.rootStateChangedNotification = this.rootStateChangedNotificationSubject.asObservable().pipe(takeUntil(this.destroyed));
     }
 
     /**
@@ -101,13 +102,14 @@ export class Store<S> {
         }
 
         const stateMutators = new Subject<StateMutation<S>>();
+
         const state = createState(stateMutators, initialState);
 
         // to make publishReplay become effective, we need a subscription that lasts
         const stateSubscription = state.subscribe();
         const onDestroy = () => { stateSubscription.unsubscribe(); };
 
-        const store = new Store<S>(state, stateMutators, [], onDestroy);
+        const store = new Store<S>(state, stateMutators, [], onDestroy, new Subject());
 
         // emit a single state mutation so that we emit the initial state on subscription
         stateMutators.next(s => s);
@@ -139,7 +141,7 @@ export class Store<S> {
         }
 
         const onDestroy = this.getOnDestroyFunctionForSlice(key, cleanupState);
-        const sliceStore = new Store<K>(state, this.stateMutators, keyChain, onDestroy, this.devTool);
+        const sliceStore = new Store<K>(state, this.stateMutators, keyChain, onDestroy, this.rootStateChangedNotificationSubject);
 
         // destroy the slice if the parent gets destroyed
         this._destroyed.subscribe(undefined, undefined, () => {
@@ -159,28 +161,35 @@ export class Store<S> {
      */
     addReducer<P>(action: NamedObservable<P>, reducer: Reducer<S, P>, actionName?: string): Subscription {
 
-        const rootReducer: RootReducer<S, P> = (payload: P) => (state) => {
+        const rootReducer: RootReducer<S, P> = (payload: P) => (rootState) => {
             if (this.keyChain.length === 0) {
                 // assume R = S; reducer transforms the root state; this is a runtime assumption
-                state = reducer(state, payload);
-
+                rootState = reducer(rootState, payload);
             } else {
                 const updateFn = (currentValue: S) => reducer(currentValue, payload);
-                setNestedProperty(state, updateFn, this.keyChain);
+                setNestedProperty(rootState, updateFn, this.keyChain);
             }
 
-            if (this.devTool !== undefined) {
-                const name = actionName || action.name || '';
-                this.devTool.notifyStateChange(name, payload, state);
+            // Send state change notification
+            const name = actionName || action.name || '';
+            const changeNotification: RootStateChangeNotification = {
+                actionName: name,
+                actionPayload: payload,
+                path: this.keyChain,
+                newState: rootState
             }
+            this.rootStateChangedNotificationSubject.next(changeNotification);
 
-            return state;
+            return rootState;
         }
 
         return action.pipe(
-            map(rootReducer),
+            map(payload => rootReducer(payload)),
             takeUntil(this._destroyed)
-        ).subscribe(rootStateMutation => this.stateMutators.next(rootStateMutation));
+        ).subscribe(rootStateMutation => {
+            this.stateMutators.next(rootStateMutation)
+        });
+
     }
 
     /**
@@ -214,6 +223,15 @@ export class Store<S> {
             return mapped.pipe(distinctUntilChanged())
     }
 
+    /**
+     * Only used for debugging purposes (so we can bridge Redux Devtools to the store)
+     * Note: Do not use in day-to-day code, use .select() instead.
+     */
+    rootStateChangedNotification: Observable<RootStateChangeNotification>;
+
+    /**
+     * Destroys the Store/Slice. All Observables obtained via .select() will complete when called.
+     */
     destroy(): void {
         this._destroyed.next();
         this._destroyed.complete();
@@ -262,4 +280,30 @@ function setNestedProperty(obj: SObject, updateFn: (currentValue: any) => any, k
  */
 function setNestedPropertyToValue(obj: SObject, value: any, keyChain: string[]): void {
     return setNestedProperty(obj, () => value, keyChain);
+}
+
+function getNestedProperty(obj: SObject, keyChain: string[]) {
+    let current: any = obj;
+    keyChain.map(property => {
+        current = obj[property]
+    })
+    return current;
+}
+
+export function notifyOnStateChange<S>(store: Store<S>)
+    : Observable<StateChangeNotification<S>> {
+
+    // return store.notifyAction;
+    return store.rootStateChangedNotification.pipe(
+        map(an => ({
+            actionName: an.actionName,
+            actionPayload: an.actionPayload,
+            rootState: an.newState,
+
+            // WARNING: path and sliceState refer to the reducer of the slice that triggered the action
+            // It is NOT guaranteed that this is the slice's state you are subscribing to.
+            path: an.path,
+            sliceState: getNestedProperty(an.newState, an.path)
+        }))
+    )
 }

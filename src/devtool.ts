@@ -1,10 +1,12 @@
 import { createStore, StoreEnhancer, compose, Action as ReduxAction } from "redux";
-import { Store } from "./store";
+import { Store, notifyOnStateChange } from "./store";
 import { Subject } from "rxjs/Subject";
 
-import { take } from "rxjs/operators"
+import { take } from "rxjs/operators"
 
 /* istanbul ignore next */
+
+
 export function enableDevTool<S extends object>(store: Store<S>) {
 
     console.warn(" enableDevTool is work in progress; its not fully working and require the browser extension!");
@@ -51,12 +53,13 @@ export function enableDevTool<S extends object>(store: Store<S>) {
         );
     });
 
-    store.devTool = {
-        notifyStateChange: (actionName, payload, state) => {
-            if (actionName !== "__INTERNAL_SYNC")
-                reactiveStateUpdate.next({ actionName, payload, state });
-        }
-    }
+
+    notifyOnStateChange(store).subscribe(notification => {
+        const { actionName, actionPayload, rootState } = notification;
+        if (actionName !== "__INTERNAL_SYNC")
+            reactiveStateUpdate.next({ actionName, payload: actionPayload, state: rootState });
+    })
+
     const syncReducer = (state: S, payload: any) => {
         return { ...payload };
     };

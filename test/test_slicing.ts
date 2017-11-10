@@ -8,7 +8,7 @@ import { CounterState, RootState, SliceState } from "./test_common_types";
 
 describe("Store slicing tests", () => {
     let store: Store<CounterState>;
-    let counterStore: Store<number>;
+    let counterSlice: Store<number>;
     let incrementAction: Action<void>;
     let incrementReducer: Reducer<number, void>;
     let incrementSubscription: Subscription;
@@ -17,12 +17,12 @@ describe("Store slicing tests", () => {
         incrementAction = new Action<void>();
         incrementReducer = (state) => state + 1;
         store = Store.create({ counter: 0 });
-        counterStore = store.createSlice("counter");
-        incrementSubscription = counterStore.addReducer(incrementAction, incrementReducer);
+        counterSlice = store.createSlice("counter");
+        incrementSubscription = counterSlice.addReducer(incrementAction, incrementReducer);
     });
 
     it("should emit the initial state when subscribing to a freshly sliced store", done => {
-        counterStore.select().subscribe(counter => {
+        counterSlice.select().subscribe(counter => {
             expect(counter).to.equal(0);
             done();
         })
@@ -31,7 +31,7 @@ describe("Store slicing tests", () => {
     it("should select a slice and emit the slice value", done => {
         incrementAction.next();
 
-        counterStore.select().subscribe(counter => {
+        counterSlice.select().subscribe(counter => {
             expect(counter).to.equal(1);
             done();
         })
@@ -51,7 +51,7 @@ describe("Store slicing tests", () => {
     it("should not invoke reducers which have been unsubscribed", done => {
         incrementSubscription.unsubscribe();
 
-        counterStore.select().skip(1).subscribe(state => {
+        counterSlice.select().skip(1).subscribe(state => {
             done("Error: This should have not been called");
         })
 
@@ -64,7 +64,7 @@ describe("Store slicing tests", () => {
         const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
-        counterStore.select(s => s, true).skip(1).take(1).subscribe(counter => {
+        counterSlice.select(s => s, true).skip(1).take(1).subscribe(counter => {
             expect(counter).to.equal(0);
             done();
         });
@@ -77,7 +77,7 @@ describe("Store slicing tests", () => {
         const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
-        counterStore.select(s => s, false).skip(1).toArray().subscribe(changes => {
+        counterSlice.select(s => s, false).skip(1).toArray().subscribe(changes => {
             expect(changes).to.deep.equal([]);
             done();
         });
