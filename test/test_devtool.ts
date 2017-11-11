@@ -128,6 +128,6 @@ describe("Devtool notification tests", () => {
             }, wait);
         })
 
-    })
+    }).timeout(10000)
 
 });
