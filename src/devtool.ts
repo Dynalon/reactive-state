@@ -6,6 +6,8 @@ import { take } from "rxjs/operators"
 
 /* istanbul ignore next */
 
+// symbols only for debugging and devtools
+export { RootStateChangeNotification, StateChangeNotification } from './types'
 
 export function enableDevTool<S extends object>(store: Store<S>) {
 
@@ -65,3 +67,12 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     };
     store.addReducer(reduxToReactiveSync, syncReducer, "__INTERNAL_SYNC");
 };
+
+export function getNestedProperty(obj: object, keyChain: string[]) {
+    let current: any = obj;
+    keyChain.map(property => {
+        current = (obj as any)[property]
+    })
+    return current;
+}
+

@@ -3,8 +3,8 @@ import { expect } from "chai";
 import { Subscription } from "rxjs/Rx";
 import { Subject } from "rxjs/Subject";
 import { range } from "rxjs/observable/range";
-import { Store, Action, Reducer, notifyOnStateChange } from "../dist/index";
-
+import { Store, Action, Reducer } from "../dist/index";
+import { notifyOnStateChange } from "../dist/store"
 import { CounterState } from "./test_common_types";
 
 describe("Devtool notification tests", () => {
@@ -86,7 +86,6 @@ describe("Devtool notification tests", () => {
 
     it("should trigger a state change notification on the parent if a slice changes", done => {
 
-        // do not use pre-setup store as it has reducers wired up
         const store = Store.create({ counter: 0 })
         notifyOnStateChange(store).subscribe(notification => {
             expect(notification.actionName).to.equal("INCREMENT_ACTION");
