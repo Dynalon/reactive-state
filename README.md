@@ -16,7 +16,7 @@ Features
   * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed asynchronously leveraging RxJS built-in operators
   * single, application-wide Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and sub-tree notifications
   * Strictly typed to find errors during compile time
-  * Heavily tested, 50+ tests for ~120 lines of code
+  * Heavily tested, 70+ tests for ~150 lines of code
 
 Installation
 ----

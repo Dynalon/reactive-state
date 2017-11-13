@@ -23,6 +23,11 @@ export interface NamedObservable<T> extends Observable<T> {
     name?: string;
 }
 
+export interface ActionDispatch<P> {
+    actionName: string;
+    actionPayload: P
+}
+
 export interface RootStateChangeNotification {
     actionName: string | undefined;
     actionPayload: any;

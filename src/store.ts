@@ -3,7 +3,7 @@ import { Subject } from "rxjs/Subject";
 import { Subscription } from "rxjs/Subscription";
 import {
     StateMutation, StateChangeNotification, RootStateChangeNotification, Reducer,
-    CleanupState, NamedObservable
+    CleanupState, NamedObservable, ActionDispatch
 } from "./types";
 
 import * as clone from "clone";
@@ -13,8 +13,8 @@ declare var require: any;
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
-import { scan, map, takeUntil, distinctUntilChanged, publishReplay, refCount } from "rxjs/operators";
-
+import { filter, merge, scan, map, takeWhile, takeUntil, distinctUntilChanged, publishReplay, refCount } from "rxjs/operators";
+import { empty } from "rxjs/observable/empty";
 // TODO: We currently do not allow Symbol properties on the root state. This types assets als properties
 // of the objects are strings (numbers get transformed to strings anyway)
 export type SObject = { [key: string]: any };
@@ -69,6 +69,11 @@ export class Store<S> {
      */
     private readonly _destroyed = new Subject<void>();
 
+    /**
+     * Used for manual dispatches without observables
+     */
+    private readonly actionDispatch: Subject<ActionDispatch<any>>;
+
     private readonly rootStateChangedNotificationSubject: Subject<RootStateChangeNotification>;
 
     /**
@@ -82,7 +87,8 @@ export class Store<S> {
         stateMutators: Subject<StateMutation<S>>,
         keyChain: string[],
         onDestroy: () => void,
-        notifyRootStateChangedSubject: Subject<RootStateChangeNotification>
+        notifyRootStateChangedSubject: Subject<RootStateChangeNotification>,
+        actionDispatch: Subject<ActionDispatch<any>>
     ) {
         this.state = state;
         this.stateMutators = stateMutators;
@@ -90,6 +96,8 @@ export class Store<S> {
 
         this._destroyed.subscribe(undefined, undefined, onDestroy);
         this.destroyed = this._destroyed.asObservable();
+
+        this.actionDispatch = actionDispatch;
 
         this.rootStateChangedNotificationSubject = notifyRootStateChangedSubject;
         this.rootStateChangedNotification = this.rootStateChangedNotificationSubject.asObservable().pipe(takeUntil(this.destroyed));
@@ -115,7 +123,7 @@ export class Store<S> {
         const stateSubscription = state.subscribe();
         const onDestroy = () => { stateSubscription.unsubscribe(); };
 
-        const store = new Store<S>(state, stateMutators, [], onDestroy, new Subject());
+        const store = new Store<S>(state, stateMutators, [], onDestroy, new Subject(), new Subject());
 
         // emit a single state mutation so that we emit the initial state on subscription
         stateMutators.next(s => s);
@@ -147,7 +155,14 @@ export class Store<S> {
         }
 
         const onDestroy = this.getOnDestroyFunctionForSlice(key, cleanupState);
-        const sliceStore = new Store<K>(state, this.stateMutators, keyChain, onDestroy, this.rootStateChangedNotificationSubject);
+        const sliceStore = new Store<K>(
+            state,
+            this.stateMutators,
+            keyChain,
+            onDestroy,
+            this.rootStateChangedNotificationSubject,
+            this.actionDispatch
+        );
 
         // destroy the slice if the parent gets destroyed
         this._destroyed.subscribe(undefined, undefined, () => {
@@ -165,7 +180,28 @@ export class Store<S> {
      * @param actionName An optional name (only used during development/debugging) to assign to the action. Overrides
      *  possible name set when using a NamedObservable as input
      */
-    addReducer<P>(action: NamedObservable<P>, reducer: Reducer<S, P>, actionName?: string): Subscription {
+    addReducer<P>(action: NamedObservable<P> | string, reducer: Reducer<S, P>, actionName?: string): Subscription {
+        if (typeof action === "string" && typeof actionName === "string") {
+            throw new Error("Can not specify action as string and actionName as string as same time");
+        }
+
+        let name: string | undefined;
+        if (typeof action === "string") {
+            if (action.length === 0) {
+                throw new Error("When passing an action string, it must have non-zero length");
+            }
+            name = action;
+        } else {
+            name = actionName || action.name || undefined;
+        }
+
+       let realAction = <NamedObservable<P>>this.actionDispatch.pipe(
+            takeUntil(this.destroyed),
+            takeWhile(s => name !== undefined && name.length > 0),
+            filter(s => s.actionName === name),
+            map(s => s.actionPayload),
+            merge(typeof action !== "string" ? action : empty())
+        )
 
         const rootReducer: RootReducer<S, P> = (payload: P) => (rootState) => {
             if (this.keyChain.length === 0) {
@@ -177,7 +213,6 @@ export class Store<S> {
             }
 
             // Send state change notification
-            const name = actionName || action.name || '';
             const changeNotification: RootStateChangeNotification = {
                 actionName: name,
                 actionPayload: payload,
@@ -189,7 +224,7 @@ export class Store<S> {
             return rootState;
         }
 
-        return action.pipe(
+        return realAction.pipe(
             map(payload => rootReducer(payload)),
             takeUntil(this._destroyed)
         ).subscribe(rootStateMutation => {
@@ -235,6 +270,20 @@ export class Store<S> {
     destroy(): void {
         this._destroyed.next();
         this._destroyed.complete();
+    }
+
+    /**
+     * Manually dispatch an action by its actionName and actionPayload.
+     *
+     * This function exists for compatibility reasons, development and devtools. It is not adviced to use
+     * this function extensively.
+     *
+     * Note: While the observable-based actions
+     * dispatches only reducers registered for that slice, the string based action dispatch here will forward the
+     * action to ALL stores, (sub-)slice and parent alike so make sure you separater your actions based on the strings.
+     */
+    public dispatch<P>(actionName: string, actionPayload: P) {
+        this.actionDispatch.next({ actionName, actionPayload });
     }
 
     private getOnDestroyFunctionForSlice<K>(key: keyof S, cleanupState?: CleanupState<K>): () => void {

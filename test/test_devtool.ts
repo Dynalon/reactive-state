@@ -30,7 +30,7 @@ describe("Devtool notification tests", () => {
     });
 
     it("should call the devtool callback function when a state change occurs", done => {
-        notifyOnStateChange(store).subscribe(({ rootState}) => {
+        notifyOnStateChange(store).subscribe(({ rootState }) => {
             expect(rootState).to.deep.equal({ counter: 1 });
             done();
         })
@@ -38,7 +38,7 @@ describe("Devtool notification tests", () => {
     });
 
     it("should call the devtool callback function with the correct payload when a state change occurs", done => {
-        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState}) => {
+        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
             expect(actionPayload).to.equal(3);
             done();
         });
@@ -112,7 +112,7 @@ describe("Devtool notification tests", () => {
         // finish after 100 actions dispatched
         counter1.zip(counter2).take(N_ACTIONS).toArray().subscribe(() => done());
 
-        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState}) => {
+        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
             expect(rootState.value).to.equal(actionPayload);
             expect(actionName).to.equal("SET_VALUE");
             counter2.next();
