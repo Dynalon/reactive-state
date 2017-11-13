@@ -1,3 +1,7 @@
+v0.4.0
+* Use lettable operators from RxJS 5.5
+* Change API for devtool
+
 v0.2.2
 
 * Fixed tslib only being a dev dependency, although it is needed as runtime dep
