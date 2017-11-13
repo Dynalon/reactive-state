@@ -71,6 +71,12 @@ export class Store<S> {
 
     private readonly rootStateChangedNotificationSubject: Subject<RootStateChangeNotification>;
 
+    /**
+     * Only used for debugging purposes (so we can bridge Redux Devtools to the store)
+     * Note: Do not use in day-to-day code, use .select() instead.
+     */
+    public rootStateChangedNotification: Observable<RootStateChangeNotification>;
+
     private constructor(
         state: Observable<S>,
         stateMutators: Subject<StateMutation<S>>,
@@ -222,12 +228,6 @@ export class Store<S> {
         else
             return mapped.pipe(distinctUntilChanged())
     }
-
-    /**
-     * Only used for debugging purposes (so we can bridge Redux Devtools to the store)
-     * Note: Do not use in day-to-day code, use .select() instead.
-     */
-    rootStateChangedNotification: Observable<RootStateChangeNotification>;
 
     /**
      * Destroys the Store/Slice. All Observables obtained via .select() will complete when called.
