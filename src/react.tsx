@@ -12,7 +12,7 @@ function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOriginalProps
 
         if (typeof field === "function") {
             let func = (actionMap as any)[ownProp];
-           actionProps[ownProp] = func;
+            actionProps[ownProp] = func;
         }
         else if (typeof field.next === "function") {
             actionProps[ownProp] = (arg1: any, ...args: any[]) => field.next(arg1);
@@ -103,11 +103,9 @@ export function observablesToState<TComponentState extends {}>(
             continue;
 
         if (typeof value.subscribe === "function") {
-            // TODO get rid of any
-            value.subscribe(item => component.setState((prevState: any) => {
-                const newState = { ...prevState };
-                newState[key] = item;
-                return newState;
+            value.subscribe(item => component.setState((prevState: TComponentState) => {
+                const patch = { [key]: item }
+                return { ...(prevState as any), ...patch };
             }));
         } else {
             throw new Error(`Could not map non-observable for property ${key}`)
@@ -116,12 +114,27 @@ export function observablesToState<TComponentState extends {}>(
 }
 
 export function mapToState<T, TComponentState, TComponentProps>(
+    source: Observable<T>,
     component: React.Component<TComponentProps, TComponentState>,
-    observable: Observable<T>,
-    setStateFn: (item: T, prevState: TComponentState, props: TComponentProps) => TComponentState) {
-        return observable.subscribe(item => {
-            component.setState((prevState: any, props) => {
-                return setStateFn(item, prevState, props);
-            })
+    setStateFn: (item: T, prevState: TComponentState, props: TComponentProps) => TComponentState)
+    : Subscription {
+
+    return source.subscribe(item => {
+        component.setState((prevState: TComponentState, props: TComponentProps) => {
+            return setStateFn(item, prevState, props);
         })
+    })
+}
+
+/**
+ * Sets the emitted values of an observable to a components state using setState()
+ * @param source
+ * @param component
+ * @param stateKey
+ */
+export function bindToState<T, TState>(source: Observable<T>, component: React.Component<any, TState>, stateKey: keyof TState) {
+    return source.subscribe(t => {
+        const patch = { [stateKey]: t };
+        component.setState(prevState => ({ ...(prevState as any), ...patch }))
+    })
 }
