@@ -6,15 +6,23 @@ import {
     CleanupState, NamedObservable, ActionDispatch
 } from "./types";
 
-import * as clone from "clone";
-
 // TODO use typings here
 declare var require: any;
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
-import { filter, merge, scan, map, takeWhile, takeUntil, distinctUntilChanged, publishReplay, refCount } from "rxjs/operators";
+// TODO do we really need this to be properly tree-shakable?!?
+import { filter } from "rxjs/operators/filter";
+import { merge } from "rxjs/operators/merge";
+import { scan } from "rxjs/operators/scan";
+import { map } from "rxjs/operators/map";
+import { takeUntil } from "rxjs/operators/takeUntil";
+import { distinctUntilChanged } from "rxjs/operators/distinctUntilChanged";
+import { publishReplay } from "rxjs/operators/publishReplay";
+import { refCount } from "rxjs/operators/refCount";
+
 import { empty } from "rxjs/observable/empty";
+
 // TODO: We currently do not allow Symbol properties on the root state. This types assets als properties
 // of the objects are strings (numbers get transformed to strings anyway)
 export type SObject = { [key: string]: any };
@@ -112,7 +120,6 @@ export class Store<S> {
         else {
             if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
                 throw new Error("initialState must be a plain object, an array, or a primitive type");
-            initialState = clone(initialState);
         }
 
         const stateMutators = new Subject<StateMutation<S>>();
@@ -139,9 +146,6 @@ export class Store<S> {
             throw new Error("initialState must be a plain object, an array, or a primitive type");
         if (isObject(cleanupState) && !Array.isArray(cleanupState) && !isPlainObject(cleanupState))
             throw new Error("cleanupState must be a plain object, an array, or a primitive type");
-
-        initialState = clone(initialState);
-        cleanupState = clone(cleanupState);
 
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
         const state: Observable<K> = this.state.pipe(map((s: SObject) => <K>s[key]));
@@ -197,7 +201,7 @@ export class Store<S> {
 
         let realAction = <NamedObservable<P>>this.actionDispatch.pipe(
             takeUntil(this.destroyed),
-            takeWhile(s => name !== undefined && name.length > 0),
+            filter(s => name !== undefined && name.length > 0),
             filter(s => s.actionName === name),
             map(s => s.actionPayload),
             merge(typeof action !== "string" ? action : empty())

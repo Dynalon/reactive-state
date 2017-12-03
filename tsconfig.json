@@ -6,7 +6,7 @@
         "declaration": true,
         "module": "commonjs",
         "strict": true,
-        "importHelpers": true,
+        "importHelpers": false,
         "noUnusedLocals": true,
         "jsx": "react",
         "lib": [ "dom", "es5", "es2015.promise", "es2015.symbol" ]

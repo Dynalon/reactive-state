@@ -102,18 +102,6 @@ incrementAction.next(1);
 // linked to a single root store. The slice is just a "view" on the state, and replace reducer composition.
 ```
 
-Note for Webpack Users
-----
-For reduced filesize when creating webpack bundles for the web, add these lines to your webpack.config.js in order to reduce filesize of the output bundle:
-
-```javascript
-node: {
-    Buffer: false
-}
-```
-
-This will tell webpack not to include any `Buffer` implementation used in our [deep clone implementation](https://github.com/pvorb/clone) which is not required for web bundles. The bundles provided in this library already include this optimization.
-
 License
 ----
 

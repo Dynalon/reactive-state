@@ -2,7 +2,7 @@ import { createStore, StoreEnhancer, compose, Action as ReduxAction } from "redu
 import { Store, notifyOnStateChange } from "./store";
 import { Subject } from "rxjs/Subject";
 
-import { take } from "rxjs/operators"
+import { take } from "rxjs/operators/take"
 
 /* istanbul ignore next */
 

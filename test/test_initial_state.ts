@@ -114,40 +114,43 @@ describe("initial state chaining", () => {
         expect(() => genericStore.createSlice("value", undefined, Symbol())).not.to.throw();
     })
 
-    it("should not modify the original initialState object when creating the root store", done => {
+    it("does not clone the initialState object when creating the root store, so changes to it can be noticed outside the store", done => {
         const initialState: CounterState = {
             counter: 0
         }
 
         const store = Store.create(initialState);
         const counterAction = new Action<number>();
-        const counterReducer: Reducer<CounterState, number> =
-            (state, payload = 1) => ({ ...state, counter: state.counter });
+        const counterReducer: Reducer<CounterState, number> = (state, payload = 1) => {
+            // WARNING this is not immutable and should not be done in production code
+            // we just do it here for the test...
+            state.counter++;
+            return state;
+        }
 
         store.addReducer(counterAction, counterReducer);
         counterAction.next();
 
         store.select().subscribe(s => {
-            expect(initialState.counter).to.equal(0);
+            expect(initialState.counter).to.equal(1);
             done();
         });
     });
 
-    it("should not modify the original initialState object when creating a slice store", done => {
+    it("should not clone original initialState object when creating a slice store, so changes to it can be noticed outside the slice", done => {
         const initialState: CounterState = {
             counter: 0
         }
         const store = Store.create(initialState);
         const counterAction = new Action<number>();
-        const counterReducer: Reducer<number, number> =
-            (state, payload = 1) => state + payload;
+        const counterReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
 
         const slice = store.createSlice("counter");
         slice.addReducer(counterAction, counterReducer);
         counterAction.next();
 
         slice.select().take(2).subscribe(s => {
-            expect(initialState.counter).to.equal(0);
+            expect(initialState.counter).to.equal(1);
             done();
         });
 
