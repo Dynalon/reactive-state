@@ -1,5 +1,5 @@
 import "./test_action";
-import "./test_basic_counter";
+import "./test_select";
 import "./test_destroy";
 import "./test_devtool";
 import "./test_initial_state";

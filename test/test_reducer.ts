@@ -49,6 +49,24 @@ describe("Reducer tests", () => {
 
     });
 
+    it("should not invoke reducers which have been unsubscribed", done => {
+        const incrementAction = new Action<number>();
+        const subscription = store.addReducer(incrementAction, (state, payload) => {
+            return { ...state, counter: state.counter + payload }
+        });
+
+        store.select().skip(1).toArray().subscribe(states => {
+            expect(states[0].counter).to.equal(1)
+            expect(states.length).to.equal(1);
+            done();
+        })
+
+        incrementAction.next(1);
+        subscription.unsubscribe();
+        incrementAction.next(1);
+        store.destroy();
+    })
+
     it("should be possible to omit the payload type argument in reducers", done => {
         // This is a compile-time only test to verify the API works nicely.
 

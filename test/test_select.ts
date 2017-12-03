@@ -6,7 +6,7 @@ import { Store, Action, Reducer } from "../dist/index";
 
 import { CounterState } from "./test_common_types";
 
-describe("Basic counter state tests", () => {
+describe("Store .select() tests", () => {
 
     let store: Store<CounterState>;
     let incrementAction: Action<void>;
@@ -23,7 +23,11 @@ describe("Basic counter state tests", () => {
         incrementReducerSubscription = store.addReducer(incrementAction, incrementReducer);
     });
 
-    it("should apply incrementReducer with incrementAction", done => {
+    afterEach(() => {
+        store.destroy();
+    })
+
+    it("should emit a state change on select", done => {
         store.select().skip(1).take(1).subscribe(state => {
             expect(state.counter).to.equal(1);
             done();
@@ -31,7 +35,7 @@ describe("Basic counter state tests", () => {
         incrementAction.next();
     });
 
-    it("should use identity function as default if no selector is passed to default", done => {
+    it("should use the identity function as default if no selector function is passed", done => {
         store.select().skip(1).take(1).subscribe(state => {
             expect(state).to.be.an("Object");
             expect(state.counter).not.to.be.undefined;
@@ -41,7 +45,7 @@ describe("Basic counter state tests", () => {
         incrementAction.next();
     })
 
-    it("should emit the initial state for first subscription", done => {
+    it("should emit the initial state for the first subscription", done => {
         store.select().take(1).subscribe(state => {
             expect(state.counter).to.equal(0);
             done();
@@ -57,14 +61,24 @@ describe("Basic counter state tests", () => {
         })
     })
 
-    it("should not invoke reducers which have been unsubscribed", done => {
-        incrementReducerSubscription.unsubscribe();
+    it("should not emit a state change when the reducer returns an unmodified state", done => {
+        const initialState = {}
+        const store = Store.create<{}>(initialState);
+        const dummyAction = new Action<void>();
+        const shallowCopyAction = new Action<void>();
+        store.addReducer(dummyAction, state => state);
+        store.addReducer(shallowCopyAction, state => ({ ...state }));
 
-        store.select().skip(1).subscribe(state => {
-            done("Error: This should have not been called");
+        store.select().skip(1).toArray().subscribe(state => {
+            expect(state.length).to.equal(1);
+            expect(state[0]).not.to.equal(initialState);
+            done();
         })
 
-        incrementAction.next();
-        done();
+        dummyAction.next(undefined);
+        shallowCopyAction.next(undefined);
+        store.destroy();
     })
+
+
 })
