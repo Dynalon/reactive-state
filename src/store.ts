@@ -11,11 +11,13 @@ declare var require: any;
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
-// TODO do we really need this to be properly tree-shakable?!?
+// Using this approach saves us from using RxJS path mapping in webpack.config.js
+// See: https://github.com/ReactiveX/rxjs/blob/master/doc/lettable-operators.md#build-and-treeshaking
 import { filter } from "rxjs/operators/filter";
 import { merge } from "rxjs/operators/merge";
 import { scan } from "rxjs/operators/scan";
 import { map } from "rxjs/operators/map";
+import { takeWhile } from "rxjs/operators/takeWhile";
 import { takeUntil } from "rxjs/operators/takeUntil";
 import { distinctUntilChanged } from "rxjs/operators/distinctUntilChanged";
 import { publishReplay } from "rxjs/operators/publishReplay";
@@ -200,8 +202,8 @@ export class Store<S> {
         }
 
         let realAction = <NamedObservable<P>>this.actionDispatch.pipe(
+            takeWhile(s => name !== undefined && name.length > 0),
             takeUntil(this.destroyed),
-            filter(s => name !== undefined && name.length > 0),
             filter(s => s.actionName === name),
             map(s => s.actionPayload),
             merge(typeof action !== "string" ? action : empty())
