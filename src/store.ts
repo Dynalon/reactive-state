@@ -14,7 +14,7 @@ const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
 import { filter, merge, scan, map, takeWhile, takeUntil, distinctUntilChanged, publishReplay, refCount } from "rxjs/operators";
-import { empty } from "rxjs/observable/empty";
+import { empty } from "rxjs/observable/empty";
 // TODO: We currently do not allow Symbol properties on the root state. This types assets als properties
 // of the objects are strings (numbers get transformed to strings anyway)
 export type SObject = { [key: string]: any };
@@ -192,10 +192,10 @@ export class Store<S> {
             }
             name = action;
         } else {
-            name = actionName || action.name || undefined;
+            name = actionName || action.name || undefined;
         }
 
-       let realAction = <NamedObservable<P>>this.actionDispatch.pipe(
+        let realAction = <NamedObservable<P>>this.actionDispatch.pipe(
             takeUntil(this.destroyed),
             takeWhile(s => name !== undefined && name.length > 0),
             filter(s => s.actionName === name),
@@ -204,22 +204,30 @@ export class Store<S> {
         )
 
         const rootReducer: RootReducer<S, P> = (payload: P) => (rootState) => {
+
+            let nextEqualsPreviousState = false;
+
             if (this.keyChain.length === 0) {
                 // assume R = S; reducer transforms the root state; this is a runtime assumption
+                const previousState = rootState;
                 rootState = reducer(rootState, payload);
+                nextEqualsPreviousState = previousState === rootState;
             } else {
                 const updateFn = (currentValue: S) => reducer(currentValue, payload);
-                setNestedProperty(rootState, updateFn, this.keyChain);
+                const { previousValue, nextValue } = setNestedProperty(rootState, updateFn, this.keyChain);
+                nextEqualsPreviousState = previousValue === nextValue;
             }
 
-            // Send state change notification
-            const changeNotification: RootStateChangeNotification = {
-                actionName: name,
-                actionPayload: payload,
-                path: this.keyChain,
-                newState: rootState
+            if (!nextEqualsPreviousState) {
+                // Send state change notification
+                const changeNotification: RootStateChangeNotification = {
+                    actionName: name,
+                    actionPayload: payload,
+                    path: this.keyChain,
+                    newState: rootState
+                }
+                this.rootStateChangedNotificationSubject.next(changeNotification);
             }
-            this.rootStateChangedNotificationSubject.next(changeNotification);
 
             return rootState;
         }
@@ -312,12 +320,15 @@ export class Store<S> {
  * @param updateFn Function whose return value is set to the prop. Receives the currentValue as first argument.
  * @param keychain A list of keys that are used to walk down the object graph from 0..n
  */
-function setNestedProperty(obj: SObject, updateFn: (currentValue: any) => any, keyChain: string[]): void {
+function setNestedProperty(obj: SObject, updateFn: (currentValue: any) => any, keyChain: string[]) {
     for (let i = 0; i < keyChain.length - 1; i++) {
         obj = obj[keyChain[i]];
     }
     let lastKey = keyChain.slice(-1)[0];
-    obj[lastKey] = updateFn(obj[lastKey]);
+    const previousValue = obj[lastKey];
+    const nextValue = updateFn(previousValue);
+    obj[lastKey] = nextValue;
+    return { previousValue, nextValue }
 }
 
 /**
@@ -327,7 +338,7 @@ function setNestedProperty(obj: SObject, updateFn: (currentValue: any) => any, k
  * @param value The value that is assigned to the nested property
  * @param keychain A list of keys that are used to walk down the object graph from 0..n
  */
-function setNestedPropertyToValue(obj: SObject, value: any, keyChain: string[]): void {
+function setNestedPropertyToValue(obj: SObject, value: any, keyChain: string[]) {
     return setNestedProperty(obj, () => value, keyChain);
 }
 

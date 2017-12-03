@@ -37,6 +37,19 @@ describe("Devtool notification tests", () => {
         incrementAction.next();
     });
 
+    it("should not call the devtool callback function when the reducer returned the previous state", done => {
+        const initialState = {};
+        const store = Store.create(initialState)
+        const identityAction = new Action("IDENTITY");
+        store.addReducer(identityAction, state => state);
+        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
+            done("Error, notifyOnStateChange called by action: " + actionName);
+        });
+
+        identityAction.next(undefined);
+        setTimeout(done, 50);
+    })
+
     it("should call the devtool callback function with the correct payload when a state change occurs", done => {
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
             expect(actionPayload).to.equal(3);
