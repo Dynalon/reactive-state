@@ -2,7 +2,7 @@ import "mocha";
 import { expect } from "chai";
 import { Subscription } from "rxjs/Rx";
 
-import { Store, Action, Reducer } from "../dist/index";
+import { Store, Action, Reducer } from "../src/index";
 
 import { CounterState, RootState, SliceState } from "./test_common_types";
 

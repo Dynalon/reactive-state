@@ -1,15 +1,16 @@
 {
     "compilerOptions": {
-        "target": "ES5",
+        "target": "ES2015",
         "sourceMap": true,
-        "declaration": true,
+        "declaration": false,
         "module": "commonjs",
         "strict": true,
         "noImplicitAny": false,
         "noUnusedLocals": true,
-        "lib": [ "dom", "es5", "es2015.promise", "es2015.core", "es2015.symbol" ]
+        "lib": [ "dom", "es2015" ]
     },
     "include": [
-        "*.ts"
+        "../src/*.ts",
+        "./**/*.ts"
     ]
 }

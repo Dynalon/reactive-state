@@ -1,6 +1,6 @@
 import "mocha";
 import { Observable } from "rxjs/Rx";
-import { Store, Action, Reducer } from "../dist/index";
+import { Store, Action, Reducer } from "../src/index";
 
 // make sure the example in the README.md actually works and compiles
 // use this test as playground

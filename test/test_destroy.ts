@@ -1,6 +1,6 @@
 import "mocha";
 
-import { Store, Action, Reducer } from "../dist/index";
+import { Store, Action, Reducer } from "../src/index";
 
 import { CounterState } from "./test_common_types";
 

@@ -3,8 +3,8 @@ import { expect } from "chai";
 import { Subscription } from "rxjs/Rx";
 import { Subject } from "rxjs/Subject";
 import { range } from "rxjs/observable/range";
-import { Store, Action, Reducer } from "../dist/index";
-import { notifyOnStateChange } from "../dist/store"
+import { Store, Action, Reducer } from "../src/index";
+import { notifyOnStateChange } from "../src/store"
 import { CounterState } from "./test_common_types";
 
 describe("Devtool notification tests", () => {

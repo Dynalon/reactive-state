@@ -1,7 +1,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { Action, Store, Reducer } from "../dist/index";
+import { Action, Store, Reducer } from "../src/index";
 
 describe("Action tests", () => {
     interface GenericState {
