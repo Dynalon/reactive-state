@@ -8,7 +8,9 @@ import { Store } from "./store";
 function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOriginalProps>): Partial<TOriginalProps> {
     const actionProps: any = {};
     for (let ownProp in actionMap) {
-        const field = (actionMap as any)[ownProp];
+        const field = actionMap[ownProp];
+
+        if (field === undefined) continue;
 
         if (typeof field === "function") {
             let func = (actionMap as any)[ownProp];
@@ -27,9 +29,15 @@ export type ActionFunction = (...args: any[]) => any;
 export type ActionMap<TProps> = {
     [P in keyof TProps]?: ActionFunction | Observer<any>
 }
+export type MapStateToProps<S, P> = (state: S) => Partial<P>;
 
 export type ComponentConstructor<TProps, TState> = new (...args: any[]) => React.Component<TProps, TState>;
 
+export interface ConnectOptions<TState, TProps> {
+    store?: Store<TState>;
+    actionMap?: ActionMap<TProps>;
+    mapStateToProps?: MapStateToProps<TState, TProps>
+}
 // if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
 // that do not correspond to any component prop)
@@ -44,24 +52,38 @@ export type ComponentConstructor<TProps, TState> = new (...args: any[]) => React
  */
 export function connect<TOriginalProps, TAppState>(
     ComponentToConnect: ComponentConstructor<TOriginalProps, object>,
-    store: Store<TAppState>,
-    mapStateToProps: (state: TAppState) => Partial<TOriginalProps> = (state) => ({}),
-    actionMap: ActionMap<TOriginalProps> = {}
-): React.ComponentClass<TOriginalProps> {
+    options: ConnectOptions<TAppState, TOriginalProps>,
+): React.ComponentClass<TOriginalProps & ConnectOptions<TOriginalProps, TAppState>> {
 
-    return class ConnectedComponent extends React.Component<TOriginalProps, object> {
+    const {  actionMap, store, mapStateToProps } = options;
+    type ComponentProps = TOriginalProps & ConnectOptions<TAppState, TOriginalProps>;
+
+    return class ConnectedComponent extends React.Component<ComponentProps, object> {
 
         private subscription: Subscription
         private actionProps: Partial<TOriginalProps>;
 
         constructor(...args: any[]) {
             super(...args);
-            this.actionProps = assembleActionProps(actionMap);
         }
 
         componentWillMount() {
-            this.subscription = store.select(s => s).subscribe(state => {
-                this.setState((prevState, props) => mapStateToProps(state))
+            if (!!this.props.store && !!store) {
+                throw new Error("Connected component with late-bound store must be passed a store reference as prop");
+            }
+            const boundStore = (this.props.store ||  store) as Store<TAppState>;
+
+            const boundMapStateToProps = (
+                this.props.mapStateToProps ||
+                 mapStateToProps ||
+                 (() => ({}))
+            ) as MapStateToProps<TAppState, TOriginalProps>;
+
+            const boundActionMap = (this.props.actionMap || actionMap ||  {}) as ActionMap<TOriginalProps>;
+            this.actionProps = assembleActionProps(boundActionMap);
+
+            this.subscription = boundStore.select().subscribe(state => {
+                this.setState((prevState, props) => boundMapStateToProps(state))
             })
         }
 
@@ -74,6 +96,27 @@ export function connect<TOriginalProps, TAppState>(
         }
     }
 }
+
+export const connectComponent = <TState, TProps>(
+    Comp: React.ComponentClass<TProps>,
+    store?: Store<TState> | ConnectOptions<TState, TProps>,
+    mapStateToProps?: MapStateToProps<TState, TProps>,
+    actionMap?: ActionMap<TProps>
+) => {
+    return (props: TProps & ConnectOptions<TState, TProps>) => {
+        let connectProps: ConnectOptions<TState, TProps> = {};
+        if (store && store instanceof Store) {
+            connectProps = { store, mapStateToProps, actionMap };
+        } else if (store) {
+            connectProps = store;
+        } else {
+            throw new Error("second argument must be a store or options object");
+        }
+        const Wrapped = connect(Comp, connectProps);
+        return <Wrapped {...props as any} />
+    }
+}
+
 
 /**
  * A map specifying which property on the components state should be populated with the value of the map value (=observable)
@@ -128,6 +171,7 @@ export function mapToState<T, TComponentState, TComponentProps>(
 
 /**
  * Sets the emitted values of an observable to a components state using setState()
+ *
  * @param source
  * @param component
  * @param stateKey
