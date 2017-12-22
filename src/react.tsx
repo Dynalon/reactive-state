@@ -54,7 +54,7 @@ export function connect<TOriginalProps, TAppState>(
         options = {};
     }
 
-    const {  actionMap, store, mapStateToProps } = options;
+    const { actionMap, store, mapStateToProps } = options;
     type ComponentProps = TOriginalProps & ConnectOptions<TAppState, TOriginalProps>;
 
     return class ConnectedComponent extends React.Component<ComponentProps, object> {
@@ -70,14 +70,14 @@ export function connect<TOriginalProps, TAppState>(
             if (!!this.props.store && !!store) {
                 throw new Error("Connected component with late-bound store must be passed a store reference as prop");
             }
-            const boundStore = (this.props.store ||  store) as Store<TAppState>;
+            const boundStore = (this.props.store || store) as Store<TAppState>;
 
             const empty = (state: any) => ({});
             const boundMapStateToProps = (
-                 this.props.mapStateToProps || mapStateToProps || empty
+                this.props.mapStateToProps || mapStateToProps || empty
             ) as MapStateToProps<TAppState, TOriginalProps>;
 
-            const boundActionMap = (this.props.actionMap || actionMap ||  {}) as ActionMap<TOriginalProps>;
+            const boundActionMap = (this.props.actionMap || actionMap || {}) as ActionMap<TOriginalProps>;
             this.actionProps = assembleActionProps(boundActionMap);
 
             this.subscription = boundStore.select().subscribe(state => {
@@ -125,41 +125,39 @@ export const connectComponent = <TState, TProps>(
  *        secondsPassed: Observable.interval(1000)
  *     }
  */
-export type ObservableToStateMap<TComponentState> = {
+export type unpackMap<TComponentState> = {
     [P in keyof TComponentState]?: Observable<TComponentState[P]>
 }
 
 /**
- * Can be used to bind the last emitted item of an observable to a component's internal state.
+ * Can be used to bind the last emitted item of multiple observables to a component's internal state.
  *
  * @param component - The component of which we set the internal state
  * @param map - A map for which each key in the map will used as target state property to set the observable item to
  */
-export function observablesToState<TComponentState extends {}>(
+export function unpackToState<TComponentState extends {}>(
     component: React.Component<object, TComponentState>,
-    map: ObservableToStateMap<TComponentState>
-): void {
+    map: unpackMap<TComponentState>
+): Subscription {
+    const subscriptions = new Subscription();
     for (let key in map) {
-        const value = map[key];
-        if (value === undefined)
+        const observable = map[key];
+        if (observable === undefined)
             continue;
 
-        if (typeof value.subscribe === "function") {
-            value.subscribe(item => component.setState((prevState: TComponentState) => {
-                const patch = { [key]: item }
-                return { ...(prevState as any), ...patch };
-            }));
-        } else {
+        if (typeof observable.subscribe !== "function") {
             throw new Error(`Could not map non-observable for property ${key}`)
         }
+        subscriptions.add(bindToState(component, observable, key));
     }
+    return subscriptions;
 }
 
 export function mapToState<T, TComponentState, TComponentProps>(
-    source: Observable<T>,
     component: React.Component<TComponentProps, TComponentState>,
-    setStateFn: (item: T, prevState: TComponentState, props: TComponentProps) => TComponentState)
-    : Subscription {
+    source: Observable<T>,
+    setStateFn: (item: T, prevState: TComponentState, props: TComponentProps) => TComponentState
+): Subscription {
 
     return source.subscribe(item => {
         component.setState((prevState: TComponentState, props: TComponentProps) => {
@@ -170,14 +168,14 @@ export function mapToState<T, TComponentState, TComponentProps>(
 
 /**
  * Sets the emitted values of an observable to a components state using setState()
- *
- * @param source
- * @param component
- * @param stateKey
  */
-export function bindToState<T, TState>(source: Observable<T>, component: React.Component<any, TState>, stateKey: keyof TState) {
-    return source.subscribe(t => {
-        const patch = { [stateKey]: t };
-        component.setState(prevState => ({ ...(prevState as any), ...patch }))
+export function bindToState<T, TState extends object>(
+    component: React.Component<any, TState> ,
+    source: Observable<T>,
+    stateKey: keyof TState
+): Subscription {
+    return source.subscribe(item => {
+        const patch = { [stateKey]: item };
+        component.setState((prevState: object) => ({ ...prevState, ...patch }))
     })
 }
