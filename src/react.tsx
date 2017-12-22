@@ -52,8 +52,12 @@ export interface ConnectOptions<TState, TProps> {
  */
 export function connect<TOriginalProps, TAppState>(
     ComponentToConnect: ComponentConstructor<TOriginalProps, object>,
-    options: ConnectOptions<TAppState, TOriginalProps>,
+    options?: ConnectOptions<TAppState, TOriginalProps>,
 ): React.ComponentClass<TOriginalProps & ConnectOptions<TOriginalProps, TAppState>> {
+
+    if (!options) {
+        options = {};
+    }
 
     const {  actionMap, store, mapStateToProps } = options;
     type ComponentProps = TOriginalProps & ConnectOptions<TAppState, TOriginalProps>;
@@ -73,10 +77,9 @@ export function connect<TOriginalProps, TAppState>(
             }
             const boundStore = (this.props.store ||  store) as Store<TAppState>;
 
+            const empty = (state: any) => ({});
             const boundMapStateToProps = (
-                this.props.mapStateToProps ||
-                 mapStateToProps ||
-                 (() => ({}))
+                 this.props.mapStateToProps || mapStateToProps || empty
             ) as MapStateToProps<TAppState, TOriginalProps>;
 
             const boundActionMap = (this.props.actionMap || actionMap ||  {}) as ActionMap<TOriginalProps>;
@@ -97,6 +100,7 @@ export function connect<TOriginalProps, TAppState>(
     }
 }
 
+// TODO decide if this should be exported/public api or removed at all?
 export const connectComponent = <TState, TProps>(
     Comp: React.ComponentClass<TProps>,
     store?: Store<TState> | ConnectOptions<TState, TProps>,
