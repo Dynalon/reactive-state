@@ -44,16 +44,11 @@ export interface ConnectOptions<TState, TProps> {
 
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
- *
- * @param ComponentToConnect
- * @param store
- * @param mapStateToProps
- * @param actionMap
  */
 export function connect<TOriginalProps, TAppState>(
     ComponentToConnect: ComponentConstructor<TOriginalProps, object>,
     options?: ConnectOptions<TAppState, TOriginalProps>,
-): React.ComponentClass<TOriginalProps & ConnectOptions<TOriginalProps, TAppState>> {
+): React.ComponentClass<TOriginalProps & ConnectOptions<TAppState, TOriginalProps>> {
 
     if (!options) {
         options = {};
