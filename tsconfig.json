@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES5",
-        "outDir": "dist",
+        // "outDir": "dist",
         "sourceMap": true,
         "declaration": true,
         "module": "commonjs",
@@ -13,7 +13,9 @@
     },
     "include": [
         "src/**/*.ts",
-        "src/**/*.tsx"
+        "src/**/*.tsx",
+        "react/**/*.ts",
+        "react/**/*.tsx"
     ],
     "exclude": [
         "test/"

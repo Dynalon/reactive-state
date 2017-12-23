@@ -3,7 +3,7 @@ import { Subscription } from "rxjs/Subscription";
 import { Observer } from "rxjs/Observer";
 import { Observable } from "rxjs/Observable";
 
-import { Store } from "./store";
+import { Store } from "../src/store";
 
 function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOriginalProps>): Partial<TOriginalProps> {
     const actionProps: any = {};
