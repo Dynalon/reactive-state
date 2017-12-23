@@ -348,10 +348,10 @@ function setNestedPropertyToValue(obj: SObject, value: any, keyChain: string[]) 
     return setNestedProperty(obj, () => value, keyChain);
 }
 
-function getNestedProperty(obj: SObject, keyChain: string[]) {
+export function getNestedProperty(obj: SObject, keyChain: string[]) {
     let current: any = obj;
     keyChain.map(property => {
-        current = obj[property]
+        current = current[property]
     })
     return current;
 }
