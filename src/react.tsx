@@ -42,7 +42,7 @@ export interface ConnectOptions<TState, TProps> {
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
 // that do not correspond to any component prop)
 
-export type Optional<T> = { [P in keyof T]: T[P] | undefined }
+export type Optional<T> = { [P in keyof T]?: T[P] | undefined }
 
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
@@ -51,7 +51,7 @@ export type Optional<T> = { [P in keyof T]: T[P] | undefined }
 export function connect<TOriginalProps, TAppState>(
     ComponentToConnect: ComponentConstructor<TOriginalProps, object>,
     options?: ConnectOptions<TAppState, TOriginalProps>,
-): React.ComponentClass<Optional<TOriginalProps> & ConnectOptions<TAppState, TOriginalProps>> {
+): React.ComponentClass<Partial<TOriginalProps> & ConnectOptions<TAppState, TOriginalProps>> {
 
     if (!options) {
         options = {};
