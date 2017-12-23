@@ -20,6 +20,7 @@ describe("initial state setting", () => {
         genericStore.addReducer(genericAction, genericReducer);
     })
 
+    // justification: Slices can have any type like "number" etc., so makes no sense to initialize with {}
     it("should accept an initial state of undefined and create and empty object as initial root state", done => {
         const store = Store.create<object>();
 
