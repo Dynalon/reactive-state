@@ -1,4 +1,6 @@
-v1.0.0 (to be released)
+v0.5.0
+* React bridge now considered mature and can be imported from 'reactive-state/react'
+* Do not overwrite any initialstate on a slice if that prop is not undefined
 * Breaking change: Do not clone initialState/cleanupState for stores/slices. This means that whatever you pass
   as initial state object can be modified by the store, and modifications will be visisble to whoever uses that
   instance. The non-clone behaviour is no coherent with Redux behaviour and allows us to drop a cloneDeep()
