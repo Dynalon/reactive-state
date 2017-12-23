@@ -6,6 +6,7 @@ import "./test_initial_state";
 import "./test_reducer";
 import "./test_slicing";
 import "./test_stringbased_action_dispatch";
+import "./test_getnestedproperty";
 
 // Uncomment for testing the README.md example or other doc examples
 // import "./test_example";

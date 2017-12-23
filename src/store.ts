@@ -153,9 +153,15 @@ export class Store<S> {
         const state: Observable<K> = this.state.pipe(map((s: SObject) => <K>s[key]));
         const keyChain = [...this.keyChain, key];
 
+
         if (initialState !== undefined) {
+            const setInitialStateOnSliceIfPropertyIsNotSet = (s: S) => {
+                if (getNestedProperty(s, keyChain) === undefined) {
+                    setNestedPropertyToValue(s, initialState, keyChain);
+                }
+            }
             this.stateMutators.next(s => {
-                setNestedPropertyToValue(s, initialState, keyChain);
+                setInitialStateOnSliceIfPropertyIsNotSet(s);
                 return s;
             });
         }
@@ -348,10 +354,10 @@ function setNestedPropertyToValue(obj: SObject, value: any, keyChain: string[]) 
     return setNestedProperty(obj, () => value, keyChain);
 }
 
-function getNestedProperty(obj: SObject, keyChain: string[]) {
+export function getNestedProperty(obj: SObject, keyChain: string[]) {
     let current: any = obj;
     keyChain.map(property => {
-        current = obj[property]
+        current = current[property]
     })
     return current;
 }
