@@ -65,8 +65,8 @@ export function connect<TOriginalProps, TAppState>(
         private subscription: Subscription
         private actionProps: Partial<TOriginalProps>;
 
-        constructor(...args: any[]) {
-            super(...args);
+        constructor(props: ComponentProps, context: any) {
+            super(props, context);
         }
 
         componentWillMount() {
@@ -179,6 +179,7 @@ export function bindToState<T, TState extends object>(
 ): Subscription {
     return source.subscribe(item => {
         const patch = { [stateKey]: item };
-        component.setState((prevState: object) => ({ ...prevState, ...patch }))
+        // TODO eliminate any
+        component.setState((prevState: any) => ({ ...prevState, ...patch }))
     })
 }
