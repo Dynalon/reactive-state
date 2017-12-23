@@ -3,10 +3,9 @@ import { expect } from "chai";
 import { Observable } from "rxjs/Rx";
 
 import { Store, Action, Reducer } from "../src/index";
-
 import { RootState, SliceState, GenericState, CounterState } from "./test_common_types";
 
-describe("initial state chaining", () => {
+describe("initial state setting", () => {
 
     class Foo { };
     let store: Store<RootState>;
@@ -183,6 +182,16 @@ describe("initial state chaining", () => {
 
         store.createSlice("slice", { foo: "bar" });
     });
+
+    it("should not overwrite an initial state on the slice if the slice key already has a value", done => {
+        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" });
+        sliceStore.destroy();
+        const sliceStore2 = store.createSlice<SliceState>("slice", { foo: "different" });
+        sliceStore2.select().subscribe(state => {
+            expect(state.foo).to.equal("bar");
+            done();
+        })
+    })
 
     it("should set the state to the cleanup value undefined but keep the property on the object, when the slice store is destroyed for case 'undefined'", done => {
         const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, "undefined");
