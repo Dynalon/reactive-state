@@ -1,6 +1,6 @@
 {
   "name": "reactive-state",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "description": "Redux-like state management using RxJS and TypeScript",
   "main": "src/index.js",
   "files": [
@@ -65,11 +65,10 @@
   "dependencies": {
     "lodash.isobject": "^3.0.2",
     "lodash.isplainobject": "^4.0.6",
-    "react": "^16.0.0",
-    "rxjs": "^5.5.0",
-    "tslib": "^1.7.1"
+    "rxjs": "^5.5.0"
   },
   "optionalDependencies": {
+    "react": "^16.0.0",
     "redux": "^3.6.0"
   }
 }
