@@ -31,8 +31,6 @@ export type ActionMap<TProps> = {
 }
 export type MapStateToProps<S, P> = (state: S) => Partial<P>;
 
-export type ComponentConstructor<TProps, TState> = new (...args: any[]) => React.Component<TProps, TState>;
-
 export interface ConnectOptions<TState, TProps> {
     store?: Store<TState>;
     actionMap?: ActionMap<TProps>;
@@ -49,7 +47,7 @@ export type Optional<T> = { [P in keyof T]?: T[P] | undefined }
  * Note that all props of the original component will become optional props (their value may be undefined).
  */
 export function connect<TOriginalProps, TAppState>(
-    ComponentToConnect: ComponentConstructor<TOriginalProps, object>,
+    ComponentToConnect: React.ComponentType<TOriginalProps>,
     options?: ConnectOptions<TAppState, TOriginalProps>,
 ): React.ComponentClass<Partial<TOriginalProps> & ConnectOptions<TAppState, TOriginalProps>> {
 
@@ -100,7 +98,7 @@ export function connect<TOriginalProps, TAppState>(
 
 // TODO decide if this should be exported/public api or removed at all?
 export const connectComponent = <TState, TProps>(
-    Comp: React.ComponentClass<TProps>,
+    Comp: React.ComponentType<TProps>,
     store?: Store<TState> | ConnectOptions<TState, TProps>,
     mapStateToProps?: MapStateToProps<TState, TProps>,
     actionMap?: ActionMap<TProps>
