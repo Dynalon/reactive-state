@@ -5,18 +5,20 @@
 Reactive State
 ====
 
-A typed, wrist-friendly state container aimed as an alternative to Redux when using RxJS. Written in TypeScript but usable from plain JavaScript. Originally inspired by the blog posting from [Michael Zalecki](http://michalzalecki.com/use-rxjs-with-react/) but heavily modified and extended since.
+A typed, wrist-friendly state container aimed as an alternative to Redux when using RxJS. Written with RxJS in TypeScript but perfectly usable from plain JavaScript. Originally inspired by the blog posting from [Michael Zalecki](http://michalzalecki.com/use-rxjs-with-react/) but heavily modified and extended since.
 
 Features
 ----
 
   * wrist-friendly with no boilerplate code, no string constants, and not a single switch statement
-  * Actions are just Observables, so are Subjects. Call `.next()` to dispatch an action.
+  * Actions are just Observables, so are Subjects. Just call `.next()` to dispatch an action.
   * dynamically add and remove reducers during runtime (usefull in lazy-loaded application modules)
   * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed asynchronously leveraging RxJS built-in operators
-  * single, application-wide Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and sub-tree notifications
+  * no need for selector libraries like MobX or Reselect, RxJS already ships it
+  * single, application-wide Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and state separation
   * Strictly typed to find errors during compile time
   * Heavily tested, 70+ tests for ~150 lines of code
+  * React bridge (like `react-redux`) included, though using React is not mandatory
 
 Installation
 ----
@@ -28,7 +30,7 @@ Documentation
 ----
 
   * [Wiki](https://github.com/Dynalon/reactive-state/wiki)
-  * [Demo App with annotated source](https://github.com/Dynalon/reactive-state-react-example)
+  * [Demo App with annotated source](https://github.com/Dynalon/reactive-state-react-example) (includes react bridge examples)
 
 Additionally, there is a small [example.ts file](https://github.com/Dynalon/reactive-state/blob/master/src/example.ts) and see also see the included [unit tests](https://github.com/Dynalon/reactive-state/tree/master/test) as well.
 
