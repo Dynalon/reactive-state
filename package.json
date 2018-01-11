@@ -4,7 +4,7 @@
   "description": "Redux-like state management using RxJS and TypeScript",
   "main": "src/index.js",
   "files": [
-    "dist/bundles/*",
+    "dist/**/*",
     "src/**/*.js",
     "src/**/*.js.map",
     "src/**/*.d.ts",
@@ -17,12 +17,12 @@
     "build": "tsc && npm run bundle",
     "build-tests": "tsc -p test",
     "bundle": "webpack",
-    "coverage": "node node_modules/.bin/istanbul cover _mocha -- test/dist/test/test",
+    "coverage": "node node_modules/.bin/istanbul cover _mocha -- test/test",
     "coveralls": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "watch": "tsc -w",
     "watch-tests": "tsc -w -p test",
     "develop": "concurrently \"npm run watch\" \"npm run watch-tests\" ",
-    "run-tests": "mocha --timeout 10000 test/dist/test/test.js",
+    "run-tests": "mocha --timeout 10000 test/test.js",
     "test": "npm run build-tests && npm run coverage"
   },
   "repository": {
