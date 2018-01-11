@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2015",
+        "outDir": "./dist/",
         "sourceMap": true,
         "declaration": false,
         "module": "commonjs",
@@ -10,7 +11,7 @@
         "lib": [ "dom", "es2015" ]
     },
     "include": [
-        "../src/*.ts",
+        "../src/**/*.ts",
         "./**/*.ts"
     ]
 }
