@@ -19,6 +19,7 @@
     "bundle": "webpack",
     "coverage": "node node_modules/.bin/istanbul cover _mocha -- test/test",
     "coveralls": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "prepublishOnly": "npm run build",
     "watch": "tsc -w",
     "watch-tests": "tsc -w -p test",
     "develop": "concurrently \"npm run watch\" \"npm run watch-tests\" ",
