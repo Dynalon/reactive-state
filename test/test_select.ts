@@ -1,6 +1,5 @@
 import "mocha";
 import { expect } from "chai";
-import { Subscription } from "rxjs/Rx";
 
 import { Store, Action, Reducer } from "../src/index";
 
@@ -44,7 +43,7 @@ describe("Store .select() tests", () => {
         incrementAction.next();
     })
 
-    it("should emit the initial state for the first subscription", done => {
+    it("should immediately emit the last-emitted (might be initial) state when subscription happens", done => {
         store.select().take(1).subscribe(state => {
             expect(state.counter).to.equal(0);
             done();
@@ -60,7 +59,7 @@ describe("Store .select() tests", () => {
         })
     })
 
-    it("should not emit a state change when the reducer returns an unmodified state", done => {
+    it("should not emit a state change when the reducer returns the unmofified, previous state", done => {
         const initialState = {}
         const store = Store.create<{}>(initialState);
         const dummyAction = new Action<void>();
