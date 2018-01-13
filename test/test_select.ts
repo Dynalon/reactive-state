@@ -11,7 +11,6 @@ describe("Store .select() tests", () => {
     let store: Store<CounterState>;
     let incrementAction: Action<void>;
     let incrementReducer: Reducer<CounterState, void>;
-    let incrementReducerSubscription: Subscription;
 
     beforeEach(() => {
         const initialState = {
@@ -20,7 +19,7 @@ describe("Store .select() tests", () => {
         store = Store.create(initialState);
         incrementAction = new Action<void>();
         incrementReducer = (state) => ({ ...state, counter: state.counter + 1 });
-        incrementReducerSubscription = store.addReducer(incrementAction, incrementReducer);
+        store.addReducer(incrementAction, incrementReducer);
     });
 
     afterEach(() => {
