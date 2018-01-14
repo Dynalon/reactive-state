@@ -19,6 +19,7 @@ Features
   * Strictly typed to find errors during compile time
   * Heavily tested, 70+ tests for ~150 lines of code
   * React bridge (like `react-redux`) included, though using React is not mandatory
+  * Support for React-Devtool Extension (not all features supported, work in progress)
 
 Installation
 ----
