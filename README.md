@@ -53,22 +53,23 @@ const initialState: AppState = {
 
 const store = Store.create(initialState);
 
-// The .select() function returns an Observable that emits every state change; we can subscribe to it
-// the second argument true will - for the sake of this example force output - every state change even
-// to nested properties
+// The .select() function returns an Observable that emits every state change; we can simply
+// subscribe to it. The second argument "true" will - for the sake of this example - force output
+// on every state change even to nested properties
 store.select(state => state, true).subscribe(newState => console.log("ROOT STATE:", JSON.stringify(newState)));
 
 // the state Observable always caches the last emitted state, so we will immediately get printed the inital state:
 // [CONSOLE.LOG] ROOT STATE: {"counter":0}
 
-// Actions are just extended RxJS Subjects
-const incrementAction = new Action<number>();
+// Actions are just extended RxJS Subjects, but could also be plain Observables
+const incrementAction = new Subject<number>();
 const incrementReducer: Reducer<AppState, number> = (state, payload) => {
     return { ...state, counter: state.counter + payload };
 };
 
-// register reducer for an action
-const incrementSubscription = store.addReducer(incrementAction, incrementReducer);
+// register reducer for an action; the string identifier is optional and only used for display in
+// the devtool browser extension
+const incrementSubscription = store.addReducer(incrementAction, incrementReducer, "INCREMENT");
 
 // dispatch actions
 
@@ -81,6 +82,8 @@ incrementAction.next(1);
 incrementSubscription.unsubscribe();
 
 // Now, here is the more powerfull part of Reactive State: lets use a slice to simplifiy our code!
+// Slices point to a specific property on the rootState (or of another slice). You can think of them
+// as "views" to the global state.
 
 const sliceStore = store.createSlice("counter");
 // Note: while the first argument "counter" above may look like a magic string it is not: it is
@@ -88,7 +91,7 @@ const sliceStore = store.createSlice("counter");
 // trigger a TypeScript compilation error. This make it safe for refactorings :)
 
 const incrementSliceReducer: Reducer<number, number> = (state, payload) => state + payload;
-sliceStore.addReducer(incrementAction, incrementSliceReducer);
+sliceStore.addReducer(incrementAction, incrementSliceReducer, "INCREMENT");
 
 sliceStore.select().subscribe(counter => console.log("COUNTER STATE:", counter));
 // [CONSOLE.LOG] COUNTER STATE: 2
@@ -102,7 +105,7 @@ incrementAction.next(1);
 // [CONSOLE.LOG] COUNTER STATE: 4
 
 // Note how the ROOT STATE change subscription still is active; even if we operate on a slice, it is still
-// linked to a single root store. The slice is just a "view" on the state, and replace reducer composition.
+// linked to a single root store. The slice is just a "view" on the state, and replaces reducer composition that would be used in redux.
 ```
 
 License
