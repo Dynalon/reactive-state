@@ -58,9 +58,20 @@ export function bindToState<T, TState extends object>(
     source: Observable<T>,
     stateKey: keyof TState
 ): Subscription {
-    return source.subscribe(item => {
+    const subscription = source.subscribe(item => {
         const patch = { [stateKey]: item };
         // TODO eliminate any
         component.setState((prevState: any) => ({ ...prevState, ...patch }))
     })
+
+    // unsubscribe then the component is unmounted
+    const originalUnmount = component.componentWillUnmount;
+    component.componentWillUnmount = function() {
+        subscription.unsubscribe();
+        if (originalUnmount) {
+            originalUnmount.call(component);
+        }
+    }.bind(component);
+
+    return subscription;
 }
