@@ -51,7 +51,9 @@ export function mapToState<T, TComponentState, TComponentProps>(
 }
 
 /**
- * Sets the emitted values of an observable to a components state using setState()
+ * Sets the emitted values of an observable to a components state using setState(). The
+ * subscription to the source observable is automatically unsubscribed when the component
+ * unmounts.
  */
 export function bindToState<T, TState extends object>(
     component: React.Component<any, TState> ,
