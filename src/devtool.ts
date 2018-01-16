@@ -40,7 +40,6 @@ export function enableDevTool<S extends object>(store: Store<S>) {
                 // write back the state from DevTools/Redux to our ReactiveState
                 reduxStore.subscribe(() => {
                     const reduxState = reduxStore.getState();
-                    console.info("Writing back redux state to reactive-state state: ", reduxState)
                     reduxToReactiveSync.next(reduxState);
                 })
 
