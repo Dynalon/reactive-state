@@ -51,7 +51,7 @@ const decrementReducer: Reducer<number, void> = (state: number, payload: void) =
 // while it looks like a magic string, it is NOT: 'counter' is of type "keyof AppState"; so putting
 // any non-property name of AppState here is actually a compilation error! This makes it safe during
 // refactorings!
-const counterStore = store.createSlice<number>('counter');
+const counterStore = store.createSlice('counter');
 
 counterStore.addReducer(incrementAction, incrementReducer);
 counterStore.addReducer(decrementAction, decrementReducer);
@@ -82,7 +82,7 @@ const markTodoAsDoneReducer: Reducer<TodoState, number> = (state: TodoState, pay
     return { ...state, todos };
 };
 
-const todoStore = store.createSlice<TodoState>('todoState');
+const todoStore = store.createSlice('todoState');
 todoStore.addReducer(deleteToDoAction, deleteToDoReducer);
 const reducerSubscription = todoStore.addReducer(markTodoAsDoneAction, markTodoAsDoneReducer);
 
@@ -95,7 +95,7 @@ deleteToDoAction.next(1);
 reducerSubscription.unsubscribe();
 
 // create a slice pointing directly to the todos array
-const todosArraySlice = store.createSlice<TodoState>('todoState').createSlice<Todo[]>('todos');
+const todosArraySlice = store.createSlice('todoState').createSlice('todos');
 
 // create simpler reducer
 const markTodoAsDoneSimpleReducer: Reducer<Todo[], number> = (state: Todo[], payload: number) => {

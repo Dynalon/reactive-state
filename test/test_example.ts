@@ -109,7 +109,7 @@ export function testComputedValuesExample() {
         return [...state.filter(t => t.id !== id), todo];
     };
 
-    const todoStore = store.createSlice<Todo[]>("todos");
+    const todoStore = store.createSlice("todos");
     todoStore.addReducer(markTodoAsDone, markTodoAsDoneReducer);
 
     const todos = todoStore.select()
