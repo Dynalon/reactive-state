@@ -106,10 +106,10 @@ describe("Store slicing tests", () => {
             return { ...state, foo: "baz" }
         };
 
-        const slice1 = rootStore.createSlice<SliceState>("slice", { foo: "bar" });
+        const slice1 = rootStore.createSlice("slice", { foo: "bar" });
         slice1.addReducer(action, reducer);
 
-        const slice2 = rootStore.createSlice<SliceState>("slice", { foo: "bar2" });
+        const slice2 = rootStore.createSlice("slice", { foo: "bar2" });
         slice2.select().skip(1).subscribe(slice => {
             if (!slice) {
                 done("ERROR");

@@ -81,7 +81,7 @@ describe("Devtool notification tests", () => {
     });
 
     it("should trigger a state change notification on a slice", done => {
-        const slice = store.createSlice<number>("counter");
+        const slice = store.createSlice("counter");
 
         notifyOnStateChange(slice).subscribe(({ actionName, actionPayload, rootState }) => {
             expect(rootState).to.deep.equal({ counter: 1 });
@@ -106,7 +106,7 @@ describe("Devtool notification tests", () => {
             expect(notification.rootState).to.deep.equal({ counter: 1 })
             done();
         })
-        const slice = store.createSlice<number>("counter");
+        const slice = store.createSlice("counter");
         const incrementAction = new Action<number>("INCREMENT_ACTION");
         const incrementReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
         slice.addReducer(incrementAction, incrementReducer);

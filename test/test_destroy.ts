@@ -56,7 +56,7 @@ describe("destroy logic", () => {
 
     it("should unsubscribe any reducer subscription for a sliceStore when the root store is destroyed", done => {
         const store = Store.create<CounterState>({ counter: 0 });
-        const sliceStore = store.createSlice<number>("counter");
+        const sliceStore = store.createSlice("counter");
         const incrementAction = new Action<void>();
         const incrementReducer: Reducer<number, void> = (state) => state + 1;
 

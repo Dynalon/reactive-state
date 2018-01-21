@@ -92,14 +92,14 @@ describe("Reducer tests", () => {
 
         let currentStore = rootStore;
         Observable.range(1, nestingLevel).subscribe(n => {
-            const nestedStore = currentStore.createSlice<SliceState>("slice", { foo: "" });
+            const nestedStore = currentStore.createSlice("slice", { foo: "" }) as Store<SliceState>;
 
             const nAsString = n.toString();
             const fooAction = new Action<string>();
             const fooReducer: Reducer<SliceState, string> = (state, payload) => ({ ...state, foo: payload });
             nestedStore.addReducer(fooAction, fooReducer);
             nestedStore.select().skip(1).take(1).subscribe(s => {
-                expect(s.foo).to.equal(nAsString);
+                expect(s!.foo).to.equal(nAsString);
                 allDone();
             })
 
