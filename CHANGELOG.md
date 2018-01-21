@@ -1,3 +1,8 @@
+v1.0.0 (unreleased)
+
+* Fix type-inference for .createSlice() - this breaks existing code (just remove the type argument from
+  .createSlice() to fix). Contributed by Sebastian Nemeth.
+
 v0.5.0
 * React bridge now considered mature and can be imported from 'reactive-state/react'
 * Do not overwrite any initialstate on a slice if that prop is not undefined
