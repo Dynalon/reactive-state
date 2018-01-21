@@ -142,7 +142,7 @@ export class Store<S> {
     /**
      * Creates a new linked store, that Selects a slice on the main store.
      */
-    createSlice<K>(key: keyof S, initialState?: K, cleanupState?: CleanupState<K>): Store<K> {
+    createSlice<K extends keyof S>(key: K, initialState?: S[K], cleanupState?: CleanupState<S[K]>): Store<S[K]> {
 
         if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
             throw new Error("initialState must be a plain object, an array, or a primitive type");
@@ -150,7 +150,7 @@ export class Store<S> {
             throw new Error("cleanupState must be a plain object, an array, or a primitive type");
 
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
-        const state: Observable<K> = this.state.pipe(map((s: SObject) => <K>s[key]));
+        const state: Observable<S[K]> = this.state.pipe(map((s: SObject) => <S[K]>s[key]));
         const keyChain = [...this.keyChain, key];
 
 
@@ -167,7 +167,7 @@ export class Store<S> {
         }
 
         const onDestroy = this.getOnDestroyFunctionForSlice(key, cleanupState);
-        const sliceStore = new Store<K>(
+        const sliceStore = new Store<S[K]>(
             state,
             this.stateMutators,
             keyChain,

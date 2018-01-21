@@ -32,7 +32,7 @@ describe("initial state setting", () => {
     })
 
     it("should accept an initial state of undefined and use undefined as initial state", done => {
-        const sliceStore = store.createSlice<SliceState>("slice", undefined);
+        const sliceStore = store.createSlice("slice", undefined);
 
         sliceStore.select().take(1).subscribe(initialState => {
             expect(initialState).to.be.undefined;
@@ -42,17 +42,17 @@ describe("initial state setting", () => {
 
     it("should accept an initial state object when creating a slice", () => {
 
-        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" });
+        const sliceStore = store.createSlice("slice", { foo: "bar" });
 
         sliceStore.select().take(1).subscribe(slice => {
             expect(slice).to.be.an("Object");
             expect(Object.getOwnPropertyNames(slice)).to.deep.equal(["foo"]);
-            expect(slice.foo).to.equal("bar");
+            expect(slice!.foo).to.equal("bar");
         })
     })
 
     it("should set the initial state for a slice-of-a-slice on the sliced state", done => {
-        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" });
+        const sliceStore = store.createSlice("slice", { foo: "bar" }) as Store<SliceState>;
 
         store.select(s => s, true).skip(1).subscribe(s => {
             if (!s.slice || !s.slice.slice) {
@@ -74,11 +74,6 @@ describe("initial state setting", () => {
 
     it("should not allow non-plain objects for the slice store as initialState", () => {
         expect(() => genericStore.createSlice("value", new Foo())).to.throw();
-    })
-
-    it("should not allow non-plain objects for the slice store as cleanupState", () => {
-        // we have to trick TypeScript compiler for this test
-        expect(() => genericStore.createSlice<SliceState>("value", undefined, <SliceState>new Foo())).to.throw();
     })
 
     it("should allow primitive types, plain object and array as initial state for root store creation", () => {
@@ -106,12 +101,6 @@ describe("initial state setting", () => {
     it("should allow primitive types, plain object and array as cleanup state for slice store creation", () => {
         expect(() => genericStore.createSlice("value", undefined, null)).not.to.throw();
         expect(() => genericStore.createSlice("value", undefined, undefined)).not.to.throw();
-        expect(() => genericStore.createSlice("value", undefined, "foobar")).not.to.throw();
-        expect(() => genericStore.createSlice("value", undefined, 5)).not.to.throw();
-        expect(() => genericStore.createSlice("value", undefined, false)).not.to.throw();
-        expect(() => genericStore.createSlice("value", undefined, {})).not.to.throw();
-        expect(() => genericStore.createSlice("value", undefined, [])).not.to.throw();
-        expect(() => genericStore.createSlice("value", undefined, Symbol())).not.to.throw();
     })
 
     it("does not clone the initialState object when creating the root store, so changes to it can be noticed outside the store", done => {
@@ -162,7 +151,7 @@ describe("initial state setting", () => {
 
         let currentStore = rootStore;
         Observable.range(1, nestingLevel).subscribe(n => {
-            const nestedStore = currentStore.createSlice<SliceState>("slice", { foo: n.toString() });
+            const nestedStore = currentStore.createSlice("slice", { foo: n.toString() }) as Store<SliceState>;
             nestedStore.select().take(1).subscribe(state => {
                 expect(state.foo).to.equal(n.toString());
             });
@@ -185,17 +174,17 @@ describe("initial state setting", () => {
     });
 
     it("should not overwrite an initial state on the slice if the slice key already has a value", done => {
-        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" });
+        const sliceStore = store.createSlice("slice", { foo: "bar" });
         sliceStore.destroy();
-        const sliceStore2 = store.createSlice<SliceState>("slice", { foo: "different" });
+        const sliceStore2 = store.createSlice("slice", { foo: "different" });
         sliceStore2.select().subscribe(state => {
-            expect(state.foo).to.equal("bar");
+            expect(state!.foo).to.equal("bar");
             done();
         })
     })
 
     it("should set the state to the cleanup value undefined but keep the property on the object, when the slice store is destroyed for case 'undefined'", done => {
-        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, "undefined");
+        const sliceStore = store.createSlice("slice", { foo: "bar" }, "undefined");
         sliceStore.destroy();
 
         store.select().subscribe(state => {
@@ -206,7 +195,7 @@ describe("initial state setting", () => {
     })
 
     it("should remove the slice property on parent state altogether when the slice store is destroyed for case 'delete'", done => {
-        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, "delete");
+        const sliceStore = store.createSlice("slice", { foo: "bar" }, "delete");
         sliceStore.destroy();
 
         store.select().subscribe(state => {
@@ -217,7 +206,7 @@ describe("initial state setting", () => {
     })
 
     it("should set the state to the cleanup value when the slice store is unsubscribed for case null", done => {
-        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, null);
+        const sliceStore = store.createSlice("slice", { foo: "bar" }, null);
         sliceStore.destroy();
 
         store.select().subscribe(state => {
@@ -227,7 +216,7 @@ describe("initial state setting", () => {
     })
 
     it("should set the state to the cleanup value when the slice store is unsubscribed for case any object", done => {
-        const sliceStore = store.createSlice<SliceState>("slice", { foo: "bar" }, { foo: "baz" });
+        const sliceStore = store.createSlice("slice", { foo: "bar" }, { foo: "baz" });
         sliceStore.destroy();
 
         store.select().subscribe(state => {

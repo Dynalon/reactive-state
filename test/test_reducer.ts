@@ -52,7 +52,7 @@ describe("Reducer tests", () => {
     it("should not invoke reducers which have been unsubscribed", done => {
         const incrementAction = new Action<number>();
         const subscription = store.addReducer(incrementAction, (state, payload) => {
-            return { ...state, counter: state.counter + payload }
+            return { ...state, counter: state.counter + payload }
         });
 
         store.select().skip(1).toArray().subscribe(states => {
@@ -92,7 +92,7 @@ describe("Reducer tests", () => {
 
         let currentStore = rootStore;
         Observable.range(1, nestingLevel).subscribe(n => {
-            const nestedStore = currentStore.createSlice<SliceState>("slice", { foo: "" });
+            const nestedStore = currentStore.createSlice("slice", { foo: "" }) as Store<SliceState>;
 
             const nAsString = n.toString();
             const fooAction = new Action<string>();
