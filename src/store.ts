@@ -25,8 +25,8 @@ import { refCount } from "rxjs/operators/refCount";
 
 import { empty } from "rxjs/observable/empty";
 
-// TODO: We currently do not allow Symbol properties on the root state. This types assets als properties
-// of the objects are strings (numbers get transformed to strings anyway)
+// TODO: We currently do not allow Symbol properties on the root state. This types asserts that all properties
+// on the state object are strings (numbers get transformed to strings anyway)
 export type SObject = { [key: string]: any };
 
 /**
@@ -55,7 +55,7 @@ function createState<S>(stateMutators: Observable<StateMutation<S>>, initialStat
 export class Store<S> {
 
     /**
-     * Observable that indicated when the stored was destroyed using the .destroy() function.
+     * Observable that emits when the store was destroyed using the .destroy() function.
      */
     public readonly destroyed: Observable<void>;
 
@@ -150,9 +150,8 @@ export class Store<S> {
             throw new Error("cleanupState must be a plain object, an array, or a primitive type");
 
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
-        const state: Observable<S[K]> = this.state.pipe(map((s: SObject) => <S[K]>s[key]));
+        const state: Observable<S[K]> = this.state.pipe(map(state => state[key]));
         const keyChain = [...this.keyChain, key];
-
 
         if (initialState !== undefined) {
             const setInitialStateOnSliceIfPropertyIsNotSet = (s: S) => {
@@ -300,7 +299,7 @@ export class Store<S> {
      *
      * Note: While the observable-based actions
      * dispatches only reducers registered for that slice, the string based action dispatch here will forward the
-     * action to ALL stores, (sub-)slice and parent alike so make sure you separater your actions based on the strings.
+     * action to ALL stores, (sub-)slice and parent alike so make sure you separate your actions based on the strings.
      */
     public dispatch<P>(actionName: string, actionPayload: P) {
         this.actionDispatch.next({ actionName, actionPayload });
