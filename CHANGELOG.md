@@ -1,4 +1,4 @@
-v1.0.0 (unreleased)
+v1.0.0
 
 * Fix type-inference for .createSlice() - this breaks existing code (just remove the type argument from
   .createSlice() to fix). Contributed by Sebastian Nemeth.
