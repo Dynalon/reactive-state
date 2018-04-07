@@ -4,7 +4,7 @@
         "sourceMap": true,
         "declaration": false,
         "module": "commonjs",
-        "strict": true,
+        "strict": false,
         "noImplicitAny": false,
         "noUnusedLocals": true,
         "lib": [ "dom", "es2015" ]

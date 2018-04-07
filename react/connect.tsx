@@ -29,12 +29,12 @@ export function connect<TOriginalProps, TAppState>(
     }
 
     const { actionMap, store, mapStateToProps } = options;
-    type ComponentProps = TOriginalProps & ConnectOptions<TAppState, TOriginalProps>;
+    type ComponentProps = Partial<TOriginalProps> & ConnectOptions<TAppState, TOriginalProps>;
 
     return class ConnectedComponent extends React.Component<ComponentProps, object> {
 
-        private subscription: Subscription
-        private actionProps: Partial<TOriginalProps>;
+        private subscription?: Subscription
+        private actionProps?: Partial<TOriginalProps>;
 
         constructor(props: ComponentProps, context: any) {
             super(props, context);
@@ -60,7 +60,7 @@ export function connect<TOriginalProps, TAppState>(
         }
 
         componentWillUnmount() {
-            this.subscription.unsubscribe()
+            this.subscription!.unsubscribe()
         }
 
         render() {

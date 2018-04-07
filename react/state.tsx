@@ -32,7 +32,7 @@ export function unpackToState<TComponentState extends {}>(
         if (typeof observable.subscribe !== "function") {
             throw new Error(`Could not map non-observable for property ${key}`)
         }
-        subscriptions.add(bindToState(component, observable, key));
+        subscriptions.add(bindToState(component, observable!, key));
     }
     return subscriptions;
 }
@@ -43,7 +43,7 @@ export function mapToState<T, TComponentState, TComponentProps>(
     setStateFn: (item: T, prevState: TComponentState, props: TComponentProps) => TComponentState
 ): Subscription {
 
-    return source.subscribe(item => {
+    return source.subscribe((item: T) => {
         component.setState((prevState: TComponentState, props: TComponentProps) => {
             return setStateFn(item, prevState, props);
         })
@@ -60,7 +60,7 @@ export function bindToState<T, TState extends object>(
     source: Observable<T>,
     stateKey: keyof TState
 ): Subscription {
-    const subscription = source.subscribe(item => {
+    const subscription = source.subscribe((item: T) => {
         const patch = { [stateKey]: item };
         // TODO eliminate any
         component.setState((prevState: any) => ({ ...prevState, ...patch }))

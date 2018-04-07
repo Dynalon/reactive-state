@@ -3,6 +3,7 @@ import { Store, notifyOnStateChange } from "./store";
 import { Subject } from "rxjs/Subject";
 
 import { take } from "rxjs/operators/take"
+import { StateChangeNotification } from "./types";
 
 /* istanbul ignore next */
 
@@ -28,8 +29,8 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     const reduxToReactiveSync = new Subject<S>();
     const reactiveStateUpdate = new Subject<any>();
 
-    store.select(s => s, true).pipe(take(1)).subscribe(initialState => {
-        let currentState: S = initialState;
+    // TODO: initialState: S should be auto-infered, maybe a bug in TS or RxJS?
+    store.select(s => s, true).pipe(take(1)).subscribe((initialState: S) => {
 
         const enhancer: StoreEnhancer<S> = (next) => {
             return (reducer, preloadedState) => {
@@ -43,8 +44,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
                     reduxToReactiveSync.next(reduxState);
                 })
 
-                reactiveStateUpdate.subscribe(p => {
-                    currentState = p.state;
+                reactiveStateUpdate.subscribe((p: any) => {
                     reduxStore.dispatch({ type: p.actionName, payload: p.payload, state: p.state });
                 });
                 return reduxStore;
@@ -69,14 +69,14 @@ export function enableDevTool<S extends object>(store: Store<S>) {
         }
 
         createStore(
-            reduxReducer,
+            reduxReducer as any,
             initialState,
             compose(enhancer, devtoolExtension)
         );
     });
 
 
-    notifyOnStateChange(store).subscribe(notification => {
+    notifyOnStateChange(store).subscribe((notification: StateChangeNotification<S>) => {
         const { actionName, actionPayload, rootState } = notification;
         if (actionName !== "__INTERNAL_SYNC")
             reactiveStateUpdate.next({ actionName: actionName || "UNNAMED", payload: actionPayload, state: rootState });
