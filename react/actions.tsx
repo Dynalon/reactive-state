@@ -25,16 +25,17 @@ export function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOrigin
     const actionProps: any = {};
     for (let ownProp in actionMap) {
         const field = actionMap[ownProp];
+        const observerField = field as Observer<any>;
 
         if (field === undefined) continue;
 
         if (typeof field === "function") {
-            let func = (actionMap as any)[ownProp];
+            let func = actionMap[ownProp];
             actionProps[ownProp] = func;
         }
-        // check if its an observable
-        else if (typeof field.next === "function") {
-            actionProps[ownProp] = (arg1: any, ...args: any[]) => field.next(arg1);
+        // check if its an observable - TODO typeguard?
+        else if (typeof observerField.next === "function") {
+            actionProps[ownProp] = (arg1: any, ...args: any[]) => observerField.next(arg1);
         }
     }
     return actionProps;

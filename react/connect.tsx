@@ -1,91 +1,87 @@
 import * as React from "react";
-import { Subscription } from "rxjs/Subscription";
+import * as PropTypes from "prop-types";
+import { Subscription } from "rxjs/Subscription";
 import { Store } from "../src/store";
 
-import { ActionMap, assembleActionProps } from "./actions";
+import { ActionMap, assembleActionProps } from "./actions";
 
 // if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
 // that do not correspond to any component prop)
 export type MapStateToProps<S, P> = (state: S) => Partial<P>;
 
-export interface ConnectOptions<TState, TProps> {
-    store?: Store<TState>;
-    actionMap?: ActionMap<TProps>;
-    mapStateToProps?: MapStateToProps<TState, TProps>
+// TODO better naming
+export interface ConnectResult<S, P, N = S> {
+    mapStateToProps: MapStateToProps<N, P>;
+    actionMap: ActionMap<P>;
+    store: Store<N>;
+    cleanupSubscription?: Subscription;
 }
+
+export type ConnectCallback<S, P, N> = (store: Store<S>) => ConnectResult<S, P, N>;
 
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
- * Note that all props of the original component will become optional props (their value may be undefined).
+ * TODO: Use TS Extract<> type here to remove props from TOriginalProps of the resulting component?
  */
-export function connect<TOriginalProps, TAppState>(
+export function connect<TOriginalProps, TAppState extends {}, TSliceState>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
-    options?: ConnectOptions<TAppState, TOriginalProps>,
-): React.ComponentClass<Partial<TOriginalProps> & ConnectOptions<TAppState, TOriginalProps>> {
+    connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TSliceState>
+) {
+    return class ConnectedComponent extends React.Component<Partial<TOriginalProps>, object> {
 
-    if (!options) {
-        options = {};
-    }
+        subscription: Subscription = new Subscription();
+        actionProps: Partial<TOriginalProps> = {};
 
-    const { actionMap, store, mapStateToProps } = options;
-    type ComponentProps = Partial<TOriginalProps> & ConnectOptions<TAppState, TOriginalProps>;
+        static contextTypes = {
+            reactiveStateStore: PropTypes.any
+        }
 
-    return class ConnectedComponent extends React.Component<ComponentProps, object> {
-
-        private subscription?: Subscription
-        private actionProps?: Partial<TOriginalProps>;
-
-        constructor(props: ComponentProps, context: any) {
+        constructor(props: TOriginalProps, context: any) {
             super(props, context);
         }
 
         componentWillMount() {
-            if (!!this.props.store && !!store) {
+            const store = this.context.reactiveStateStore as Store<TAppState>;
+            if (!store) {
                 throw new Error("Connected component with late-bound store must be passed a store reference as prop");
             }
-            const boundStore = (this.props.store || store) as Store<TAppState>;
+            const result = connectCallback(store);
 
-            const empty = (state: any) => ({});
-            const boundMapStateToProps = (
-                this.props.mapStateToProps || mapStateToProps || empty
-            ) as MapStateToProps<TAppState, TOriginalProps>;
+            if (result.actionMap) {
+                this.actionProps = assembleActionProps(result.actionMap);
+            }
 
-            const boundActionMap = (this.props.actionMap || actionMap || {}) as ActionMap<TOriginalProps>;
-            this.actionProps = assembleActionProps(boundActionMap);
+            if (result.mapStateToProps) {
+                this.subscription.add(result.store.select().subscribe(state => {
+                    this.setState((prevState, props) => result.mapStateToProps(state))
+                }))
+            }
 
-            this.subscription = boundStore.select().subscribe(state => {
-                this.setState((prevState, props) => boundMapStateToProps(state))
-            })
+            if (result.cleanupSubscription) {
+                this.subscription.add(result.cleanupSubscription);
+            }
         }
 
         componentWillUnmount() {
-            this.subscription!.unsubscribe()
+            this.subscription.unsubscribe()
         }
 
         render() {
-            return <ComponentToConnect {...this.props} {...this.state } { ...this.actionProps } />
+            return <div><ComponentToConnect {...this.props} {...this.state} {...this.actionProps} /></div>
         }
     }
 }
 
-// TODO decide if this should be exported/public api or removed at all?
-export const connectComponent = <TState, TProps>(
-    Comp: React.ComponentType<TProps>,
-    store?: Store<TState> | ConnectOptions<TState, TProps>,
-    mapStateToProps?: MapStateToProps<TState, TProps>,
-    actionMap?: ActionMap<TProps>
-) => {
-    return (props: TProps & ConnectOptions<TState, TProps>) => {
-        let connectProps: ConnectOptions<TState, TProps> = {};
-        if (store && store instanceof Store) {
-            connectProps = { store, mapStateToProps, actionMap };
-        } else if (store) {
-            connectProps = store;
-        } else {
-            throw new Error("second argument must be a store or options object");
+export function withStore<TAppState, TComponentProps extends {  store?: Store<TAppState> }>(Component: React.ComponentType<TComponentProps>) {
+    return class extends React.Component<TComponentProps, {}> {
+        static contextTypes = {
+            reactiveStateStore: PropTypes.any
         }
-        const Wrapped = connect(Comp, connectProps);
-        return <Wrapped {...props as any} />
+
+        render() {
+            // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
+            return <Component { ...this.props} store={this.context.reactiveStateStore} />
+        }
     }
 }

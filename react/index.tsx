@@ -1,5 +1,6 @@
 import { ActionFunction, ActionMap } from './actions';
-import { connect, connectComponent, MapStateToProps } from './connect';
+import { connect, MapStateToProps, withStore } from './connect';
+import { StoreProvider } from './provider'
 import { UnpackMap, mapToState, bindToState, unpackToState } from './state';
 
 export {
@@ -16,5 +17,7 @@ export {
     // connect
     MapStateToProps,
     connect,
-    connectComponent,
+
+    StoreProvider,
+    withStore
 }
