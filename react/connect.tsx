@@ -73,15 +73,15 @@ export function connect<TOriginalProps, TAppState extends {}, TSliceState>(
     }
 }
 
-export function withStore<TAppState, TComponentProps extends {  store?: Store<TAppState> }>(Component: React.ComponentType<TComponentProps>) {
-    return class extends React.Component<TComponentProps, {}> {
+export function withStore<S, P>(fn: (store: Store<S>) => JSX.Element) {
+    return class extends React.Component<Exclude<P, { store: Store<S> }>, {}> {
         static contextTypes = {
             reactiveStateStore: PropTypes.any
         }
 
         render() {
             // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
-            return <Component { ...this.props} store={this.context.reactiveStateStore} />
+            return fn(this.context.reactiveStateStore);
         }
     }
 }
