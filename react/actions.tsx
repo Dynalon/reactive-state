@@ -1,5 +1,4 @@
-import { Observer } from 'rxjs/Observer';
-import { Observable } from 'rxjs/Observable';
+import { Observer, Observable } from 'rxjs';
 
 // This will be a function that dispatches actions, but should not return anything
 export type ActionFunction = (...args: any[]) => any;

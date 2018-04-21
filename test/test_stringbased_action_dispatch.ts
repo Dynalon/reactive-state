@@ -2,7 +2,7 @@ import "mocha";
 import { expect } from "chai";
 import { Store, Action, Reducer } from "../src/index";
 import { CounterState } from "./test_common_types";
-import { Subject } from "rxjs/Rx";
+import { Subject } from "rxjs";
 
 describe("String based action dispatch", () => {
 

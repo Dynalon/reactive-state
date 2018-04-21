@@ -1,6 +1,7 @@
 import "mocha";
 import { expect } from "chai";
-import { Observable } from "rxjs/Rx";
+import { of, range } from "rxjs";
+import { take, toArray, skip } from "rxjs/operators"
 
 import { Action, Reducer, Store } from "../src/index";
 import { CounterState, SliceState } from "./test_common_types";
@@ -26,7 +27,7 @@ describe("Reducer tests", () => {
         const addReducer = (state, n) => state + n;
         slice.addReducer(addAction, addReducer);
 
-        slice.select().take(2).toArray().subscribe(s => {
+        slice.select().pipe(take(2), toArray()).subscribe(s => {
             expect(s).to.deep.equal([0, 1]);
             done();
         })
@@ -37,10 +38,10 @@ describe("Reducer tests", () => {
 
     it("should be possible to add a reducer with an Observable as action", done => {
         // Note: type arguments not expressed on purpose for this test!
-        const addAction = Observable.of(1);
+        const addAction = of(1);
         const addReducer: Reducer<number, number> = (state, n) => state + n;
 
-        slice.select().take(2).toArray().subscribe(s => {
+        slice.select().pipe(take(2), toArray()).subscribe(s => {
             expect(s).to.deep.equal([0, 1]);
             done();
         });
@@ -55,7 +56,7 @@ describe("Reducer tests", () => {
             return { ...state, counter: state.counter + payload }
         });
 
-        store.select().skip(1).toArray().subscribe(states => {
+        store.select().pipe(skip(1), toArray()).subscribe(states => {
             expect(states[0].counter).to.equal(1)
             expect(states.length).to.equal(1);
             done();
@@ -73,7 +74,7 @@ describe("Reducer tests", () => {
         const incrementReducer: Reducer<number> = (state) => state + 1;
         const incrementAction = new Action<void>();
         slice.addReducer(incrementAction, incrementReducer);
-        slice.select().skip(1).subscribe(n => {
+        slice.select().pipe(skip(1)).subscribe(n => {
             expect(n).to.equal(1);
             done();
         });
@@ -91,14 +92,14 @@ describe("Reducer tests", () => {
         }
 
         let currentStore = rootStore;
-        Observable.range(1, nestingLevel).subscribe(n => {
+        range(1, nestingLevel).subscribe(n => {
             const nestedStore = currentStore.createSlice("slice", { foo: "" }) as Store<SliceState>;
 
             const nAsString = n.toString();
             const fooAction = new Action<string>();
             const fooReducer: Reducer<SliceState, string> = (state, payload) => ({ ...state, foo: payload });
             nestedStore.addReducer(fooAction, fooReducer);
-            nestedStore.select().skip(1).take(1).subscribe(s => {
+            nestedStore.select().pipe(skip(1), take(1)).subscribe(s => {
                 expect(s!.foo).to.equal(nAsString);
                 allDone();
             })

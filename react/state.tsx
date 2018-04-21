@@ -1,5 +1,4 @@
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
+import { Observable, Subscription } from 'rxjs';
 
 /**
  * A map specifying which property on the components state should be populated with the value of the map value (=observable)

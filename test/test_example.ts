@@ -1,5 +1,6 @@
 import "mocha";
-import { Observable } from "rxjs/Rx";
+import { zip } from "rxjs";
+import { map } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
 
 // make sure the example in the README.md actually works and compiles
@@ -116,11 +117,11 @@ export function testComputedValuesExample() {
 
     // create an auto computed observables using RxJS basic operators
 
-    const openTodos = todos.map(todos => todos.filter(t => t.done == false).length);
-    const completedTodos = todos.map(todos => todos.filter(t => t.done == true).length);
+    const openTodos = todos.pipe(map(todos => todos.filter(t => t.done == false).length));
+    const completedTodos = todos.pipe(map(todos => todos.filter(t => t.done == true).length));
 
     // whenever the number of open or completed todos changes, log a message
-    Observable.zip(openTodos, completedTodos)
+    zip(openTodos, completedTodos)
         .subscribe(([open, completed]) => console.log(`I have ${open} open todos and ${completed} completed todos`));
 
     markTodoAsDone.next(0);

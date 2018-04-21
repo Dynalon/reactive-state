@@ -1,6 +1,4 @@
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import { Subscription } from "rxjs/Subscription";
+import { Observable, Subject, Subscription } from "rxjs";
 import {
     StateMutation, StateChangeNotification, RootStateChangeNotification, Reducer,
     CleanupState, NamedObservable, ActionDispatch
@@ -11,19 +9,18 @@ declare var require: any;
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
-// Using this approach saves us from using RxJS path mapping in webpack.config.js
-// See: https://github.com/ReactiveX/rxjs/blob/master/doc/lettable-operators.md#build-and-treeshaking
-import { filter } from "rxjs/operators/filter";
-import { merge } from "rxjs/operators/merge";
-import { scan } from "rxjs/operators/scan";
-import { map } from "rxjs/operators/map";
-import { takeWhile } from "rxjs/operators/takeWhile";
-import { takeUntil } from "rxjs/operators/takeUntil";
-import { distinctUntilChanged } from "rxjs/operators/distinctUntilChanged";
-import { publishReplay } from "rxjs/operators/publishReplay";
-import { refCount } from "rxjs/operators/refCount";
-
-import { empty } from "rxjs/observable/empty";
+import {
+    filter,
+    merge,
+    scan,
+    map,
+    takeWhile,
+    takeUntil,
+    distinctUntilChanged,
+    publishReplay,
+    refCount
+} from "rxjs/operators";
+import { empty } from "rxjs"
 
 // TODO: We currently do not allow Symbol properties on the root state. This types asserts that all properties
 // on the state object are strings (numbers get transformed to strings anyway)

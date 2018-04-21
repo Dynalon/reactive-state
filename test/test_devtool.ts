@@ -1,8 +1,7 @@
 import "mocha";
 import { expect } from "chai";
-import { Subscription } from "rxjs/Rx";
-import { Subject } from "rxjs/Subject";
-import { range } from "rxjs/observable/range";
+import { Subscription, Subject, range, zip } from "rxjs";
+import { take, toArray } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
 import { notifyOnStateChange } from "../src/store"
 import { CounterState } from "./test_common_types";
@@ -123,7 +122,11 @@ describe("Devtool notification tests", () => {
         const counter1 = new Subject<any>();
         const counter2 = new Subject<any>();
         // finish after 100 actions dispatched
-        counter1.zip(counter2).take(N_ACTIONS).toArray().subscribe(() => done());
+
+        zip(counter1, counter2).pipe(
+            take(N_ACTIONS),
+            toArray(),
+        ).subscribe(() => done());
 
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
             expect(rootState.value).to.equal(actionPayload);

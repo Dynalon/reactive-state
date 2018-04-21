@@ -1,6 +1,6 @@
 import "mocha";
 import { expect } from "chai";
-
+import { skip, take, toArray } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
 
 import { CounterState } from "./test_common_types";
@@ -26,7 +26,7 @@ describe("Store .select() tests", () => {
     })
 
     it("should emit a state change on select", done => {
-        store.select().skip(1).take(1).subscribe(state => {
+        store.select().pipe(skip(1), take(1)).subscribe(state => {
             expect(state.counter).to.equal(1);
             done();
         });
@@ -34,7 +34,7 @@ describe("Store .select() tests", () => {
     });
 
     it("should use the identity function as default if no selector function is passed", done => {
-        store.select().skip(1).take(1).subscribe(state => {
+        store.select().pipe(skip(1), take(1)).subscribe(state => {
             expect(state).to.be.an("Object");
             expect(state.counter).not.to.be.undefined;
             done();
@@ -44,7 +44,7 @@ describe("Store .select() tests", () => {
     })
 
     it("should immediately emit the last-emitted (might be initial) state when subscription happens", done => {
-        store.select().take(1).subscribe(state => {
+        store.select().pipe(take(1)).subscribe(state => {
             expect(state.counter).to.equal(0);
             done();
         })
@@ -53,7 +53,7 @@ describe("Store .select() tests", () => {
     it("should emit the last state immediately when selecting", done => {
         incrementAction.next();
 
-        store.select().take(1).subscribe(state => {
+        store.select().pipe(take(1)).subscribe(state => {
             expect(state.counter).to.equal(1);
             done();
         })
@@ -67,7 +67,7 @@ describe("Store .select() tests", () => {
         store.addReducer(dummyAction, state => state);
         store.addReducer(shallowCopyAction, state => ({ ...state }));
 
-        store.select().skip(1).toArray().subscribe(state => {
+        store.select().pipe(skip(1), toArray()).subscribe(state => {
             expect(state.length).to.equal(1);
             expect(state[0]).not.to.equal(initialState);
             done();
@@ -77,6 +77,4 @@ describe("Store .select() tests", () => {
         shallowCopyAction.next(undefined);
         store.destroy();
     })
-
-
 })
