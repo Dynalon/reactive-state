@@ -40,11 +40,14 @@ export function enableDevTool<S extends object>(store: Store<S>) {
 
                 // write back the state from DevTools/Redux to our ReactiveState
                 reduxStore.subscribe(() => {
-                    const reduxState = reduxStore.getState();
-                    reduxToReactiveSync.next(reduxState);
+                    // const reduxState = reduxStore.getState();
+                    // console.info("RDX UPD STATE: ", reduxState)
+                    // console.info("JUMP/SKIP not supported, do not use or you get undefined behaviour!")
+                    // reduxToReactiveSync.next(reduxState);
                 })
 
                 reactiveStateUpdate.subscribe((p: any) => {
+                    // console.info("RDX DISP", p)
                     reduxStore.dispatch({ type: p.actionName, payload: p.payload, state: p.state });
                 });
                 return reduxStore;
@@ -77,12 +80,14 @@ export function enableDevTool<S extends object>(store: Store<S>) {
 
 
     notifyOnStateChange(store).subscribe((notification: StateChangeNotification<S>) => {
+        // console.info("CH NOTI: ", notification)
         const { actionName, actionPayload, rootState } = notification;
         if (actionName !== "__INTERNAL_SYNC")
             reactiveStateUpdate.next({ actionName: actionName || "UNNAMED", payload: actionPayload, state: rootState });
     })
 
     const syncReducer = (state: S, payload: any) => {
+        // console.info("RDX STATE AS PAYLOAD", state, payload)
         return { ...payload };
     };
     store.addReducer(reduxToReactiveSync, syncReducer, "__INTERNAL_SYNC");
