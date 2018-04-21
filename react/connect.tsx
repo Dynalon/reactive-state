@@ -12,9 +12,9 @@ export type MapStateToProps<S, P> = (state: S) => Partial<P>;
 
 // TODO better naming
 export interface ConnectResult<S, P, N = S> {
-    mapStateToProps: MapStateToProps<N, P>;
-    actionMap: ActionMap<P>;
-    store: Store<N>;
+    mapStateToProps?: MapStateToProps<N, P>;
+    actionMap?: ActionMap<P>;
+    store?: Store<N>;
     cleanupSubscription?: Subscription;
 }
 
@@ -48,13 +48,18 @@ export function connect<TOriginalProps, TAppState extends {}, TSliceState>(
             }
             const result = connectCallback(store);
 
+            if (!result.store) {
+                // if no store is returned, no slice was created and we use the original one
+                result.store = store as Store<any>;
+            }
+
             if (result.actionMap) {
                 this.actionProps = assembleActionProps(result.actionMap);
             }
 
             if (result.mapStateToProps) {
                 this.subscription.add(result.store.select().subscribe(state => {
-                    this.setState((prevState, props) => result.mapStateToProps(state))
+                    this.setState((prevState, props) => result.mapStateToProps!(state))
                 }))
             }
 
