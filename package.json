@@ -13,6 +13,7 @@
     "react/**/*.d.ts"
   ],
   "types": "src/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "build": "tsc && npm run bundle",
     "build-tests": "tsc -p test",
