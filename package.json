@@ -47,7 +47,6 @@
   "homepage": "https://github.com/Dynalon/reactive-state",
   "devDependencies": {
     "@types/chai": "^3.5.2",
-    "@types/lodash.isarray": "^4.0.3",
     "@types/lodash.isobject": "^3.0.3",
     "@types/lodash.isplainobject": "^4.0.3",
     "@types/mocha": "^2.2.41",
