@@ -11,10 +11,10 @@ import { ActionMap, assembleActionProps } from "./actions";
 export type MapStateToProps<S, P> = (state: S) => Partial<P>;
 
 // TODO better naming
-export interface ConnectResult<S, P, N = S> {
-    mapStateToProps?: MapStateToProps<N, P>;
-    actionMap?: ActionMap<P>;
-    store?: Store<N>;
+export interface ConnectResult<TAppState, TOriginalProps, TSliceState = TAppState> {
+    mapStateToProps?: MapStateToProps<TSliceState, TOriginalProps>;
+    actionMap?: ActionMap<TOriginalProps>;
+    store?: Store<TSliceState>;
     cleanupSubscription?: Subscription;
 }
 
@@ -46,7 +46,7 @@ export function connect<TOriginalProps, TAppState extends {}, TSliceState>(
             if (!store) {
                 throw new Error("Connected component with late-bound store must be passed a store reference as prop");
             }
-            const result = connectCallback(store) || {};
+            const result = connectCallback ? connectCallback(store) : {};
 
             if (!result.store) {
                 // if no store is returned, no slice was created and we use the original one
