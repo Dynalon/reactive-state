@@ -20,7 +20,7 @@ import {
     publishReplay,
     refCount
 } from "rxjs/operators";
-import { empty } from "rxjs"
+import { EMPTY } from "rxjs"
 
 // TODO: We currently do not allow Symbol properties on the root state. This types asserts that all properties
 // on the state object are strings (numbers get transformed to strings anyway)
@@ -208,7 +208,7 @@ export class Store<S> {
             takeUntil(this.destroyed),
             filter(s => s.actionName === name),
             map(s => s.actionPayload),
-            merge(typeof action !== "string" ? action : empty())
+            merge(typeof action !== "string" ? action : EMPTY)
         )
 
         const rootReducer: RootReducer<S, P> = (payload: P) => (rootState) => {
