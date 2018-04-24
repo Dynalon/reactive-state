@@ -17,7 +17,7 @@ Features
   * no need for selector libraries like MobX or Reselect, RxJS already ships it
   * single, application-wide Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and state separation
   * Strictly typed to find errors during compile time
-  * Heavily tested, 70+ tests for ~150 lines of code
+  * Heavily tested, 70+ tests for ~400 lines of code
   * React bridge (like `react-redux`) included, though using React is not mandatory
   * Support for React-Devtool Extension (not all features supported, work in progress)
 
