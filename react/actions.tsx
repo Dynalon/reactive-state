@@ -1,10 +1,10 @@
 import { Observer, Observable } from 'rxjs';
-
+import { ExtractProps } from "./connect";
 // This will be a function that dispatches actions, but should not return anything
 export type ActionFunction = (...args: any[]) => any;
 
-export type ActionMap<TProps> = {
-    [P in keyof TProps]?: ActionFunction | Observer<any>
+export type ActionMap<TComponentOrProps> = {
+    [P in keyof ExtractProps<TComponentOrProps>]?: ActionFunction | Observer<any>
 }
 
 /**
