@@ -1,3 +1,9 @@
+v2.0.0 (unreleased)
+
+* Complete change of react connect() API: usage of Components as wrapper now discouraged, everything can be wired inside a
+  single function now
+* Very strict typing of MapStateToProps and ActionMap types using TypeScript 2.8 conditional types
+
 v1.0.0
 
 * Fix type-inference for .createSlice() - this breaks existing code (just remove the type argument from
