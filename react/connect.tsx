@@ -7,7 +7,7 @@ import { ActionMap, assembleActionProps } from "./actions";
 
 // Allows to get the props of a component, or pass the props themselves.
 // See: https://stackoverflow.com/questions/50084643/typescript-conditional-types-extract-component-props-type-from-react-component/50084862#50084862
-export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.ComponentType<infer TProps> ? TProps : TComponentOrTProps;
+export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.Component<infer TProps, any> ? TProps : TComponentOrTProps;
 
 // if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
