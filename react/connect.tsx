@@ -12,7 +12,7 @@ export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.
 // if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
 // that do not correspond to any component prop)
-export type MapStateToProps<S, TComponentOrProps> = (state: S) => Partial<ExtractProps<TComponentOrProps>> | undefined | void;
+export type MapStateToProps<S, TComponentOrProps> = (state: S) => Partial<ExtractProps<TComponentOrProps>> |  undefined | void;
 
 // TODO better naming
 export interface ConnectResult<TAppState, TOriginalProps, TSliceState = TAppState> {
@@ -35,14 +35,10 @@ export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceS
     ComponentToConnect: React.ComponentType<TOriginalProps>,
     connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TSliceState>
 ) {
-    return class ConnectedComponent extends React.Component<Partial<TOriginalProps>, ConnectState> {
+    const klass = class ConnectedComponent extends React.Component<Partial<TOriginalProps>, ConnectState> {
 
         subscription: Subscription = new Subscription();
         actionProps: Partial<TOriginalProps> = {};
-
-        static contextTypes = {
-            reactiveStateStore: PropTypes.any
-        }
 
         constructor(props: TOriginalProps, context: any) {
             super(props, context);
@@ -93,8 +89,15 @@ export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceS
                 <ComponentToConnect {...this.state.connectedProps} {...this.actionProps} {...this.state.originalProps} />
             </div>
         }
+    };
 
+    // Note: While we could declare this as a static field in the class, the typescript code generation will confuse
+    // our code coverage tool and show an uncovered line :(
+    (klass as any).contextTypes = {
+        reactiveStateStore: PropTypes.any
     }
+
+    return klass;
 }
 
 // TODO decide what to keep

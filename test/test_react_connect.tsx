@@ -3,8 +3,8 @@ import "mocha";
 import { expect } from "chai";
 
 import { Subject, Subscription } from "rxjs";
-import { map, take } from "rxjs/operators";
-import { Action, Store, Reducer } from "../src/index";
+import { take } from "rxjs/operators";
+import { Store } from "../src/index";
 import { connect, ConnectResult, MapStateToProps, StoreProvider, ActionMap } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
@@ -49,7 +49,7 @@ function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, 
     })
 }
 
-describe("connect() tests", () => {
+describe("react bridge: connect() tests", () => {
 
     let store: Store<TestState>;
     let mount: (elem: JSX.Element) => Enzyme.ReactWrapper<any, any>;
@@ -144,7 +144,6 @@ describe("connect() tests", () => {
         ConnectedTestComponent = getConnectedComponent({ mapStateToProps });
         const onClick = () => done();
         const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
-        const textMessage = wrapper.find("h1").text();
         wrapper.find("button").simulate("click");
     })
 
@@ -155,7 +154,19 @@ describe("connect() tests", () => {
         ConnectedTestComponent = getConnectedComponent({ mapStateToProps });
         const onClick = () => done();
         const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
-        const textMessage = wrapper.find("h1").text();
+        wrapper.find("button").simulate("click");
+    })
+
+    it("should allow an observer in an actionMap", done => {
+        const onClick = new Subject<void>();
+        console.info(typeof onClick)
+        console.info(typeof onClick.next)
+        const actionMap: ActionMap<TestComponent> = {
+            onClick
+        };
+        onClick.subscribe(() => done());
+        ConnectedTestComponent = getConnectedComponent({ actionMap, mapStateToProps: undefined });
+        const wrapper = mount(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
     })
 
@@ -168,6 +179,17 @@ describe("connect() tests", () => {
         wrapper.find("button").simulate("click");
     })
 
+    it("should throw an error for invalid entries in the action map", () => {
+        const actionMap: ActionMap<TestComponent> = {
+            onClick: (5 as any)
+        };
+        expect(() => {
+            ConnectedTestComponent = getConnectedComponent({ actionMap, mapStateToProps: undefined });
+            const wrapper = mount(<ConnectedTestComponent />);
+            wrapper.find("button").simulate("click");
+        }).to.throw();
+    })
+
     it("should allow undefined fields in an actionMap to ignore callbacks", done => {
         const actionMap: ActionMap<TestComponent> = {
             onClick: undefined
@@ -178,6 +200,4 @@ describe("connect() tests", () => {
         wrapper.find("button").simulate("click");
         wrapper.unmount();
     })
-
-
 })

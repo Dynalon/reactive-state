@@ -1,5 +1,5 @@
-import { Observer, Observable } from 'rxjs';
-import { ExtractProps } from "./connect";
+import { Observer, Observable } from 'rxjs';
+import { ExtractProps } from "./connect";
 
 // Taken from the TypeScript docs, allows to extract all functions of a type
 export type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
@@ -45,6 +45,8 @@ export function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOrigin
         // check if its an observable - TODO typeguard?
         else if (typeof observerField.next === "function") {
             actionProps[ownProp] = (arg1: any, ...args: any[]) => observerField.next(arg1);
+        } else {
+            throw new Error(`unknown property value for property named "${ownProp}" in action map. Expected function or Observer`)
         }
     }
     return actionProps;

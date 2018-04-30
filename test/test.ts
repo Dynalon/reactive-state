@@ -8,7 +8,7 @@ import "./test_slicing";
 import "./test_stringbased_action_dispatch";
 import "./test_getnestedproperty";
 
-import "./test_react";
+import "./test_react_connect";
 
 // Uncomment for testing the README.md example or other doc examples
 // import "./test_example";
