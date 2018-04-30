@@ -18,21 +18,24 @@ export type MapStateToProps<S, TComponentOrProps> = (state: S) => Partial<Extrac
 export interface ConnectResult<TAppState, TOriginalProps, TSliceState = TAppState> {
     mapStateToProps?: MapStateToProps<TSliceState, TOriginalProps>;
     actionMap?: ActionMap<TOriginalProps>;
-    store?: Store<TSliceState>;
     cleanupSubscription?: Subscription;
 }
 
 export type ConnectCallback<S, P, N> = (store: Store<S>) => ConnectResult<S, P, N>;
 
+export interface ConnectState {
+    originalProps: object;
+    connectedProps: object;
+}
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
  * TODO: Use TS Extract<> type here to remove props from TOriginalProps of the resulting component?
  */
-export function connect<TOriginalProps, TAppState extends {}, TSliceState>(
+export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceState>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
     connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TSliceState>
 ) {
-    return class ConnectedComponent extends React.Component<Partial<TOriginalProps>, object> {
+    return class ConnectedComponent extends React.Component<Partial<TOriginalProps>, ConnectState> {
 
         subscription: Subscription = new Subscription();
         actionProps: Partial<TOriginalProps> = {};
@@ -46,30 +49,34 @@ export function connect<TOriginalProps, TAppState extends {}, TSliceState>(
         }
 
         componentWillMount() {
+            this.setState((prevState) => ({ ...prevState, originalProps: this.props }));
+
             const store = this.context.reactiveStateStore as Store<TAppState>;
-            if (!store) {
-                throw new Error("Connected component with late-bound store must be passed a store reference as prop");
-            }
-            const result = connectCallback ? connectCallback(store) : {};
 
-            if (!result.store) {
-                // if no store is returned, no slice was created and we use the original one
-                result.store = store as Store<any>;
+            if (store) {
+                const result = connectCallback ? connectCallback(store) : {};
+                if (result.actionMap) {
+                    this.actionProps = assembleActionProps(result.actionMap);
+                }
+                if (result.mapStateToProps) {
+                    this.subscription.add(store.select().subscribe(state => {
+                        this.setState((prevState) => {
+                            const connectedProps: object = result.mapStateToProps!(state as any) || {};
+                            return {
+                                ...prevState,
+                                connectedProps,
+                            }
+                        });
+                    }))
+                }
+                if (result.cleanupSubscription) {
+                    this.subscription.add(result.cleanupSubscription);
+                }
             }
+        }
 
-            if (result.actionMap) {
-                this.actionProps = assembleActionProps(result.actionMap);
-            }
-
-            if (result.mapStateToProps) {
-                this.subscription.add(result.store.select().subscribe(state => {
-                    this.setState((prevState, props) => result.mapStateToProps!(state))
-                }))
-            }
-
-            if (result.cleanupSubscription) {
-                this.subscription.add(result.cleanupSubscription);
-            }
+        componentDidUpdate() {
+            this.setState((prevState) => ({ ...prevState, originalProps: this.props }))
         }
 
         componentWillUnmount() {
@@ -77,7 +84,9 @@ export function connect<TOriginalProps, TAppState extends {}, TSliceState>(
         }
 
         render() {
-            return <div><ComponentToConnect {...this.props} {...this.state} {...this.actionProps} /></div>
+            return <div>
+                <ComponentToConnect {...this.state.connectedProps} {...this.actionProps} {...this.state.originalProps} />
+            </div>
         }
     }
 }
@@ -96,15 +105,15 @@ export function withStoreAlternate<S, P>(fn: (store: Store<S>) => JSX.Element) {
     }
 }
 
-export function withStore<S, P extends { store: Store<S> }>(OriginalComponent: React.ComponentType<P>) {
-    return class extends React.Component<P,  {}> {
+export function withStore<S, P extends { store: Store<S> }>(OriginalComponent: React.ComponentType<P>) {
+    return class extends React.Component<P, {}> {
         static contextTypes = {
             reactiveStateStore: PropTypes.any
         }
 
         render() {
             // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
-            return <OriginalComponent store={this.context.reactiveStateStore} { ...this.props } />
+            return <OriginalComponent store={this.context.reactiveStateStore} { ...this.props} />
         }
     }
 }
