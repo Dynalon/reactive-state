@@ -35,7 +35,7 @@ export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceS
     ComponentToConnect: React.ComponentType<TOriginalProps>,
     connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TSliceState>
 ) {
-    const klass = class ConnectedComponent extends React.Component<Partial<TOriginalProps>, ConnectState> {
+    const klass = class ConnectedComponent extends React.PureComponent<Partial<TOriginalProps>, ConnectState> {
 
         subscription: Subscription = new Subscription();
         actionProps: Partial<TOriginalProps> = {};
