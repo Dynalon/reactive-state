@@ -12,6 +12,7 @@ export class StoreProvider extends React.Component<StoreProviderProps, {}> {
         reactiveStateStore: PropTypes.any
     }
 
+
     getChildContext() {
         return {
             reactiveStateStore: this.props.store as Store<{}>
@@ -63,3 +64,26 @@ export const StoreSlice = class StoreSlice<TAppState, TSliceState> extends React
 (StoreSlice as any).childContextTypes = {
     reactiveStateStore: PropTypes.any
 };
+
+export class WithStore extends React.Component<{}, {}> {
+    public store?: Store<any>;
+
+    static contextTypes = {
+        reactiveStateStore: PropTypes.any
+    }
+
+    componentWillMount() {
+    }
+
+    render() {
+        const store = this.context.reactiveStateStore;
+        if (!store)
+            throw new Error("WithStore used but no store could be found in context. Did you suppliy a StoreProvider?")
+        else if (typeof this.props.children !== "function")
+            throw new Error("WithStore used but its child is not a function.")
+        else {
+            const child = this.props.children as (store: Store<any>) => React.ReactNode;
+            return <>{child(store)}</>
+        }
+    }
+}

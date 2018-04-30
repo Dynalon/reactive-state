@@ -106,30 +106,3 @@ export function connect<TAppState, TOriginalProps extends {}>(
 
     return klass;
 }
-
-// TODO decide what to keep
-// export function withStoreAlternate<S, P>(fn: (store: Store<S>) => JSX.Element) {
-//     return class extends React.Component<Exclude<P, { store: Store<S> }>, {}> {
-//         static contextTypes = {
-//             reactiveStateStore: PropTypes.any
-//         }
-
-//         render() {
-//             // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
-//             return fn(this.context.reactiveStateStore);
-//         }
-//     }
-// }
-
-// export function withStore<S, P extends { store: Store<S> }>(OriginalComponent: React.ComponentType<P>) {
-//     return class extends React.Component<P, {}> {
-//         static contextTypes = {
-//             reactiveStateStore: PropTypes.any
-//         }
-
-//         render() {
-//             // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
-//             return <OriginalComponent store={this.context.reactiveStateStore} { ...this.props} />
-//         }
-//     }
-// }

@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { Subject, Subscription } from "rxjs";
 import { take, map } from "rxjs/operators";
 import { Store, Action } from "../src/index";
-import { connect, ConnectResult, MapStateToProps, StoreProvider, StoreSlice, ActionMap } from "../react"
+import { connect, ConnectResult, MapStateToProps, StoreProvider, StoreSlice, ActionMap, WithStore } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 
@@ -216,7 +216,7 @@ describe("react bridge: connect() tests", () => {
         const nextSliceMessage = new Action<string>("NEXT_SLICE_MESSAGE");
 
         const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
-            const mapStateToProps = (store: Store<SliceState>) => {
+            const mapStateToProps: MapStateToProps<SliceState, TestComponent> = (store) => {
                 return store.select().pipe(
                     map(state => ({ message: state.sliceMessage }))
                 )
@@ -247,7 +247,7 @@ describe("react bridge: connect() tests", () => {
     it("should assert the store slice is destroyed when the StoreSlice component unmounts", (done) => {
         const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
             store.destroyed.subscribe(() => done());
-            return { }
+            return {}
         });
 
         const wrapper = Enzyme.mount(
@@ -282,5 +282,36 @@ describe("react bridge: connect() tests", () => {
         nextMessage.next("stringslice");
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("stringslice");
+    })
+
+    it("should be possible to get a context store instance with the WithStore render prop", (done) => {
+        const SampleSFC: React.SFC<{ store: Store<TestState> }> = (props) => {
+            expect(store).to.be.ok;
+            store.destroy();
+            return null;
+        }
+        store.destroyed.subscribe(() => done());
+
+        Enzyme.mount(<StoreProvider store={store}>
+            <WithStore>{theStore => <SampleSFC store={theStore} />}</WithStore>
+        </StoreProvider>
+        )
+    })
+
+    it("should throw an error if WithStore is used outside of a StoreProvider context", () => {
+        const SampleSFC: React.SFC<{ store: Store<TestState> }> = (props) => {
+            return null;
+        }
+        expect(() => {
+            Enzyme.mount(<WithStore>{theStore => <SampleSFC store={theStore} />}</WithStore>);
+        }).to.throw();
+    })
+
+    it("should throw an error if WithStore is used but no function is supplied as child", () => {
+        expect(() => {
+            Enzyme.mount(<StoreProvider store={store}>
+                <WithStore><h1>Not a function</h1></WithStore>
+            </StoreProvider>)
+        }).to.throw();
     })
 })
