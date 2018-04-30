@@ -68,7 +68,7 @@ describe("connect() tests", () => {
     it("should map a props from the state to the props using mapStateToProps", () => {
         const wrapper = mount(<ConnectedTestComponent />);
         const messageText = wrapper.find("h1").text();
-        expect(messageText).to.equal("Foobar");
+        expect(messageText).to.equal(initialState.message);
     });
 
     it("should trigger an action on a callback function in the actionMap", done => {
@@ -107,6 +107,10 @@ describe("connect() tests", () => {
             return <StoreProvider store={store}><ConnectedTestComponent message={props.message} /></StoreProvider>
         };
         const wrapper = Enzyme.mount(<Root />);
+        const textMessage = wrapper.find("h1").text();
+        // we provided a message props - even though its undefined at first, its mere presence should supersede the
+        // connected prop of message
+        expect(textMessage).to.equal("");
         setTimeout(() => {
             wrapper.setProps({ message: "Bla" });
             const textMessage = wrapper.find("h1").text();
