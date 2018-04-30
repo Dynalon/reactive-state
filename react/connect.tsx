@@ -75,8 +75,10 @@ export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceS
             }
         }
 
-        componentDidUpdate() {
-            this.setState((prevState) => ({ ...prevState, originalProps: this.props }))
+        componentDidUpdate(prevProps: any, prevState: any) {
+            if (prevState === this.state) {
+                this.setState((prevState) => ({ ...prevState, originalProps: this.props }))
+            }
         }
 
         componentWillUnmount() {
@@ -88,6 +90,7 @@ export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceS
                 <ComponentToConnect {...this.state.connectedProps} {...this.actionProps} {...this.state.originalProps} />
             </div>
         }
+
     }
 }
 

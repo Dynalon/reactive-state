@@ -102,6 +102,19 @@ describe("connect() tests", () => {
         wrapper.find("button").simulate("click");
     })
 
+    it("should use a props if it updated later on", done => {
+        const Root: React.SFC<{ message?: string }> = (props) =>  {
+            return <StoreProvider store={store}><ConnectedTestComponent message={props.message} /></StoreProvider>
+        };
+        const wrapper = Enzyme.mount(<Root />);
+        setTimeout(() => {
+            wrapper.setProps({ message: "Bla" });
+            const textMessage = wrapper.find("h1").text();
+            expect(textMessage).to.equal("Bla");
+            done();
+        }, 50)
+    })
+
     it("unsubscribe the cleanup subscription on component unmount", (done) => {
         cleanupSubscription.add(() => done());
         const wrapper = mount(<ConnectedTestComponent />);
