@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { Subject, Subscription } from "rxjs";
 import { take, map } from "rxjs/operators";
 import { Store, Action } from "../src/index";
-import { connect, ConnectResult, MapStateToProps, StoreProvider, ActionMap } from "../react"
+import { connect, ConnectResult, MapStateToProps, StoreProvider, StoreSlice, ActionMap } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 
@@ -14,7 +14,13 @@ const nextMessage = new Action<string>();
 
 interface TestState {
     message: string;
+    slice?: SliceState
 }
+
+interface SliceState {
+    sliceMessage: string;
+}
+
 interface TestComponentProps {
     message: string;
     onClick: (arg1: any) => void;
@@ -26,6 +32,10 @@ class TestComponent extends React.Component<TestComponentProps, {}> {
             <h1>{this.props.message}</h1>
             <button onClick={this.props.onClick} />
         </div>
+    }
+
+    componentDidCatch() {
+
     }
 }
 
@@ -57,9 +67,12 @@ describe("react bridge: connect() tests", () => {
     let ConnectedTestComponent: any;
     let cleanupSubscription: Subscription;
 
-    const initialState: TestState = Object.freeze({
-        message: "Foobar"
-    })
+    const initialState: TestState = {
+        message: "initialMessage",
+        slice: {
+            sliceMessage: "initialSliceMessage"
+        }
+    }
 
     beforeEach(() => {
         setupJSDomEnv();
@@ -197,5 +210,77 @@ describe("react bridge: connect() tests", () => {
         const wrapper = mount(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
         wrapper.unmount();
+    })
+
+    it("can use StoreSlice with an object slice", () => {
+        const nextSliceMessage = new Action<string>("NEXT_SLICE_MESSAGE");
+
+        const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
+            const mapStateToProps = (store: Store<SliceState>) => {
+                return store.select().pipe(
+                    map(state => ({ message: state.sliceMessage }))
+                )
+            }
+            store.addReducer(nextSliceMessage, (state, newMessage) => {
+                return {
+                    ...state,
+                    sliceMessage: newMessage,
+                };
+            })
+            return {
+                mapStateToProps
+            }
+        });
+
+        const wrapper = Enzyme.mount(
+            <StoreProvider store={store}>
+                <StoreSlice slice={(store: Store<TestState>) => "slice"}>
+                    <ConnectedTestComponent />
+                </StoreSlice>
+            </StoreProvider>
+        )
+        nextSliceMessage.next("objectslice");
+        const messageText = wrapper.find("h1").text();
+        expect(messageText).to.equal("objectslice");
+    })
+
+    it("should assert the store slice is destroyed when the StoreSlice component unmounts", (done) => {
+        const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
+            store.destroyed.subscribe(() => done());
+            return { }
+        });
+
+        const wrapper = Enzyme.mount(
+            <StoreProvider store={store}>
+                <StoreSlice slice={(store: Store<TestState>) => "slice"}>
+                    <ConnectedTestComponent />
+                </StoreSlice>
+            </StoreProvider>
+        )
+        wrapper.unmount();
+    })
+
+    it("can use StoreSlice with a string slice", () => {
+        const ConnectedTestComponent = connect(TestComponent, () => {
+            const mapStateToProps = (store: Store<string>) => {
+                return store.select().pipe(
+                    map(message => ({ message }))
+                )
+            }
+            return {
+                mapStateToProps
+            }
+        });
+
+        const wrapper = Enzyme.mount(
+            <StoreProvider store={store}>
+                <StoreSlice slice={(store: Store<TestState>) => "message"}>
+                    <ConnectedTestComponent />
+                </StoreSlice>
+            </StoreProvider>
+        )
+        nextMessage.next("stringslice");
+        const messageText = wrapper.find("h1").text();
+        expect(messageText).to.equal("stringslice");
     })
 })

@@ -13,7 +13,7 @@ describe("String based action dispatch", () => {
     beforeEach(() => {
         const initialState = {
             counter: 0
-        };
+        }
         store = Store.create(initialState);
         incrementReducer = (state, payload = 1) => ({ ...state, counter: state.counter + payload });
     });

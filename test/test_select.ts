@@ -60,7 +60,7 @@ describe("Store .select() tests", () => {
     })
 
     it("should not emit a state change when the reducer returns the unmofified, previous state", done => {
-        const initialState = {}
+        const initialState = {};
         const store = Store.create<{}>(initialState);
         const dummyAction = new Action<void>();
         const shallowCopyAction = new Action<void>();
