@@ -76,4 +76,19 @@ describe("Store .select() tests", () => {
         shallowCopyAction.next(undefined);
         store.destroy();
     })
+
+    it("should not emit a state change when the reducer returns shallow copy of a prvious state", done => {
+        const initialState = { foo: "bar "};
+        const store = Store.create(initialState);
+        const shallowCopyAction = new Action<void>();
+        store.addReducer(shallowCopyAction, state => ({ ...state }));
+
+        store.select().pipe(skip(1), toArray()).subscribe(state => {
+            expect(state.length).to.equal(0);
+            done();
+        })
+
+        shallowCopyAction.next(undefined);
+        store.destroy();
+    })
 })
