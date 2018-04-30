@@ -3,13 +3,14 @@ import "mocha";
 import { expect } from "chai";
 
 import { Subject, Subscription } from "rxjs";
-import { take } from "rxjs/operators";
-import { Store } from "../src/index";
+import { take, map } from "rxjs/operators";
+import { Store, Action } from "../src/index";
 import { connect, ConnectResult, MapStateToProps, StoreProvider, ActionMap } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 
-const clicked = new Subject<void>();
+const globalClicked = new Subject<void>();
+const nextMessage = new Action<string>();
 
 interface TestState {
     message: string;
@@ -28,15 +29,15 @@ class TestComponent extends React.Component<TestComponentProps, {}> {
     }
 }
 
-function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, TestComponentProps, TestState> | null) {
+function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, TestComponentProps> | null) {
     return connect(TestComponent, (store: Store<TestState>) => {
-        const mapStateToProps: MapStateToProps<TestState, TestComponent> = (state) => {
-            return {
-                message: state.message
-            }
+        const mapStateToProps: MapStateToProps<TestState, TestComponent> = (store) => {
+            return store.createSlice("message").select().pipe(
+                map(message => ({ message }))
+            )
         }
         const actionMap: ActionMap<TestComponent> = {
-            onClick: clicked
+            onClick: globalClicked
         }
         if (connectResultOverride === null) {
             return;
@@ -65,18 +66,36 @@ describe("react bridge: connect() tests", () => {
         cleanupSubscription = new Subscription();
         ConnectedTestComponent = getConnectedComponent({ cleanupSubscription });
         store = Store.create(initialState);
+        store.addReducer(nextMessage, (state, message) => {
+            return {
+                ...state,
+                message
+            }
+        })
         mount = (elem: JSX.Element) => Enzyme.mount(<StoreProvider store={store}>{elem}</StoreProvider>);
     })
 
-    it("should map a props from the state to the props using mapStateToProps", () => {
+    it("should map a prop from the state to the prop of the component using mapStateToProps", () => {
         const wrapper = mount(<ConnectedTestComponent />);
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal(initialState.message);
     });
 
+    it("should receive prop updates from the store using mapStateToProps", () => {
+        const wrapper = mount(<ConnectedTestComponent />);
+        expect(wrapper.find("h1").text()).to.equal(initialState.message);
+
+        nextMessage.next("Message1");
+        expect(wrapper.find("h1").text()).to.equal("Message1");
+
+        nextMessage.next("Message2");
+        expect(wrapper.find("h1").text()).to.equal("Message2");
+    });
+
+
     it("should trigger an action on a callback function in the actionMap", done => {
         const wrapper = mount(<ConnectedTestComponent />);
-        clicked.pipe(take(1)).subscribe(() => {
+        globalClicked.pipe(take(1)).subscribe(() => {
             expect(true).to.be.true;
             done();
         });
@@ -95,6 +114,7 @@ describe("react bridge: connect() tests", () => {
     })
 
     it("should use the provided props if there is no store in context", (done) => {
+        const clicked = new Subject<void>();
         const onClick = () => setTimeout(() => done(), 50);
         clicked.subscribe(() => {
             done("Error: called the subject");
@@ -106,7 +126,7 @@ describe("react bridge: connect() tests", () => {
     })
 
     it("should use a props if it updated later on", done => {
-        const Root: React.SFC<{ message?: string }> = (props) =>  {
+        const Root: React.SFC<{ message?: string }> = (props) => {
             return <StoreProvider store={store}><ConnectedTestComponent message={props.message} /></StoreProvider>
         };
         const wrapper = Enzyme.mount(<Root />);
@@ -137,30 +157,8 @@ describe("react bridge: connect() tests", () => {
         wrapper.find("button").simulate("click");
     })
 
-    it("should allow mapStateToProps to return undefined", done => {
-        const mapStateToProps: MapStateToProps<TestState, TestComponent> = (state) => {
-            return undefined;
-        }
-        ConnectedTestComponent = getConnectedComponent({ mapStateToProps });
-        const onClick = () => done();
-        const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
-        wrapper.find("button").simulate("click");
-    })
-
-    it("should allow mapStateToProps to return void", done => {
-        const mapStateToProps: MapStateToProps<TestState, TestComponent> = (state) => {
-            return;
-        }
-        ConnectedTestComponent = getConnectedComponent({ mapStateToProps });
-        const onClick = () => done();
-        const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
-        wrapper.find("button").simulate("click");
-    })
-
     it("should allow an observer in an actionMap", done => {
         const onClick = new Subject<void>();
-        console.info(typeof onClick)
-        console.info(typeof onClick.next)
         const actionMap: ActionMap<TestComponent> = {
             onClick
         };

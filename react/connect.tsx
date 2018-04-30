@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as PropTypes from "prop-types";
-import { Subscription } from "rxjs";
+import { Subscription, Observable } from "rxjs";
 import { Store } from "../src/store";
 
 import { ActionMap, assembleActionProps } from "./actions";
@@ -12,16 +12,16 @@ export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.
 // if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
 // that do not correspond to any component prop)
-export type MapStateToProps<S, TComponentOrProps> = (state: S) => Partial<ExtractProps<TComponentOrProps>> |  undefined | void;
+export type MapStateToProps<S, TComponentOrProps> = (store: Store<S>) => Observable<Partial<ExtractProps<TComponentOrProps>>>;
 
 // TODO better naming
-export interface ConnectResult<TAppState, TOriginalProps, TSliceState = TAppState> {
-    mapStateToProps?: MapStateToProps<TSliceState, TOriginalProps>;
+export interface ConnectResult<TAppState, TOriginalProps> {
+    mapStateToProps?: MapStateToProps<TAppState, TOriginalProps>;
     actionMap?: ActionMap<TOriginalProps>;
     cleanupSubscription?: Subscription;
 }
 
-export type ConnectCallback<S, P, N> = (store: Store<S>) => ConnectResult<S, P, N> | undefined;
+export type ConnectCallback<S, P> = (store: Store<S>) => ConnectResult<S, P> | undefined;
 
 export interface ConnectState {
     originalProps: object;
@@ -29,11 +29,11 @@ export interface ConnectState {
 }
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
- * TODO: Use TS Extract<> type here to remove props from TOriginalProps of the resulting component?
+ * Note: The returned component is a PureComponent - so make sure to update a prop immutably
  */
-export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceState>(
+export function connect<TOriginalProps extends {}, TAppState extends {}>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
-    connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TSliceState>
+    connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>>
 ) {
     const klass = class ConnectedComponent extends React.PureComponent<Partial<TOriginalProps>, ConnectState> {
 
@@ -49,34 +49,41 @@ export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceS
 
             const store = this.context.reactiveStateStore as Store<TAppState>;
 
-            if (store) {
-                let result = connectCallback(store);
-                if (result === undefined) {
-                    result = {};
-                }
-                if (result.actionMap) {
-                    this.actionProps = assembleActionProps(result.actionMap);
-                }
-                if (result.mapStateToProps) {
-                    this.subscription.add(store.select().subscribe(state => {
-                        this.setState((prevState) => {
-                            const connectedProps: object = result!.mapStateToProps!(state as any) || {};
-                            return {
-                                ...prevState,
-                                connectedProps,
-                            }
-                        });
-                    }))
-                }
-                if (result.cleanupSubscription) {
-                    this.subscription.add(result.cleanupSubscription);
-                }
+            const weHaveNoStoreEnvironmentAndBehaveAsTheOriginalComponent = store === undefined;
+            if (weHaveNoStoreEnvironmentAndBehaveAsTheOriginalComponent) {
+                return;
+            }
+
+            let result = connectCallback(store);
+
+            if (result === undefined) {
+                result = {};
+            }
+
+            if (result.actionMap) {
+                this.actionProps = assembleActionProps(result.actionMap);
+            }
+
+            if (result.mapStateToProps) {
+                const stateUpdates = result.mapStateToProps(store);
+                this.subscription.add(stateUpdates.subscribe(connectedState => {
+                    this.setState((prevState: ConnectState) => {
+                        return {
+                            ...prevState,
+                            connectedProps: connectedState
+                        }
+                    });
+                }))
+            }
+
+            if (result.cleanupSubscription) {
+                this.subscription.add(result.cleanupSubscription);
             }
         }
 
         componentDidUpdate(prevProps: any, prevState: any) {
             if (prevState === this.state) {
-                this.setState((prevState) => ({ ...prevState, originalProps: this.props }))
+                this.setState((prevState: ConnectState) => ({ ...prevState, originalProps: this.props }))
             }
         }
 
