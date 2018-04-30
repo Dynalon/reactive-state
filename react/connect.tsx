@@ -12,7 +12,7 @@ export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.
 // if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
 // that do not correspond to any component prop)
-export type MapStateToProps<S, TComponentOrProps> = (state: S) => Partial<ExtractProps<TComponentOrProps>>;
+export type MapStateToProps<S, TComponentOrProps> = (state: S) => Partial<ExtractProps<TComponentOrProps>> | undefined | void;
 
 // TODO better naming
 export interface ConnectResult<TAppState, TOriginalProps, TSliceState = TAppState> {
@@ -21,7 +21,7 @@ export interface ConnectResult<TAppState, TOriginalProps, TSliceState = TAppStat
     cleanupSubscription?: Subscription;
 }
 
-export type ConnectCallback<S, P, N> = (store: Store<S>) => ConnectResult<S, P, N>;
+export type ConnectCallback<S, P, N> = (store: Store<S>) => ConnectResult<S, P, N> | undefined;
 
 export interface ConnectState {
     originalProps: object;
@@ -54,14 +54,17 @@ export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceS
             const store = this.context.reactiveStateStore as Store<TAppState>;
 
             if (store) {
-                const result = connectCallback ? connectCallback(store) : {};
+                let result = connectCallback(store);
+                if (result === undefined) {
+                    result = {};
+                }
                 if (result.actionMap) {
                     this.actionProps = assembleActionProps(result.actionMap);
                 }
                 if (result.mapStateToProps) {
                     this.subscription.add(store.select().subscribe(state => {
                         this.setState((prevState) => {
-                            const connectedProps: object = result.mapStateToProps!(state as any) || {};
+                            const connectedProps: object = result!.mapStateToProps!(state as any) || {};
                             return {
                                 ...prevState,
                                 connectedProps,
@@ -95,28 +98,28 @@ export function connect<TOriginalProps extends {}, TAppState extends {}, TSliceS
 }
 
 // TODO decide what to keep
-export function withStoreAlternate<S, P>(fn: (store: Store<S>) => JSX.Element) {
-    return class extends React.Component<Exclude<P, { store: Store<S> }>, {}> {
-        static contextTypes = {
-            reactiveStateStore: PropTypes.any
-        }
+// export function withStoreAlternate<S, P>(fn: (store: Store<S>) => JSX.Element) {
+//     return class extends React.Component<Exclude<P, { store: Store<S> }>, {}> {
+//         static contextTypes = {
+//             reactiveStateStore: PropTypes.any
+//         }
 
-        render() {
-            // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
-            return fn(this.context.reactiveStateStore);
-        }
-    }
-}
+//         render() {
+//             // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
+//             return fn(this.context.reactiveStateStore);
+//         }
+//     }
+// }
 
-export function withStore<S, P extends { store: Store<S> }>(OriginalComponent: React.ComponentType<P>) {
-    return class extends React.Component<P, {}> {
-        static contextTypes = {
-            reactiveStateStore: PropTypes.any
-        }
+// export function withStore<S, P extends { store: Store<S> }>(OriginalComponent: React.ComponentType<P>) {
+//     return class extends React.Component<P, {}> {
+//         static contextTypes = {
+//             reactiveStateStore: PropTypes.any
+//         }
 
-        render() {
-            // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
-            return <OriginalComponent store={this.context.reactiveStateStore} { ...this.props} />
-        }
-    }
-}
+//         render() {
+//             // TODO check that store is set? (i.e. warn user he needs a StoreProvider)
+//             return <OriginalComponent store={this.context.reactiveStateStore} { ...this.props} />
+//         }
+//     }
+// }

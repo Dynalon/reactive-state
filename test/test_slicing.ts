@@ -102,12 +102,13 @@ describe("Store slicing tests", () => {
             slice: { foo: "bar" }
         });
         const action = new Action<void>();
-        const reducer: Reducer<SliceState, void> = (state, payload) => {
+        const reducer: Reducer<SliceState, void> = (state) => {
             return { ...state, foo: "baz" }
         };
 
         const slice1 = rootStore.createSlice("slice", { foo: "bar" });
-        slice1.addReducer(action, reducer);
+        // TODO eliminate any
+        slice1.addReducer(action, reducer as any);
 
         const slice2 = rootStore.createSlice("slice", { foo: "bar2" });
         slice2.select().pipe(skip(1)).subscribe(slice => {

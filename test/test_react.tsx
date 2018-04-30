@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { Subject, Subscription } from "rxjs";
 import { map, take } from "rxjs/operators";
 import { Action, Store, Reducer } from "../src/index";
-import { connect, MapStateToProps, StoreProvider, ActionMap } from "../react"
+import { connect, ConnectResult, MapStateToProps, StoreProvider, ActionMap } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 
@@ -28,7 +28,7 @@ class TestComponent extends React.Component<TestComponentProps, {}> {
     }
 }
 
-function getConnectedComponent(subscription?: Subscription) {
+function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, TestComponentProps, TestState> | null) {
     return connect(TestComponent, (store: Store<TestState>) => {
         const mapStateToProps: MapStateToProps<TestState, TestComponent> = (state) => {
             return {
@@ -38,10 +38,13 @@ function getConnectedComponent(subscription?: Subscription) {
         const actionMap: ActionMap<TestComponent> = {
             onClick: clicked
         }
+        if (connectResultOverride === null) {
+            return;
+        }
         return {
             actionMap,
             mapStateToProps,
-            cleanupSubscription: subscription
+            ...connectResultOverride
         }
     })
 }
@@ -60,7 +63,7 @@ describe("connect() tests", () => {
     beforeEach(() => {
         setupJSDomEnv();
         cleanupSubscription = new Subscription();
-        ConnectedTestComponent = getConnectedComponent(cleanupSubscription);
+        ConnectedTestComponent = getConnectedComponent({ cleanupSubscription });
         store = Store.create(initialState);
         mount = (elem: JSX.Element) => Enzyme.mount(<StoreProvider store={store}>{elem}</StoreProvider>);
     })
@@ -122,6 +125,57 @@ describe("connect() tests", () => {
     it("unsubscribe the cleanup subscription on component unmount", (done) => {
         cleanupSubscription.add(() => done());
         const wrapper = mount(<ConnectedTestComponent />);
+        wrapper.unmount();
+    })
+
+    it("should allow the connect callback to return undefined and then use the provided props", (done) => {
+        ConnectedTestComponent = getConnectedComponent(null);
+        const onClick = () => done();
+        const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
+        const textMessage = wrapper.find("h1").text();
+        expect(textMessage).to.equal("Bla");
+        wrapper.find("button").simulate("click");
+    })
+
+    it("should allow mapStateToProps to return undefined", done => {
+        const mapStateToProps: MapStateToProps<TestState, TestComponent> = (state) => {
+            return undefined;
+        }
+        ConnectedTestComponent = getConnectedComponent({ mapStateToProps });
+        const onClick = () => done();
+        const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
+        const textMessage = wrapper.find("h1").text();
+        wrapper.find("button").simulate("click");
+    })
+
+    it("should allow mapStateToProps to return void", done => {
+        const mapStateToProps: MapStateToProps<TestState, TestComponent> = (state) => {
+            return;
+        }
+        ConnectedTestComponent = getConnectedComponent({ mapStateToProps });
+        const onClick = () => done();
+        const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
+        const textMessage = wrapper.find("h1").text();
+        wrapper.find("button").simulate("click");
+    })
+
+    it("should allow callback functions in an actionMap", done => {
+        const actionMap: ActionMap<TestComponent> = {
+            onClick: () => done()
+        };
+        ConnectedTestComponent = getConnectedComponent({ actionMap, mapStateToProps: undefined });
+        const wrapper = mount(<ConnectedTestComponent />);
+        wrapper.find("button").simulate("click");
+    })
+
+    it("should allow undefined fields in an actionMap to ignore callbacks", done => {
+        const actionMap: ActionMap<TestComponent> = {
+            onClick: undefined
+        };
+        ConnectedTestComponent = getConnectedComponent({ actionMap, cleanupSubscription });
+        cleanupSubscription.add(() => done());
+        const wrapper = mount(<ConnectedTestComponent />);
+        wrapper.find("button").simulate("click");
         wrapper.unmount();
     })
 

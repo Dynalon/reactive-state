@@ -51,7 +51,7 @@ describe("String based action dispatch", () => {
         });
 
         it("should be possible to add an action as NamedObservable and trigger a manual dispatch on it", done => {
-            const incrementAction = new Action(INCREMENT_ACTION)
+            const incrementAction = new Action<number>(INCREMENT_ACTION)
             store.addReducer(incrementAction, incrementReducer);
             store.dispatch(INCREMENT_ACTION, 1)
             store.select().subscribe(state => {

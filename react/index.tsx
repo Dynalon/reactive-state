@@ -1,7 +1,7 @@
 import { ActionFunction, ActionMap } from './actions';
-import { connect, MapStateToProps, withStore, withStoreAlternate } from './connect';
+import { connect, MapStateToProps, ConnectResult } from './connect';
 import { StoreProvider } from './provider'
-import { UnpackMap, mapToState, bindToState, unpackToState } from './state';
+// import { UnpackMap, mapToState, bindToState, unpackToState } from './state';
 
 export {
     // Action
@@ -9,16 +9,17 @@ export {
     ActionMap,
 
     // State
-    UnpackMap,
-    unpackToState,
-    mapToState,
-    bindToState,
+    // UnpackMap,
+    // unpackToState,
+    // mapToState,
+    // bindToState,
 
     // connect
     MapStateToProps,
     connect,
+    ConnectResult,
 
     StoreProvider,
-    withStore,
-    withStoreAlternate,
+    // withStore,
+    // withStoreAlternate,
 }
