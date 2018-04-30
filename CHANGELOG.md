@@ -1,8 +1,11 @@
 v2.0.0 (unreleased)
 
-* Complete change of react connect() API: usage of Components as wrapper now discouraged, everything can be wired inside a
+* fully RxJS 6 based (without need for rxjs-compat)
+* complete change of react connect() API: usage of Components as wrapper now discouraged, everything can be wired inside a
   single function now
-* Very strict typing of MapStateToProps and ActionMap types using TypeScript 2.8 conditional types
+* very strict typing of MapStateToProps and ActionMap types using TypeScript 2.8 conditional types
+* react bridge is now a first-class citizen: Enzyme based tests with full DOM rendering implemented; react bridge 
+  tests contribute to overall code coverage
 
 v1.0.0
 
