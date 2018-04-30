@@ -1,11 +1,17 @@
 v2.0.0 (unreleased)
 
 * fully RxJS 6 based (without need for rxjs-compat)
-* complete change of react connect() API: usage of Components as wrapper now discouraged, everything can be wired inside a
-  single function now
-* very strict typing of MapStateToProps and ActionMap types using TypeScript 2.8 conditional types
-* react bridge is now a first-class citizen: Enzyme based tests with full DOM rendering implemented; react bridge 
+* store.select() now performs a shallow equal check on each state change, not emitting a next state if its shallow-equal
+  to the previous state. Can be turned off by passing .select(s => s, true) - bear in mind that even states are emitted
+  that are reference-equal to the previous state (i.e. no change happened at all). In this case, you might want to use
+  distinctUntilChange() yourself on the select'ed result.
+* react bridge: complete change of react connect() API: usage of Components as wrapper now discouraged, everything can
+  be wired inside a single function now passed to connect()
+* react bridge: very strict typing of MapStateToProps and ActionMap types using TypeScript 2.8 conditional types
+* react bridge: is now a first-class citizen: Enzyme based tests with full DOM rendering implemented; react bridge
   tests contribute to overall code coverage
+* react bridge: Use <StoreProvider store={store}> to provide a store instance via React's context API
+* react bridge: Introduce <StoreSlice slice={state => "keyOfState"}> to create store slices in a declarative way
 
 v1.0.0
 

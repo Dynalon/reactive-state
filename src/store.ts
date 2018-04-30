@@ -3,6 +3,7 @@ import {
     StateMutation, StateChangeNotification, RootStateChangeNotification, Reducer,
     CleanupState, NamedObservable, ActionDispatch
 } from "./types";
+import { shallowEqual } from "./shallowEqual";
 
 // TODO use typings here
 declare var require: any;
@@ -20,7 +21,7 @@ import {
     publishReplay,
     refCount
 } from "rxjs/operators";
-import { EMPTY } from "rxjs"
+import { EMPTY } from "rxjs"
 
 // TODO: We currently do not allow Symbol properties on the root state. This types asserts that all properties
 // on the state object are strings (numbers get transformed to strings anyway)
@@ -271,13 +272,15 @@ export class Store<S> {
 
         const mapped = this.state.pipe(
             takeUntil(this._destroyed),
-            map(selectorFn)
+            map(selectorFn),
         )
 
         if (forceEmitEveryChange)
             return mapped;
         else
-            return mapped.pipe(distinctUntilChanged())
+            return mapped.pipe(
+                distinctUntilChanged((a, b) => shallowEqual(a, b)),
+            )
     }
 
     /**

@@ -59,17 +59,16 @@ describe("Store .select() tests", () => {
         })
     })
 
-    it("should not emit a state change when the reducer returns the unmofified, previous state", done => {
+    it("should not emit a state change when the reducer returns the unmofified, previous state or a shallow copy of it", done => {
         const initialState = {};
-        const store = Store.create<{}>(initialState);
+        const store = Store.create(initialState);
         const dummyAction = new Action<void>();
         const shallowCopyAction = new Action<void>();
         store.addReducer(dummyAction, state => state);
         store.addReducer(shallowCopyAction, state => ({ ...state }));
 
         store.select().pipe(skip(1), toArray()).subscribe(state => {
-            expect(state.length).to.equal(1);
-            expect(state[0]).not.to.equal(initialState);
+            expect(state.length).to.equal(0);
             done();
         })
 
