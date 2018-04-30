@@ -6,7 +6,8 @@
         "module": "commonjs",
         "strict": false,
         "noImplicitAny": false,
-        "noUnusedLocals": true,
+        "noUnusedLocals": false,
+        "jsx": "react",
         "lib": [ "dom", "es2015" ]
     },
     "include": [
