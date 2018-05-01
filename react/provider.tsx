@@ -32,7 +32,8 @@ export interface StoreSliceState<TSliceState> {
     slice: Store<TSliceState>
 }
 
-export const StoreSlice = class StoreSlice<TAppState, TSliceState, TKey extends keyof TAppState> extends React.Component<StoreSliceProps<TAppState,TKey>, StoreSliceState<TSliceState>> {
+export const StoreSlice = class StoreSlice<TAppState, TSliceState, TKey extends keyof TAppState>
+    extends React.Component<StoreSliceProps<TAppState, TKey>, StoreSliceState<TSliceState>> {
 
     // private slice?: Store<keyof TAppState>;
     public slice?: any;
