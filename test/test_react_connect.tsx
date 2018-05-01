@@ -65,7 +65,7 @@ describe("react bridge: connect() tests", () => {
     let store: Store<TestState>;
     let mount: (elem: JSX.Element) => Enzyme.ReactWrapper<any, any>;
     let ConnectedTestComponent: any;
-    let cleanupSubscription: Subscription;
+    let cleanup: Subscription;
 
     const initialState: TestState = {
         message: "initialMessage",
@@ -76,8 +76,8 @@ describe("react bridge: connect() tests", () => {
 
     beforeEach(() => {
         setupJSDomEnv();
-        cleanupSubscription = new Subscription();
-        ConnectedTestComponent = getConnectedComponent({ cleanupSubscription });
+        cleanup = new Subscription();
+        ConnectedTestComponent = getConnectedComponent({ cleanup });
         store = Store.create(initialState);
         store.addReducer(nextMessage, (state, message) => {
             return {
@@ -156,7 +156,7 @@ describe("react bridge: connect() tests", () => {
     })
 
     it("unsubscribe the cleanup subscription on component unmount", (done) => {
-        cleanupSubscription.add(() => done());
+        cleanup.add(() => done());
         const wrapper = mount(<ConnectedTestComponent />);
         wrapper.unmount();
     })
@@ -205,8 +205,8 @@ describe("react bridge: connect() tests", () => {
         const actionMap: ActionMap<TestComponent> = {
             onClick: undefined
         };
-        ConnectedTestComponent = getConnectedComponent({ actionMap, cleanupSubscription });
-        cleanupSubscription.add(() => done());
+        ConnectedTestComponent = getConnectedComponent({ actionMap, cleanup});
+        cleanup.add(() => done());
         const wrapper = mount(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
         wrapper.unmount();

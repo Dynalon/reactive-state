@@ -18,7 +18,7 @@ export type MapStateToProps<TComponentOrProps, TState = any> = (store: Store<TSt
 export interface ConnectResult<TAppState, TOriginalProps> {
     mapStateToProps?: MapStateToProps<TOriginalProps>;
     actionMap?: ActionMap<TOriginalProps>;
-    cleanupSubscription?: Subscription;
+    cleanup?: Subscription;
 }
 
 export type ConnectCallback<S, P> = (store: Store<S>) => ConnectResult<S, P> | undefined;
@@ -76,8 +76,8 @@ export function connect<TAppState, TOriginalProps extends {}>(
                 }))
             }
 
-            if (result.cleanupSubscription) {
-                this.subscription.add(result.cleanupSubscription);
+            if (result.cleanup) {
+                this.subscription.add(result.cleanup);
             }
         }
 
