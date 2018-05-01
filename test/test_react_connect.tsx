@@ -3,7 +3,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { Subject, Subscription } from "rxjs";
-import { take, map } from "rxjs/operators";
+import { take, map, toArray } from "rxjs/operators";
 import { Store, Action } from "../src/index";
 import { connect, ConnectResult, MapStateToProps, StoreProvider, StoreSlice, ActionMap, WithStore } from "../react"
 import * as Enzyme from "enzyme";
@@ -205,14 +205,14 @@ describe("react bridge: connect() tests", () => {
         const actionMap: ActionMap<TestComponent> = {
             onClick: undefined
         };
-        ConnectedTestComponent = getConnectedComponent({ actionMap, cleanup});
+        ConnectedTestComponent = getConnectedComponent({ actionMap, cleanup });
         cleanup.add(() => done());
         const wrapper = mount(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
         wrapper.unmount();
     })
 
-    it("can use StoreSlice with an object slice", () => {
+    it("can use StoreSlice with an object slice", (done) => {
         const nextSliceMessage = new Action<string>("NEXT_SLICE_MESSAGE");
 
         const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
@@ -232,9 +232,21 @@ describe("react bridge: connect() tests", () => {
             }
         });
 
+        store.select(s => s.slice).pipe(take(4), toArray()).subscribe(arr => {
+            expect(arr[0]!.sliceMessage).to.equal("initialSliceMessage");
+            expect(arr[1]!.sliceMessage).to.equal("1");
+            expect(arr[2]!.sliceMessage).to.equal("objectslice");
+            expect(arr[3]).to.be.undefined;
+            done();
+        })
+
+        const initialSliceState: SliceState = {
+            sliceMessage: "1"
+        };
+
         const wrapper = Enzyme.mount(
             <StoreProvider store={store}>
-                <StoreSlice slice={(store: Store<TestState>) => "slice"}>
+                <StoreSlice slice={(store: Store<TestState>) => "slice"} initialState={ initialSliceState } cleanupState={"delete"}>
                     <ConnectedTestComponent />
                 </StoreSlice>
             </StoreProvider>
@@ -242,6 +254,7 @@ describe("react bridge: connect() tests", () => {
         nextSliceMessage.next("objectslice");
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("objectslice");
+        wrapper.unmount();
     })
 
     it("should assert the store slice is destroyed when the StoreSlice component unmounts", (done) => {
@@ -333,4 +346,5 @@ describe("react bridge: connect() tests", () => {
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("Blafoo")
     })
+
 })
