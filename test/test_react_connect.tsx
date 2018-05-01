@@ -41,7 +41,7 @@ class TestComponent extends React.Component<TestComponentProps, {}> {
 
 function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, TestComponentProps> | null) {
     return connect(TestComponent, (store: Store<TestState>) => {
-        const mapStateToProps: MapStateToProps<TestState, TestComponent> = (store) => {
+        const mapStateToProps: MapStateToProps<TestComponent, TestState> = (store) => {
             return store.createSlice("message").select().pipe(
                 map(message => ({ message }))
             )
@@ -216,7 +216,7 @@ describe("react bridge: connect() tests", () => {
         const nextSliceMessage = new Action<string>("NEXT_SLICE_MESSAGE");
 
         const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
-            const mapStateToProps: MapStateToProps<SliceState, TestComponent> = (store) => {
+            const mapStateToProps: MapStateToProps<TestComponent, SliceState> = (store) => {
                 return store.select().pipe(
                     map(state => ({ message: state.sliceMessage }))
                 )
@@ -313,5 +313,24 @@ describe("react bridge: connect() tests", () => {
                 <WithStore><h1>Not a function</h1></WithStore>
             </StoreProvider>)
         }).to.throw();
+    })
+
+    // Typing regression
+    it("should be possible for mapStatetoProps to operator on any store/slice", () => {
+        const ConnectedTestComponent = connect(TestComponent, (store: Store<TestState>) => {
+            const slice = store.createSlice("message", "Blafoo");
+            const mapStateToProps: MapStateToProps<TestComponent> = () => {
+                return slice.select().pipe(
+                    map(message => ({ message }))
+                )
+            };
+            return {
+                mapStateToProps
+            }
+        });
+
+        const wrapper = mount(<ConnectedTestComponent />);
+        const messageText = wrapper.find("h1").text();
+        expect(messageText).to.equal("Blafoo")
     })
 })

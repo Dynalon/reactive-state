@@ -12,11 +12,11 @@ export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.
 // if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
 // we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
 // that do not correspond to any component prop)
-export type MapStateToProps<S, TComponentOrProps> = (store: Store<S>) => Observable<Partial<ExtractProps<TComponentOrProps>>>;
+export type MapStateToProps<TComponentOrProps, TState = any> = (store: Store<TState>) => Observable<Partial<ExtractProps<TComponentOrProps>>>;
 
 // TODO better naming
 export interface ConnectResult<TAppState, TOriginalProps> {
-    mapStateToProps?: MapStateToProps<TAppState, TOriginalProps>;
+    mapStateToProps?: MapStateToProps<TOriginalProps>;
     actionMap?: ActionMap<TOriginalProps>;
     cleanupSubscription?: Subscription;
 }
