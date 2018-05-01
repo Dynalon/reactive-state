@@ -11,9 +11,9 @@ describe("String based action dispatch", () => {
     const INCREMENT_ACTION = "INCREMENT_ACTION";
 
     beforeEach(() => {
-        const initialState = {
+        const initialState = Object.freeze({
             counter: 0
-        }
+        })
         store = Store.create(initialState);
         incrementReducer = (state, payload = 1) => ({ ...state, counter: state.counter + payload });
     });

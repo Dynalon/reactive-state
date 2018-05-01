@@ -12,9 +12,9 @@ export function testExample() {
         counter: number;
     }
 
-    const initialState: AppState = {
+    const initialState: AppState = Object.freeze({
         counter: 0
-    }
+    })
 
     const store = Store.create(initialState);
 

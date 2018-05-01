@@ -12,9 +12,9 @@ describe("Store .select() tests", () => {
     let incrementReducer: Reducer<CounterState, void>;
 
     beforeEach(() => {
-        const initialState = {
+        const initialState = Object.freeze({
             counter: 0
-        };
+        });
         store = Store.create(initialState);
         incrementAction = new Action<void>();
         incrementReducer = (state) => ({ ...state, counter: state.counter + 1 });
@@ -60,7 +60,7 @@ describe("Store .select() tests", () => {
     })
 
     it("should not emit a state change when the reducer returns the unmofified, previous state or a shallow copy of it", done => {
-        const initialState = {};
+        const initialState = Object.freeze({});
         const store = Store.create(initialState);
         const dummyAction = new Action<void>();
         const shallowCopyAction = new Action<void>();

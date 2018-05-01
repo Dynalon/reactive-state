@@ -14,9 +14,9 @@ describe("Devtool notification tests", () => {
     let incrementReducerSubscription: Subscription;
 
     beforeEach(() => {
-        const initialState = {
+        const initialState = Object.freeze({
             counter: 0
-        };
+        });
         store = Store.create(initialState);
         incrementAction = new Action<number>();
         incrementAction.name = "INCREMENT_ACTION";

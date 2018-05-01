@@ -39,8 +39,9 @@ type RootReducer<R, P> = (payload: P) => StateMutation<R>
  * @param initialState
  */
 function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
+    let initialStateCopy = createImmutableCopy(initialState);
     const state = stateMutators.pipe(
-        scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState),
+        scan((state: S, reducer: StateMutation<S>) => reducer(state), initialStateCopy),
         // these two lines make our observable hot and have it emit the last state
         // upon subscription
         publishReplay(1),
@@ -49,6 +50,15 @@ function createState<S>(stateMutators: Observable<StateMutation<S>>, initialStat
     return state;
 }
 
+function createImmutableCopy(state: any) {
+    if (isObject(state) && isPlainObject(state)) {
+        return { ...state };
+    } else if (Array.isArray(state))
+        return [ ...state ];
+    else {
+        return state;
+    }
+}
 
 export class Store<S> {
 
@@ -115,6 +125,7 @@ export class Store<S> {
      * Create a new Store based on an initial state
      */
     static create<S>(initialState?: S): Store<S> {
+        initialState = createImmutableCopy(initialState);
         if (initialState === undefined)
             initialState = {} as S;
         else {
@@ -141,7 +152,7 @@ export class Store<S> {
      * Creates a new linked store, that Selects a slice on the main store.
      */
     createSlice<K extends keyof S>(key: K, initialState?: S[K], cleanupState?: CleanupState<S[K]>): Store<S[K]> {
-
+        initialState = createImmutableCopy(initialState);
         if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
             throw new Error("initialState must be a plain object, an array, or a primitive type");
         if (isObject(cleanupState) && !Array.isArray(cleanupState) && !isPlainObject(cleanupState))
