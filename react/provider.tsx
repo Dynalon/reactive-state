@@ -23,16 +23,16 @@ export class StoreProvider extends React.Component<StoreProviderProps, {}> {
     }
 }
 
-export interface StoreSliceProps<TAppState> {
-    slice: (store: Store<TAppState>) => TAppState[keyof TAppState];
-    initialState?: TAppState[keyof TAppState];
-    cleanupState?: TAppState[keyof TAppState] | "delete" | "undefined"
+export interface StoreSliceProps<TAppState, TKey extends keyof TAppState> {
+    slice: (store: Store<TAppState>) => TKey
+    initialState?: TAppState[TKey]
+    cleanupState?: TAppState[TKey] | "delete" | "undefined"
 }
 export interface StoreSliceState<TSliceState> {
     slice: Store<TSliceState>
 }
 
-export const StoreSlice = class StoreSlice<TAppState, TSliceState> extends React.Component<StoreSliceProps<TAppState>, StoreSliceState<TSliceState>> {
+export const StoreSlice = class StoreSlice<TAppState, TSliceState, TKey extends keyof TAppState> extends React.Component<StoreSliceProps<TAppState,TKey>, StoreSliceState<TSliceState>> {
 
     // private slice?: Store<keyof TAppState>;
     public slice?: any;
