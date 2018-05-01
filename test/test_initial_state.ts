@@ -185,12 +185,12 @@ describe("initial state setting", () => {
         store.createSlice("slice", { foo: "bar" });
     });
 
-    it("should not overwrite an initial state on the slice if the slice key already has a value", done => {
+    it("should overwrite an initial state on the slice if the slice key already has a value", done => {
         const sliceStore = store.createSlice("slice", { foo: "bar" });
         sliceStore.destroy();
         const sliceStore2 = store.createSlice("slice", { foo: "different" });
         sliceStore2.select().subscribe(state => {
-            expect(state!.foo).to.equal("bar");
+            expect(state!.foo).to.equal("different");
             done();
         })
     })

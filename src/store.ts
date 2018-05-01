@@ -152,13 +152,8 @@ export class Store<S> {
         const keyChain = [...this.keyChain, key];
 
         if (initialState !== undefined) {
-            const setInitialStateOnSliceIfPropertyIsNotSet = (s: S) => {
-                if (getNestedProperty(s, keyChain) === undefined) {
-                    setNestedPropertyToValue(s, initialState, keyChain);
-                }
-            }
             this.stateMutators.next(s => {
-                setInitialStateOnSliceIfPropertyIsNotSet(s);
+                setNestedPropertyToValue(s, initialState, keyChain);
                 return s;
             });
         }
