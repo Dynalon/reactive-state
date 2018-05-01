@@ -24,7 +24,9 @@ export class StoreProvider extends React.Component<StoreProviderProps, {}> {
 }
 
 export interface StoreSliceProps<TAppState> {
-    slice: (store: Store<TAppState>) => keyof TAppState
+    slice: (store: Store<TAppState>) => keyof TAppState;
+    initialState?: TAppState;
+    cleanupState?: TAppState | "delete" | "undefined"
 }
 export interface StoreSliceState<TSliceState> {
     slice: Store<TSliceState>
@@ -44,7 +46,7 @@ export const StoreSlice = class StoreSlice<TAppState, TSliceState> extends React
     componentWillMount() {
         const store = this.context.reactiveStateStore as Store<TAppState>;
         const key: keyof TAppState = this.props.slice(store);
-        this.slice = store.createSlice(key);
+        this.slice = store.createSlice(key, this.props.initialState as any, this.props.cleanupState as any);
     }
 
     componentWillUnmount() {
