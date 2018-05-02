@@ -4,11 +4,12 @@
         "sourceMap": true,
         "declaration": false,
         "module": "commonjs",
+        "moduleResolution": "node",
         "strict": true,
         "noImplicitAny": false,
         "noUnusedLocals": true,
         "jsx": "react",
-        "lib": [ "dom", "es2015" ]
+        "lib": [ "dom", "es5", "es2015.promise", "es2015.symbol", "es2015.iterable" ]
     },
     "include": [
         "../src/*.ts",
