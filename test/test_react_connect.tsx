@@ -3,30 +3,30 @@ import "mocha";
 import { expect } from "chai";
 
 import { Subject, Subscription } from "rxjs";
-import { take, map, toArray } from "rxjs/operators";
+import { take, map } from "rxjs/operators";
 import { Store, Action } from "../src/index";
-import { connect, ConnectResult, MapStateToProps, StoreProvider, StoreSlice, ActionMap, WithStore } from "../react"
+import { connect, ConnectResult, MapStateToProps, StoreProvider, ActionMap } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 
 const globalClicked = new Subject<void>();
 const nextMessage = new Action<string>();
 
-interface TestState {
+export interface TestState {
     message: string;
     slice?: SliceState
 }
 
-interface SliceState {
+export interface SliceState {
     sliceMessage: string;
 }
 
-interface TestComponentProps {
+export interface TestComponentProps {
     message: string;
     onClick: (arg1: any) => void;
 }
 
-class TestComponent extends React.Component<TestComponentProps, {}> {
+export class TestComponent extends React.Component<TestComponentProps, {}> {
     render() {
         return <div>
             <h1>{this.props.message}</h1>
@@ -212,122 +212,6 @@ describe("react bridge: connect() tests", () => {
         wrapper.unmount();
     })
 
-    it("can use StoreSlice with an object slice", (done) => {
-        const nextSliceMessage = new Action<string>("NEXT_SLICE_MESSAGE");
-
-        const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
-            const mapStateToProps: MapStateToProps<TestComponent, SliceState> = (store) => {
-                return store.select().pipe(
-                    map(state => ({ message: state.sliceMessage }))
-                )
-            }
-            store.addReducer(nextSliceMessage, (state, newMessage) => {
-                return {
-                    ...state,
-                    sliceMessage: newMessage,
-                };
-            })
-            return {
-                mapStateToProps
-            }
-        });
-
-        store.select(s => s.slice).pipe(take(4), toArray()).subscribe(arr => {
-            expect(arr[0]!.sliceMessage).to.equal("initialSliceMessage");
-            expect(arr[1]!.sliceMessage).to.equal("1");
-            expect(arr[2]!.sliceMessage).to.equal("objectslice");
-            expect(arr[3]).to.be.undefined;
-            done();
-        })
-
-        const initialSliceState: SliceState = {
-            sliceMessage: "1"
-        };
-
-        const wrapper = Enzyme.mount(
-            <StoreProvider store={store}>
-                <StoreSlice slice={(store: Store<TestState>) => "slice"} initialState={ initialSliceState } cleanupState={"delete"}>
-                    <ConnectedTestComponent />
-                </StoreSlice>
-            </StoreProvider>
-        )
-        nextSliceMessage.next("objectslice");
-        const messageText = wrapper.find("h1").text();
-        expect(messageText).to.equal("objectslice");
-        wrapper.unmount();
-    })
-
-    it("should assert the store slice is destroyed when the StoreSlice component unmounts", (done) => {
-        const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
-            store.destroyed.subscribe(() => done());
-            return {}
-        });
-
-        const wrapper = Enzyme.mount(
-            <StoreProvider store={store}>
-                <StoreSlice slice={(store: Store<TestState>) => "slice"}>
-                    <ConnectedTestComponent />
-                </StoreSlice>
-            </StoreProvider>
-        )
-        wrapper.unmount();
-    })
-
-    it("can use StoreSlice with a string slice", () => {
-        const ConnectedTestComponent = connect(TestComponent, () => {
-            const mapStateToProps = (store: Store<string>) => {
-                return store.select().pipe(
-                    map(message => ({ message }))
-                )
-            }
-            return {
-                mapStateToProps
-            }
-        });
-
-        const wrapper = Enzyme.mount(
-            <StoreProvider store={store}>
-                <StoreSlice slice={(store: Store<TestState>) => "message"}>
-                    <ConnectedTestComponent />
-                </StoreSlice>
-            </StoreProvider>
-        )
-        nextMessage.next("stringslice");
-        const messageText = wrapper.find("h1").text();
-        expect(messageText).to.equal("stringslice");
-    })
-
-    it("should be possible to get a context store instance with the WithStore render prop", (done) => {
-        const SampleSFC: React.SFC<{ store: Store<TestState> }> = (props) => {
-            expect(store).to.be.ok;
-            store.destroy();
-            return null;
-        }
-        store.destroyed.subscribe(() => done());
-
-        Enzyme.mount(<StoreProvider store={store}>
-            <WithStore>{theStore => <SampleSFC store={theStore} />}</WithStore>
-        </StoreProvider>
-        )
-    })
-
-    it("should throw an error if WithStore is used outside of a StoreProvider context", () => {
-        const SampleSFC: React.SFC<{ store: Store<TestState> }> = (props) => {
-            return null;
-        }
-        expect(() => {
-            Enzyme.mount(<WithStore>{theStore => <SampleSFC store={theStore} />}</WithStore>);
-        }).to.throw();
-    })
-
-    it("should throw an error if WithStore is used but no function is supplied as child", () => {
-        expect(() => {
-            Enzyme.mount(<StoreProvider store={store}>
-                <WithStore><h1>Not a function</h1></WithStore>
-            </StoreProvider>)
-        }).to.throw();
-    })
-
     // Typing regression
     it("should be possible for mapStatetoProps to operator on any store/slice", () => {
         const ConnectedTestComponent = connect(TestComponent, (store: Store<TestState>) => {
@@ -346,5 +230,4 @@ describe("react bridge: connect() tests", () => {
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("Blafoo")
     })
-
 })

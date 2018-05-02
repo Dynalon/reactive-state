@@ -9,6 +9,7 @@ import "./test_stringbased_action_dispatch";
 import "./test_getnestedproperty";
 
 import "./test_react_connect";
+import "./test_react_storeprovider";
 
 // Uncomment for testing the README.md example or other doc examples
 // import "./test_example";
