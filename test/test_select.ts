@@ -5,7 +5,7 @@ import { Store, Action, Reducer } from "../src/index";
 
 import { CounterState } from "./test_common_types";
 
-describe("Store .select() tests", () => {
+describe("Store .select() and .watch() tests", () => {
 
     let store: Store<CounterState>;
     let incrementAction: Action<void>;
@@ -50,7 +50,7 @@ describe("Store .select() tests", () => {
         })
     })
 
-    it("should emit the last state immediately when selecting", done => {
+    it("should emit the last state immediately when selecting when its not initial state", done => {
         incrementAction.next();
 
         store.select().pipe(take(1)).subscribe(state => {
@@ -59,7 +59,8 @@ describe("Store .select() tests", () => {
         })
     })
 
-    it("should not emit a state change when the reducer returns the unmofified, previous state or a shallow copy of it", done => {
+    // TODO rewrite test for watch/select
+    it("should not emit a state change for .watch() when the reducer returns the unmofified, previous state or a shallow copy of it", done => {
         const initialState = Object.freeze({});
         const store = Store.create(initialState);
         const dummyAction = new Action<void>();
@@ -67,7 +68,7 @@ describe("Store .select() tests", () => {
         store.addReducer(dummyAction, state => state);
         store.addReducer(shallowCopyAction, state => ({ ...state }));
 
-        store.select().pipe(skip(1), toArray()).subscribe(state => {
+        store.watch().pipe(skip(1), toArray()).subscribe(state => {
             expect(state.length).to.equal(0);
             done();
         })
@@ -77,13 +78,13 @@ describe("Store .select() tests", () => {
         store.destroy();
     })
 
-    it("should not emit a state change when the reducer returns shallow copy of a prvious state", done => {
+    it(".watch() should not emit a state change when the reducer returns shallow copy of a previous state", done => {
         const initialState = { foo: "bar "};
         const store = Store.create(initialState);
         const shallowCopyAction = new Action<void>();
         store.addReducer(shallowCopyAction, state => ({ ...state }));
 
-        store.select().pipe(skip(1), toArray()).subscribe(state => {
+        store.watch().pipe(skip(1), toArray()).subscribe(state => {
             expect(state.length).to.equal(0);
             done();
         })

@@ -55,7 +55,7 @@ describe("initial state setting", () => {
     it("should set the initial state for a slice-of-a-slice on the sliced state", done => {
         const sliceStore = store.createSlice("slice", { foo: "bar" }) as Store<SliceState>
 
-        store.select(s => s, true).pipe(skip(1)).subscribe(s => {
+        store.select(s => s).pipe(skip(1)).subscribe(s => {
             if (!s.slice || !s.slice.slice) {
                 done("Error");
                 return;
@@ -173,7 +173,7 @@ describe("initial state setting", () => {
 
 
     it("should trigger a state change on the root store when the initial state on the slice is created", done => {
-        store.select(s => s, true).pipe(skip(1), take(1)).subscribe(state => {
+        store.select(s => s).pipe(skip(1), take(1)).subscribe(state => {
             expect(state.slice).not.to.be.undefined;
             expect(state.slice).to.have.property("foo");
             if (state.slice) {

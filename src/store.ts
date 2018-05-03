@@ -52,9 +52,9 @@ function createState<S>(stateMutators: Observable<StateMutation<S>>, initialStat
 
 function createImmutableCopy(state: any) {
     if (isObject(state) && isPlainObject(state)) {
-        return { ...state };
+        return {  ...state };
     } else if (Array.isArray(state))
-        return [ ...state ];
+        return [...state];
     else {
         return state;
     }
@@ -259,20 +259,25 @@ export class Store<S> {
     /**
      * Selects a part of the state using a selector function. If no selector function is given, the identity function
      * is used (which returns the state of type S).
-     * Note: The returned observable does not only update the root state changes (=is a new object instance)
+     * Note: The returned observable does only update when the result of the selector function changed
+     *       compared to a previous emit. A shallow copy test is performed to detect changes.
      *       This requires that your reducers update all nested properties in
-     *       an immutable way, which is required practice with Redux and also with reactive-state. To make the
-     *       observable emit any time, every if only a subtree item changes, pass true as forceEmitEveryChange second
-     *       argument to this function.
+     *       an immutable way, which is required practice with Redux and also with reactive-state.
+     *       To make the observable emit any time the state changes, use .selectAlways()
      *       For correct nested reducer updates, see:
      *         http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects
      *
      * @param selectorFn    A selector function which returns a mapped/transformed object based on the state
-     * @param forceEmitEveryChange  A flag to have updates emitted even if the select'ed
-     *                              element is not changed (But i.e. a parent prop on global state)
-     * @returns             An observable that emits when the state changes
+     * @returns             An observable that emits the result of the selector function after a
+     *                      change of the return value of the selector function
      */
-    select<T = S>(selectorFn?: (state: S) => T, forceEmitEveryChange = false): Observable<T> {
+    watch<T = S>(selectorFn?: (state: S) => T): Observable<T> {
+        return this.select(selectorFn).pipe(
+            distinctUntilChanged((a, b) => shallowEqual(a, b)),
+        )
+    }
+
+    select<T = S>(selectorFn?: (state: S) => T): Observable<T> {
         if (!selectorFn)
             selectorFn = (state: S) => <T><any>state;
 
@@ -281,12 +286,7 @@ export class Store<S> {
             map(selectorFn),
         )
 
-        if (forceEmitEveryChange)
-            return mapped;
-        else
-            return mapped.pipe(
-                distinctUntilChanged((a, b) => shallowEqual(a, b)),
-            )
+        return mapped;
     }
 
     /**

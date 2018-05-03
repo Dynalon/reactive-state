@@ -82,6 +82,7 @@ interval(1000).pipe(take(3)).subscribe(() => incrementAction.next(1));
 // <PAUSE 1sec>
 // [CONSOLE.LOG]: ROOT STATE: {"counter":4}
 // <PAUSE 1sec>
+// [CONSOLE.LOG]: ROOT STATE: {"counter":5}
 ```
 
 License

@@ -64,7 +64,7 @@ describe("Store slicing tests", () => {
         const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
-        counterSlice.select(s => s, true).pipe(skip(1), take(1)).subscribe(counter => {
+        counterSlice.select().pipe(skip(1), take(1)).subscribe(counter => {
             expect(counter).to.equal(0);
             done();
         });
@@ -77,7 +77,7 @@ describe("Store slicing tests", () => {
         const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
-        counterSlice.select(s => s, false).pipe(skip(1), toArray()).subscribe(changes => {
+        counterSlice.watch().pipe(skip(1), toArray()).subscribe(changes => {
             expect(changes).to.deep.equal([]);
             done();
         });
