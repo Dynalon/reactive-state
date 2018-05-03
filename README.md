@@ -43,7 +43,7 @@ Example Usage
 import { Store, Action } from "reactive-state";
 import { take } from "rxjs/operators";
 
-// The main (root) state for our example app
+// The state for our example app
 interface AppState {
     counter: number;
 }

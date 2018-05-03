@@ -7,7 +7,7 @@ import { Store, Action, Reducer } from "../src/index";
 // use this test as playground
 export function testExample() {
 
-    // The main (root) state for our example app
+    // The state for our example app
     interface AppState {
         counter: number;
     }
@@ -19,7 +19,7 @@ export function testExample() {
     // The .select() function returns an Observable that emits every state change, so we can subscribe to it
     store.select().subscribe(newState => console.log("ROOT STATE:", JSON.stringify(newState)));
 
-    // the state Observable always caches the last emitted state, so we will immediately print our inital state:
+    // the select() observable always caches the last emitted state, so we will immediately print our inital state:
     // [CONSOLE.LOG]: ROOT STATE: {"counter":0}
 
     // Actions are just extended RxJS Subjects
