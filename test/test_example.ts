@@ -49,7 +49,7 @@ export function testExample() {
     // [CONSOLE.LOG]: ROOT STATE: {"counter":5}
 }
 
-describe("example", () => {
+describe.skip("example", () => {
     it("should run the example", done => {
         testExample();
         setTimeout(() => {
