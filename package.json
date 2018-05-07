@@ -46,6 +46,11 @@
   },
   "homepage": "https://github.com/Dynalon/reactive-state",
   "devDependencies": {
+    "@types/enzyme": "^3.1.10",
+    "@types/jsdom": "^11.0.4",
+    "@types/lodash": "^4.14.108",
+    "@types/node": "^9.6.7",
+    "@types/prop-types": "^15.5.2",
     "@types/chai": "^3.5.2",
     "@types/lodash.isobject": "^3.0.3",
     "@types/lodash.isplainobject": "^4.0.3",
@@ -55,7 +60,11 @@
     "chai": "^3.5.0",
     "concurrently": "^3.4.0",
     "coveralls": "^3.0.0",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
     "istanbul": "^0.4.5",
+    "jsdom": "^11.10.0",
+    "lodash": "^4.17.10",
     "mocha": "^3.4.1",
     "mocha-lcov-reporter": "^1.3.0",
     "node-fetch": "^1.7.1",
@@ -64,23 +73,16 @@
     "webpack": "^3.4.1"
   },
   "dependencies": {
-    "@types/enzyme": "^3.1.10",
-    "@types/jsdom": "^11.0.4",
-    "@types/node": "^9.6.7",
-    "@types/prop-types": "^15.5.2",
-    "enzyme": "^3.3.0",
-    "enzyme-adapter-react-16": "^1.1.1",
     "hoek": "^5.0.3",
-    "jsdom": "^11.10.0",
     "lodash.isobject": "^3.0.2",
     "lodash.isplainobject": "^4.0.6",
     "prop-types": "^15.6.1",
-    "react-dom": "^16.3.2",
     "request": "^2.85.0",
     "rxjs": "^6.0.0"
   },
   "optionalDependencies": {
     "react": "^16.3.2",
+    "react-dom": "^16.3.2",
     "redux": "^3.6.0"
   }
 }

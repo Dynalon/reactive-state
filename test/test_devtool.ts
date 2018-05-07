@@ -4,13 +4,13 @@ import { Subscription, Subject, range, zip } from "rxjs";
 import { take, toArray } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
 import { notifyOnStateChange } from "../src/store"
-import { CounterState } from "./test_common_types";
+import { ExampleState } from "./test_common_types";
 
 describe("Devtool notification tests", () => {
 
-    let store: Store<CounterState>;
+    let store: Store<ExampleState>;
     let incrementAction: Action<number>;
-    let incrementReducer: Reducer<CounterState, number>;
+    let incrementReducer: Reducer<ExampleState, number>;
     let incrementReducerSubscription: Subscription;
 
     beforeEach(() => {

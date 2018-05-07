@@ -2,7 +2,7 @@ import "mocha";
 
 import { Store, Action, Reducer } from "../src/index";
 
-import { CounterState } from "./test_common_types";
+import { ExampleState } from "./test_common_types";
 
 describe("destroy logic", () => {
     interface SliceState {
@@ -32,9 +32,9 @@ describe("destroy logic", () => {
     });
 
     it("should unsubscribe any reducer subscription when the store is destroyed for the root store", done => {
-        const store = Store.create<CounterState>({ counter: 0 });
+        const store = Store.create<ExampleState>({ counter: 0 });
         const incrementAction = new Action<void>();
-        const incrementReducer: Reducer<CounterState, void> =
+        const incrementReducer: Reducer<ExampleState, void> =
             (state, payload) => ({ ...state, counter: state.counter + 1});
 
         const subscription = store.addReducer(incrementAction, incrementReducer);
@@ -44,7 +44,7 @@ describe("destroy logic", () => {
     })
 
     it("should unsubscribe any reducer subscription when a sliceStore is destroyed", done => {
-        const store = Store.create<CounterState>({ counter: 0 });
+        const store = Store.create<ExampleState>({ counter: 0 });
         const sliceStore = store.createSlice("counter");
         const incrementReducer: Reducer<number, void> = (state) => state + 1;
 
@@ -55,7 +55,7 @@ describe("destroy logic", () => {
     })
 
     it("should unsubscribe any reducer subscription for a sliceStore when the root store is destroyed", done => {
-        const store = Store.create<CounterState>({ counter: 0 });
+        const store = Store.create<ExampleState>({ counter: 0 });
         const sliceStore = store.createSlice("counter");
         const incrementAction = new Action<void>();
         const incrementReducer: Reducer<number, void> = (state) => state + 1;

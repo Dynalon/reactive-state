@@ -1,13 +1,13 @@
 import "mocha";
 import { expect } from "chai";
 import { Store, Action, Reducer } from "../src/index";
-import { CounterState } from "./test_common_types";
+import { ExampleState } from "./test_common_types";
 import { Subject } from "rxjs";
 
 describe("String based action dispatch", () => {
 
-    let store: Store<CounterState>;
-    let incrementReducer: Reducer<CounterState, number>;
+    let store: Store<ExampleState>;
+    let incrementReducer: Reducer<ExampleState, number>;
     const INCREMENT_ACTION = "INCREMENT_ACTION";
 
     beforeEach(() => {

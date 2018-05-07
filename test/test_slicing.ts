@@ -4,10 +4,10 @@ import { Subscription } from "rxjs";
 import { take, skip, toArray } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
 
-import { CounterState, RootState, SliceState } from "./test_common_types";
+import { ExampleState, RootState, SliceState } from "./test_common_types";
 
 describe("Store slicing tests", () => {
-    let store: Store<CounterState>;
+    let store: Store<ExampleState>;
     let counterSlice: Store<number>;
     let incrementAction: Action<void>;
     let incrementReducer: Reducer<number, void>;
@@ -61,7 +61,7 @@ describe("Store slicing tests", () => {
 
     it("should emit a state change on the slice if the root store changes even when the subtree is not affected and forceEmitEveryChange is set", done => {
         const simpleAction = new Action<void>();
-        const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
+        const simpleMutation: Reducer<ExampleState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
         counterSlice.select().pipe(skip(1), take(1)).subscribe(counter => {
@@ -74,7 +74,7 @@ describe("Store slicing tests", () => {
 
     it("should not emit a state change on the slice if the root store changes and forceEmitEveryChange is not set", done => {
         const simpleAction = new Action<void>();
-        const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
+        const simpleMutation: Reducer<ExampleState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
         counterSlice.watch().pipe(skip(1), toArray()).subscribe(changes => {

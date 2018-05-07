@@ -4,10 +4,10 @@ import { of, range } from "rxjs";
 import { take, toArray, skip } from "rxjs/operators"
 
 import { Action, Reducer, Store } from "../src/index";
-import { CounterState, SliceState } from "./test_common_types";
+import { ExampleState, SliceState } from "./test_common_types";
 
 describe("Reducer tests", () => {
-    let store: Store<CounterState>;
+    let store: Store<ExampleState>;
     let slice: Store<number>;
 
     beforeEach(() => {

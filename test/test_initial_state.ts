@@ -4,7 +4,7 @@ import { range } from "rxjs";
 import { take, skip } from "rxjs/operators";
 
 import { Store, Action, Reducer } from "../src/index";
-import { RootState, SliceState, GenericState, CounterState } from "./test_common_types";
+import { RootState, SliceState, GenericState, ExampleState } from "./test_common_types";
 
 describe("initial state setting", () => {
 
@@ -116,13 +116,13 @@ describe("initial state setting", () => {
     })
 
     it("does clone the initialState object when creating the root store, so changes to it can not be noticed outside the store", done => {
-        const initialState: CounterState = Object.freeze({
+        const initialState: ExampleState = Object.freeze({
             counter: 0
         })
 
         const store = Store.create(initialState);
         const counterAction = new Action<number>();
-        const counterReducer: Reducer<CounterState, number> = (state, payload = 1) => {
+        const counterReducer: Reducer<ExampleState, number> = (state, payload = 1) => {
             // WARNING this is not immutable and should not be done in production code
             // we just do it here for the test...
             state.counter++;
@@ -139,7 +139,7 @@ describe("initial state setting", () => {
     });
 
     it("should create an immutable copy of the initialState object when creating a slice store, so changes to it can not be noticed outside the slice", done => {
-        const initialState: CounterState = Object.freeze({
+        const initialState: ExampleState = Object.freeze({
             counter: 0
         })
         const store = Store.create(initialState);

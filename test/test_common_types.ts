@@ -1,5 +1,9 @@
-export interface CounterState {
+export interface ExampleState {
     counter: number;
+    message?: string;
+    bool?: boolean;
+    someArray?: string[];
+    someObject?: object;
 }
 
 export interface SliceState {
