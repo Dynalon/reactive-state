@@ -2,7 +2,6 @@ import "mocha";
 import { expect } from "chai";
 import { skip, take, toArray } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
-import { merge} from "lodash";
 
 import { ExampleState } from "./test_common_types";
 
@@ -11,13 +10,20 @@ describe("Store .select() and .watch() tests", () => {
     let store: Store<ExampleState>;
     let incrementAction: Action<void>;
     let incrementReducer: Reducer<ExampleState, void>;
-    let mergeAction: Action<ExampleState>;
+    let mergeAction: Action<Partial<ExampleState>>;
     let noChangesAction: Action<void>;
     let shallowCopyAction: Action<void>;
 
-    const mergeReducer = (state, patch) => merge(state, patch);
+    const mergeReducer = (state, patch) => {
+        const newState: ExampleState = {
+            ...state,
+            someArray: patch.someArray ? [...state.someArray, ...patch.someArray] : state.someArray,
+            someObject: patch.someObject ? { ...state.someObject, ...patch.someObject } : state.someObject
+        }
+        return newState;
+    }
     const noChangesReducer = state => state;
-    const shallowCopyReducer = (state) => ({ ...state });
+    const shallowCopyReducer = (state) => ({ ...state });
 
     const initialState = Object.freeze({
         counter: 0,
@@ -32,11 +38,11 @@ describe("Store .select() and .watch() tests", () => {
     beforeEach(() => {
 
         store = Store.create(initialState);
-        incrementAction = new Action<void>("FOO");
+        incrementAction = new Action<void>();
         incrementReducer = (state) => ({ ...state, counter: state.counter + 1 });
         store.addReducer(incrementAction, incrementReducer);
 
-        mergeAction = new Action<ExampleState>();
+        mergeAction = new Action<Partial<ExampleState>>();
         store.addReducer(mergeAction, mergeReducer);
         noChangesAction = new Action<void>();
         store.addReducer(noChangesAction, noChangesReducer);
@@ -124,6 +130,24 @@ describe("Store .select() and .watch() tests", () => {
 
             incrementAction.next();
             store.destroy();
+        })
+
+        it(".watch() should emit a state change when an array is changed immutably", done => {
+            store.watch(state => state.someArray).pipe(skip(1), take(1)).subscribe(state => {
+                expect(state).to.deep.equal([...initialState.someArray, "Dades"]);
+                done();
+            })
+
+            mergeAction.next({ someArray: ["Dades"] });
+        })
+
+        it(".watch() should emit a state change when an object is changed immutably", done => {
+            store.watch(state => state.someObject).pipe(skip(1), take(1)).subscribe(state => {
+                expect(state).to.deep.equal({ ...initialState.someObject, foo: "foo" });
+                done();
+            })
+
+            mergeAction.next({ someObject: { foo: "foo" } });
         })
     })
 })
