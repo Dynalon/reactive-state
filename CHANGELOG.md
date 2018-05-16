@@ -1,4 +1,4 @@
-v2.0.0 (unreleased)
+v2.0.0
 
 * fully RxJS 6 based (without need for rxjs-compat)
 * store.select() now emits on every state change, no matter if the result in the selection function is affected by
