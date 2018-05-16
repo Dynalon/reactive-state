@@ -12,7 +12,7 @@ Features
 
   * wrist-friendly with no boilerplate code, no string constants, and not a single switch statement
   * Actions are just Observables, so are Subjects. Just call `.next()` to dispatch an action.
-  * dynamically add and remove reducers during runtime (usefull in lazy-loaded application modules)
+  * dynamically add and remove reducers during runtime (usefull for lazy-loading application modules)
   * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed async using RxJS operators
   * no need for selector libraries like MobX or Reselect, RxJS already ships it
   * single, application-wide Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and state separation
@@ -24,7 +24,7 @@ Features
 Installation
 ----
 ```
-npm install --save reactive-state
+npm install reactive-state
 ```
 
 Documentation
