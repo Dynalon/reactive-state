@@ -13,11 +13,11 @@ Features
   * wrist-friendly with no boilerplate code, no string constants, and not a single switch statement
   * Actions are just Observables, so are Subjects. Just call `.next()` to dispatch an action.
   * dynamically add and remove reducers during runtime (usefull in lazy-loaded application modules)
-  * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed asynchronously leveraging RxJS built-in operators
+  * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed async using RxJS operators
   * no need for selector libraries like MobX or Reselect, RxJS already ships it
   * single, application-wide Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and state separation
   * Strictly typed to find errors during compile time
-  * Heavily tested, 70+ tests for ~150 lines of code
+  * Heavily unit tested, 100+ tests for ~250 lines of code
   * React bridge (like `react-redux`) included, though using React is not mandatory
   * Support for React-Devtool Extension (not all features supported, work in progress)
 
@@ -40,72 +40,49 @@ Example Usage
 ----
 
 ```typescript
-import { Store, Reducer, Action } from "reactive-state";
+import { Store, Action } from "reactive-state";
+import { take } from "rxjs/operators";
 
-// The main (root) state for our example app
+// The state for our example app
 interface AppState {
     counter: number;
 }
 
-const initialState: AppState = {
-    counter: 0
-}
+const initialState: AppState = { counter: 0 }
 
 const store = Store.create(initialState);
 
-// The .select() function returns an Observable that emits every state change; we can simply
-// subscribe to it. The second argument "true" will - for the sake of this example - force output
-// on every state change even to nested properties
-store.select(state => state, true).subscribe(newState => console.log("ROOT STATE:", JSON.stringify(newState)));
+// The .select() function returns an Observable that emits every state change, so we can subscribe to it
+store.select().subscribe(newState => console.log("ROOT STATE:", JSON.stringify(newState)));
 
-// the state Observable always caches the last emitted state, so we will immediately get printed the inital state:
-// [CONSOLE.LOG] ROOT STATE: {"counter":0}
+// the state Observable always caches the last emitted state, so we will immediately print our inital state:
+// [CONSOLE.LOG]: ROOT STATE: {"counter":0}
 
-// Actions are just extended RxJS Subjects, but could also be plain Observables
-const incrementAction = new Subject<number>();
-const incrementReducer: Reducer<AppState, number> = (state, payload) => {
+// Actions are just extended RxJS Subjects
+const incrementAction = new Action<number>();
+
+// A reducer is a function that takes a state and an optional payload, and returns a new state
+function incrementReducer (state, payload) {
     return { ...state, counter: state.counter + payload };
 };
 
-// register reducer for an action; the string identifier is optional and only used for display in
-// the devtool browser extension
-const incrementSubscription = store.addReducer(incrementAction, incrementReducer, "INCREMENT");
+store.addReducer(incrementAction, incrementReducer);
 
-// dispatch actions
+// lets dispatch some actions!
 
 incrementAction.next(1);
 // [CONSOLE.LOG]: ROOT STATE: {"counter":1}
 incrementAction.next(1);
 // [CONSOLE.LOG]: ROOT STATE: {"counter":2}
 
-// reducers can be unsubscribed dynamically - that means they won't react to the action anymore
-incrementSubscription.unsubscribe();
-
-// Now, here is the more powerfull part of Reactive State: lets use a slice to simplifiy our code!
-// Slices point to a specific property on the rootState (or of another slice). You can think of them
-// as "views" to the global state.
-
-const sliceStore = store.createSlice("counter");
-// Note: while the first argument "counter" above may look like a magic string it is not: it is
-// of type "keyof Appstate"; using any other string that is not a valid property name of AppState will thus
-// trigger a TypeScript compilation error. This make it safe for refactorings :)
-
-const incrementSliceReducer: Reducer<number, number> = (state, payload) => state + payload;
-sliceStore.addReducer(incrementAction, incrementSliceReducer, "INCREMENT");
-
-sliceStore.select().subscribe(counter => console.log("COUNTER STATE:", counter));
-// [CONSOLE.LOG] COUNTER STATE: 2
-
-incrementAction.next(1);
-// [CONSOLE.LOG] ROOT STATE: {"counter":3}
-// [CONSOLE.LOG] COUNTER STATE: 3
-
-incrementAction.next(1);
-// [CONSOLE.LOG] ROOT STATE: {"counter":4}
-// [CONSOLE.LOG] COUNTER STATE: 4
-
-// Note how the ROOT STATE change subscription still is active; even if we operate on a slice, it is still
-// linked to a single root store. The slice is just a "view" on the state, and replaces reducer composition that would be used in redux.
+// async actions? No problem, no need for a "middleware", just use RxJS:
+interval(1000).pipe(take(3)).subscribe(() => incrementAction.next(1));
+// <PAUSE 1sec>
+// [CONSOLE.LOG]: ROOT STATE: {"counter":3}
+// <PAUSE 1sec>
+// [CONSOLE.LOG]: ROOT STATE: {"counter":4}
+// <PAUSE 1sec>
+// [CONSOLE.LOG]: ROOT STATE: {"counter":5}
 ```
 
 License

@@ -1,19 +1,19 @@
 import "mocha";
 import { expect } from "chai";
 import { Store, Action, Reducer } from "../src/index";
-import { CounterState } from "./test_common_types";
-import { Subject } from "rxjs/Rx";
+import { ExampleState } from "./test_common_types";
+import { Subject } from "rxjs";
 
 describe("String based action dispatch", () => {
 
-    let store: Store<CounterState>;
-    let incrementReducer: Reducer<CounterState, number>;
+    let store: Store<ExampleState>;
+    let incrementReducer: Reducer<ExampleState, number>;
     const INCREMENT_ACTION = "INCREMENT_ACTION";
 
     beforeEach(() => {
-        const initialState = {
+        const initialState = Object.freeze({
             counter: 0
-        };
+        })
         store = Store.create(initialState);
         incrementReducer = (state, payload = 1) => ({ ...state, counter: state.counter + payload });
     });
@@ -51,7 +51,7 @@ describe("String based action dispatch", () => {
         });
 
         it("should be possible to add an action as NamedObservable and trigger a manual dispatch on it", done => {
-            const incrementAction = new Action(INCREMENT_ACTION)
+            const incrementAction = new Action<number>(INCREMENT_ACTION)
             store.addReducer(incrementAction, incrementReducer);
             store.dispatch(INCREMENT_ACTION, 1)
             store.select().subscribe(state => {

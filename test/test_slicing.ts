@@ -1,13 +1,13 @@
 import "mocha";
 import { expect } from "chai";
-import { Subscription } from "rxjs/Rx";
-
+import { Subscription } from "rxjs";
+import { take, skip, toArray } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
 
-import { CounterState, RootState, SliceState } from "./test_common_types";
+import { ExampleState, RootState, SliceState } from "./test_common_types";
 
 describe("Store slicing tests", () => {
-    let store: Store<CounterState>;
+    let store: Store<ExampleState>;
     let counterSlice: Store<number>;
     let incrementAction: Action<void>;
     let incrementReducer: Reducer<number, void>;
@@ -38,7 +38,7 @@ describe("Store slicing tests", () => {
     })
 
     it("should be possible to pass a projection function to .select()", done => {
-        store.select(state => state.counter).take(4).toArray().subscribe(values => {
+        store.select(state => state.counter).pipe(take(4), toArray()).subscribe(values => {
             expect(values).to.deep.equal([0, 1, 2, 3]);
             done();
         })
@@ -51,7 +51,7 @@ describe("Store slicing tests", () => {
     it("should not invoke reducers which have been unsubscribed", done => {
         incrementSubscription.unsubscribe();
 
-        counterSlice.select().skip(1).subscribe(state => {
+        counterSlice.select().pipe(skip(1)).subscribe(state => {
             done("Error: This should have not been called");
         })
 
@@ -61,10 +61,10 @@ describe("Store slicing tests", () => {
 
     it("should emit a state change on the slice if the root store changes even when the subtree is not affected and forceEmitEveryChange is set", done => {
         const simpleAction = new Action<void>();
-        const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
+        const simpleMutation: Reducer<ExampleState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
-        counterSlice.select(s => s, true).skip(1).take(1).subscribe(counter => {
+        counterSlice.select().pipe(skip(1), take(1)).subscribe(counter => {
             expect(counter).to.equal(0);
             done();
         });
@@ -74,10 +74,10 @@ describe("Store slicing tests", () => {
 
     it("should not emit a state change on the slice if the root store changes and forceEmitEveryChange is not set", done => {
         const simpleAction = new Action<void>();
-        const simpleMutation: Reducer<CounterState, void> = (state) => ({ ...state });
+        const simpleMutation: Reducer<ExampleState, void> = (state) => ({ ...state });
         store.addReducer(simpleAction, simpleMutation);
 
-        counterSlice.select(s => s, false).skip(1).toArray().subscribe(changes => {
+        counterSlice.watch().pipe(skip(1), toArray()).subscribe(changes => {
             expect(changes).to.deep.equal([]);
             done();
         });
@@ -89,7 +89,7 @@ describe("Store slicing tests", () => {
     it("should trigger state changes on slice siblings", done => {
         const siblingStore = store.createSlice("counter");
 
-        siblingStore.select().skip(1).subscribe(n => {
+        siblingStore.select().pipe(skip(1)).subscribe(n => {
             expect(n).to.equal(1);
             done();
         })
@@ -102,15 +102,16 @@ describe("Store slicing tests", () => {
             slice: { foo: "bar" }
         });
         const action = new Action<void>();
-        const reducer: Reducer<SliceState, void> = (state, payload) => {
+        const reducer: Reducer<SliceState, void> = (state) => {
             return { ...state, foo: "baz" }
         };
 
         const slice1 = rootStore.createSlice("slice", { foo: "bar" });
-        slice1.addReducer(action, reducer);
+        // TODO eliminate any
+        slice1.addReducer(action, reducer as any);
 
         const slice2 = rootStore.createSlice("slice", { foo: "bar2" });
-        slice2.select().skip(1).subscribe(slice => {
+        slice2.select().pipe(skip(1)).subscribe(slice => {
             if (!slice) {
                 done("ERROR");
                 return;

@@ -1,4 +1,4 @@
-import { Subject } from "rxjs/Subject";
+import { Subject } from "rxjs";
 
 /**
  * Actions basically just extend Subject that emit a Payload P and can have a string name to identify

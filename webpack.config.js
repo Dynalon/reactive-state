@@ -1,4 +1,6 @@
 const path = require('path');
+const rxPaths = require('rxjs/_esm5/path-mapping');
+const webpack = require('webpack');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
@@ -10,6 +12,7 @@ module.exports = {
         libraryTarget: "umd"
     },
     resolve: {
+        alias: rxPaths(),
         modules: [
             "node_modules"
         ],
@@ -20,6 +23,7 @@ module.exports = {
         ]
     },
     plugins: [
+        new webpack.optimize.ModuleConcatenationPlugin(),
         new UglifyJSPlugin()
     ],
     context: __dirname,

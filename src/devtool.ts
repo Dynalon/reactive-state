@@ -1,8 +1,7 @@
 import { createStore, StoreEnhancer, compose, Action as ReduxAction } from "redux";
 import { Store, notifyOnStateChange } from "./store";
-import { Subject } from "rxjs/Subject";
-
-import { take } from "rxjs/operators/take"
+import { Subject } from "rxjs";
+import { take } from "rxjs/operators"
 import { StateChangeNotification } from "./types";
 
 /* istanbul ignore next */
@@ -30,7 +29,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     const reactiveStateUpdate = new Subject<any>();
 
     // TODO: initialState: S should be auto-infered, maybe a bug in TS or RxJS?
-    store.select(s => s, true).pipe(take(1)).subscribe((initialState: S) => {
+    store.select().pipe(take(1)).subscribe((initialState: S) => {
 
         const enhancer: StoreEnhancer<S> = (next) => {
             return (reducer, preloadedState) => {

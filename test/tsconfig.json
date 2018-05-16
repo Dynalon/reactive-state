@@ -1,16 +1,19 @@
 {
     "compilerOptions": {
-        "target": "ES2015",
+        "target": "ES2016",
         "sourceMap": true,
         "declaration": false,
         "module": "commonjs",
-        "strict": false,
+        "moduleResolution": "node",
+        "strict": true,
         "noImplicitAny": false,
         "noUnusedLocals": true,
-        "lib": [ "dom", "es2015" ]
+        "jsx": "react",
+        "lib": [ "dom", "es5", "es2015.promise", "es2015.symbol", "es2015.iterable" ]
     },
     "include": [
         "../src/*.ts",
+        "../react/*.ts",
         "./**/*.ts"
     ]
 }

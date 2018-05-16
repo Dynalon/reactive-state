@@ -1,29 +1,27 @@
-import { Observable } from "rxjs/Observable";
-import { Subject } from "rxjs/Subject";
-import { Subscription } from "rxjs/Subscription";
+import { Observable, Subject, Subscription } from "rxjs";
 import {
     StateMutation, StateChangeNotification, RootStateChangeNotification, Reducer,
     CleanupState, NamedObservable, ActionDispatch
 } from "./types";
+import { shallowEqual } from "./shallowEqual";
 
 // TODO use typings here
 declare var require: any;
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
-// Using this approach saves us from using RxJS path mapping in webpack.config.js
-// See: https://github.com/ReactiveX/rxjs/blob/master/doc/lettable-operators.md#build-and-treeshaking
-import { filter } from "rxjs/operators/filter";
-import { merge } from "rxjs/operators/merge";
-import { scan } from "rxjs/operators/scan";
-import { map } from "rxjs/operators/map";
-import { takeWhile } from "rxjs/operators/takeWhile";
-import { takeUntil } from "rxjs/operators/takeUntil";
-import { distinctUntilChanged } from "rxjs/operators/distinctUntilChanged";
-import { publishReplay } from "rxjs/operators/publishReplay";
-import { refCount } from "rxjs/operators/refCount";
-
-import { empty } from "rxjs/observable/empty";
+import {
+    filter,
+    merge,
+    scan,
+    map,
+    takeWhile,
+    takeUntil,
+    distinctUntilChanged,
+    publishReplay,
+    refCount
+} from "rxjs/operators";
+import { EMPTY } from "rxjs"
 
 // TODO: We currently do not allow Symbol properties on the root state. This types asserts that all properties
 // on the state object are strings (numbers get transformed to strings anyway)
@@ -41,8 +39,9 @@ type RootReducer<R, P> = (payload: P) => StateMutation<R>
  * @param initialState
  */
 function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
+    let initialStateCopy = createImmutableCopy(initialState);
     const state = stateMutators.pipe(
-        scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState),
+        scan((state: S, reducer: StateMutation<S>) => reducer(state), initialStateCopy),
         // these two lines make our observable hot and have it emit the last state
         // upon subscription
         publishReplay(1),
@@ -51,6 +50,15 @@ function createState<S>(stateMutators: Observable<StateMutation<S>>, initialStat
     return state;
 }
 
+function createImmutableCopy(state: any) {
+    if (isObject(state) && isPlainObject(state)) {
+        return {  ...state };
+    } else if (Array.isArray(state))
+        return [...state];
+    else {
+        return state;
+    }
+}
 
 export class Store<S> {
 
@@ -117,6 +125,7 @@ export class Store<S> {
      * Create a new Store based on an initial state
      */
     static create<S>(initialState?: S): Store<S> {
+        initialState = createImmutableCopy(initialState);
         if (initialState === undefined)
             initialState = {} as S;
         else {
@@ -143,7 +152,7 @@ export class Store<S> {
      * Creates a new linked store, that Selects a slice on the main store.
      */
     createSlice<K extends keyof S>(key: K, initialState?: S[K], cleanupState?: CleanupState<S[K]>): Store<S[K]> {
-
+        initialState = createImmutableCopy(initialState);
         if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
             throw new Error("initialState must be a plain object, an array, or a primitive type");
         if (isObject(cleanupState) && !Array.isArray(cleanupState) && !isPlainObject(cleanupState))
@@ -154,13 +163,8 @@ export class Store<S> {
         const keyChain = [...this.keyChain, key];
 
         if (initialState !== undefined) {
-            const setInitialStateOnSliceIfPropertyIsNotSet = (s: S) => {
-                if (getNestedProperty(s, keyChain) === undefined) {
-                    setNestedPropertyToValue(s, initialState, keyChain);
-                }
-            }
             this.stateMutators.next(s => {
-                setInitialStateOnSliceIfPropertyIsNotSet(s);
+                setNestedPropertyToValue(s, initialState, keyChain);
                 return s;
             });
         }
@@ -211,7 +215,7 @@ export class Store<S> {
             takeUntil(this.destroyed),
             filter(s => s.actionName === name),
             map(s => s.actionPayload),
-            merge(typeof action !== "string" ? action : empty())
+            merge(typeof action !== "string" ? action : EMPTY)
         )
 
         const rootReducer: RootReducer<S, P> = (payload: P) => (rootState) => {
@@ -255,32 +259,34 @@ export class Store<S> {
     /**
      * Selects a part of the state using a selector function. If no selector function is given, the identity function
      * is used (which returns the state of type S).
-     * Note: The returned observable does not only update the root state changes (=is a new object instance)
+     * Note: The returned observable does only update when the result of the selector function changed
+     *       compared to a previous emit. A shallow copy test is performed to detect changes.
      *       This requires that your reducers update all nested properties in
-     *       an immutable way, which is required practice with Redux and also with reactive-state. To make the
-     *       observable emit any time, every if only a subtree item changes, pass true as forceEmitEveryChange second
-     *       argument to this function.
+     *       an immutable way, which is required practice with Redux and also with reactive-state.
+     *       To make the observable emit any time the state changes, use .selectAlways()
      *       For correct nested reducer updates, see:
      *         http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects
      *
      * @param selectorFn    A selector function which returns a mapped/transformed object based on the state
-     * @param forceEmitEveryChange  A flag to have updates emitted even if the select'ed
-     *                              element is not changed (But i.e. a parent prop on global state)
-     * @returns             An observable that emits when the state changes
+     * @returns             An observable that emits the result of the selector function after a
+     *                      change of the return value of the selector function
      */
-    select<T = S>(selectorFn?: (state: S) => T, forceEmitEveryChange = false): Observable<T> {
+    watch<T = S>(selectorFn?: (state: S) => T): Observable<T> {
+        return this.select(selectorFn).pipe(
+            distinctUntilChanged((a, b) => shallowEqual(a, b)),
+        )
+    }
+
+    select<T = S>(selectorFn?: (state: S) => T): Observable<T> {
         if (!selectorFn)
             selectorFn = (state: S) => <T><any>state;
 
         const mapped = this.state.pipe(
             takeUntil(this._destroyed),
-            map(selectorFn)
+            map(selectorFn),
         )
 
-        if (forceEmitEveryChange)
-            return mapped;
-        else
-            return mapped.pipe(distinctUntilChanged())
+        return mapped;
     }
 
     /**

@@ -34,11 +34,7 @@ const initialState: AppState = {
 const store = Store.create(initialState);
 
 // Log all state changes using the .select() function
-// the second boolean flag indicates that we wan't to get notified on EVERY change, even if there
-// is only a change on a subtree or nested property
-store.select(state => state, true).subscribe(newState => console.log(JSON.stringify(newState)));
-
-// wire up counter
+store.select().subscribe(newState => console.log(JSON.stringify(newState)));
 
 // Actions are just extended RxJS Subjects
 const incrementAction = new Action<void>();
@@ -49,8 +45,7 @@ const decrementAction = new Action<void>('DECREMENT');
 const decrementReducer: Reducer<number, void> = (state: number, payload: void) => state - 1;
 
 // while it looks like a magic string, it is NOT: 'counter' is of type "keyof AppState"; so putting
-// any non-property name of AppState here is actually a compilation error! This makes it safe during
-// refactorings!
+// any non-property name of AppState here is actually a compilation error!
 const counterStore = store.createSlice('counter');
 
 counterStore.addReducer(incrementAction, incrementReducer);
