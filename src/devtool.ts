@@ -31,7 +31,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     // TODO: initialState: S should be auto-infered, maybe a bug in TS or RxJS?
     store.select().pipe(take(1)).subscribe((initialState: S) => {
 
-        const enhancer: StoreEnhancer<S> = (next) => {
+        const enhancer: StoreEnhancer<any, any> = (next) => {
             return (reducer, preloadedState) => {
 
                 // run any other store enhancers
@@ -47,7 +47,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
 
                 reactiveStateUpdate.subscribe((p: any) => {
                     // console.info("RDX DISP", p)
-                    reduxStore.dispatch({ type: p.actionName, payload: p.payload, state: p.state });
+                    reduxStore.dispatch({ type: p.actionName, payload: p.payload, state: p.state } as any);
                 });
                 return reduxStore;
             };
