@@ -160,7 +160,7 @@ export class Store<S> {
 
         // S[keyof S] is assumed to be of type K; this is a runtime assumption
         const state: Observable<S[K]> = this.state.pipe(map(state => state[key]));
-        const keyChain = [...this.keyChain, key];
+        const keyChain = [...this.keyChain, key as string];
 
         if (initialState !== undefined) {
             this.stateMutators.next(s => {
