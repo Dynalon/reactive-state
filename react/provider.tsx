@@ -1,27 +1,19 @@
 import { Store } from "../src/index";
 import * as React from "react";
-import * as PropTypes from "prop-types"
+
+const { Provider, Consumer } = React.createContext<Store<any> | undefined>(undefined);
 
 export interface StoreProviderProps {
     store: Store<{}>;
 }
 
 export class StoreProvider extends React.Component<StoreProviderProps, {}> {
-
-    static childContextTypes = {
-        reactiveStateStore: PropTypes.any
-    }
-
-
-    getChildContext() {
-        return {
-            reactiveStateStore: this.props.store as Store<{}>
-        }
-    }
     render() {
-        return <div>{this.props.children}</div>;
+        return <Provider value={this.props.store}>{this.props.children}</Provider>;
     }
 }
+
+export const StoreConsumer = Consumer;
 
 export interface StoreSliceProps<TAppState, TKey extends keyof TAppState> {
     slice: (store: Store<TAppState>) => TKey
@@ -35,58 +27,41 @@ export interface StoreSliceState<TSliceState> {
 export const StoreSlice = class StoreSlice<TAppState, TSliceState, TKey extends keyof TAppState>
     extends React.Component<StoreSliceProps<TAppState, TKey>, StoreSliceState<TSliceState>> {
 
-    // private slice?: Store<keyof TAppState>;
-    public slice?: any;
-
-    getChildContext() {
-        return {
-            reactiveStateStore: this.slice as Store<TSliceState>
-        }
-    }
-
-    componentWillMount() {
-        const store = this.context.reactiveStateStore as Store<TAppState>;
-        const key: any = this.props.slice(store);
-        this.slice = store.createSlice(key, this.props.initialState as any, this.props.cleanupState as any);
-    }
+    slice?: Store<TSliceState>;
 
     componentWillUnmount() {
-        this.slice.destroy();
+        this.slice!.destroy();
     }
 
     render() {
-        return <>{this.props.children}</>
+        return <Consumer>
+            {(store: Store<TAppState> | undefined) => {
+
+                if (!store)
+                    throw new Error("StoreSlice used outside of a Store context. Did forget to add a <StoreProvider>?")
+
+                if (this.slice === undefined) {
+                    const key: any = this.props.slice(store);
+                    this.slice = store.createSlice(key, this.props.initialState as any, this.props.cleanupState as any) as any;
+                }
+                return <Provider value={this.slice}>{this.props.children}</Provider>
+            }
+            }
+        </Consumer>
     }
-};
-
-// Instead of static fields we use this to make code coverage tool happy
-(StoreSlice as any).contextTypes = {
-    reactiveStateStore: PropTypes.any
-};
-
-(StoreSlice as any).childContextTypes = {
-    reactiveStateStore: PropTypes.any
-};
+}
 
 export class WithStore extends React.Component<{}, {}> {
-    public store?: Store<any>;
-
-    static contextTypes = {
-        reactiveStateStore: PropTypes.any
-    }
-
-    componentWillMount() {
-    }
-
     render() {
-        const store = this.context.reactiveStateStore;
-        if (!store)
-            throw new Error("WithStore used but no store could be found in context. Did you suppliy a StoreProvider?")
-        else if (typeof this.props.children !== "function")
-            throw new Error("WithStore used but its child is not a function.")
-        else {
+        return <Consumer>{store => {
             const child = this.props.children as (store: Store<any>) => React.ReactNode;
-            return <>{child(store)}</>
+            if (!store)
+                throw new Error("WithStore used but no store could be found in context. Did you suppliy a StoreProvider?")
+            else if (typeof this.props.children !== "function")
+                throw new Error("WithStore used but its child is not a function.")
+            else
+                return child(store)
         }
+        }</Consumer>
     }
 }

@@ -1,7 +1,7 @@
 import * as React from "react";
-import * as PropTypes from "prop-types";
 import { Subscription, Observable } from "rxjs";
 import { Store } from "../src/store";
+import { StoreConsumer } from "./provider"
 
 import { ActionMap, assembleActionProps } from "./actions";
 
@@ -21,12 +21,14 @@ export interface ConnectResult<TAppState, TOriginalProps> {
     cleanup?: Subscription;
 }
 
+// TODO: remove undefined?!?
 export type ConnectCallback<S, P> = (store: Store<S>) => ConnectResult<S, P> | undefined;
 
 export interface ConnectState {
     originalProps: object;
     connectedProps: object;
 }
+
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
  * Note: The returned component is a PureComponent - so make sure to update a prop immutably
@@ -35,19 +37,19 @@ export function connect<TAppState, TOriginalProps extends {}>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
     connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>>
 ) {
-    const klass = class ConnectedComponent extends React.PureComponent<Partial<TOriginalProps>, ConnectState> {
+    class ConnectedComponent extends React.PureComponent<Partial<TOriginalProps> & { reactiveStateStore: Store<TAppState> }, ConnectState> {
 
         subscription: Subscription = new Subscription();
         actionProps: Partial<TOriginalProps> = {};
 
-        constructor(props: TOriginalProps, context: any) {
-            super(props, context);
+        constructor(props: any) {
+            super(props)
         }
 
         componentWillMount() {
             this.setState((prevState) => ({ ...prevState, originalProps: this.props }));
 
-            const store = this.context.reactiveStateStore as Store<TAppState>;
+            const store = this.props.reactiveStateStore;
 
             const weHaveNoStoreEnvironmentAndBehaveAsTheOriginalComponent = store === undefined;
             if (weHaveNoStoreEnvironmentAndBehaveAsTheOriginalComponent) {
@@ -98,11 +100,15 @@ export function connect<TAppState, TOriginalProps extends {}>(
         }
     };
 
-    // Note: While we could declare this as a static field in the class, the typescript code generation will confuse
-    // our code coverage tool and show an uncovered line :(
-    (klass as any).contextTypes = {
-        reactiveStateStore: PropTypes.any
-    }
+    return class extends React.PureComponent<Partial<TOriginalProps>, ConnectState> {
+        constructor(props: any) {
+            super(props);
+        }
 
-    return klass;
+        render() {
+            return <StoreConsumer>
+                {value => <ConnectedComponent reactiveStateStore={value} {...this.props as any} />}
+            </StoreConsumer>
+        }
+    }
 }

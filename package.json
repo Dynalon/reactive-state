@@ -47,7 +47,7 @@
   "homepage": "https://github.com/Dynalon/reactive-state",
   "devDependencies": {
     "@types/chai": "^3.5.2",
-    "@types/enzyme": "^3.1.10",
+    "@types/enzyme": "^3.1.13",
     "@types/jsdom": "^11.0.4",
     "@types/mocha": "^2.2.41",
     "@types/node": "^9.6.7",
@@ -55,8 +55,8 @@
     "chai": "^3.5.0",
     "concurrently": "^3.4.0",
     "coveralls": "^3.0.0",
-    "enzyme": "^3.3.0",
-    "enzyme-adapter-react-16": "^1.1.1",
+    "enzyme": "^3.4.1",
+    "enzyme-adapter-react-16": "^1.2.0",
     "istanbul": "^0.4.5",
     "jsdom": "^11.10.0",
     "mocha": "^5.2.0",
@@ -69,13 +69,10 @@
   "dependencies": {
     "@types/lodash.isobject": "^3.0.3",
     "@types/lodash.isplainobject": "^4.0.3",
-    "@types/prop-types": "^15.5.4",
-    "@types/react": "^16.4.8",
-    "hoek": "^5.0.3",
+    "@types/react": "^16.4.9",
+    "@types/react-dom": "^16.0.7",
     "lodash.isobject": "^3.0.2",
     "lodash.isplainobject": "^4.0.6",
-    "prop-types": "^15.6.1",
-    "request": "^2.85.0",
     "rxjs": "^6.2.2"
   },
   "optionalDependencies": {

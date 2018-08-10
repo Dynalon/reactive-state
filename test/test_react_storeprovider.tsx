@@ -7,7 +7,7 @@ import { Store, Action } from "../src/index";
 import { connect, MapStateToProps, StoreProvider, StoreSlice, WithStore } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
-import { TestComponent, TestState, SliceState, } from "./test_react_connect";
+import { TestComponent, TestState, SliceState } from "./test_react_connect";
 
 describe("react bridge: StoreProvider and StoreSlice tests", () => {
 
@@ -34,6 +34,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         store.destroy();
         if (wrapper) {
             wrapper.unmount()
+            wrapper = undefined;
         }
     })
 
@@ -92,7 +93,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
     it("should be possible for two StoreProvider as siblings to offer different stores", done => {
         const store1 = Store.create({ foo: "foo" })
         const store2 = Store.create({ bar: "bar" })
-        wrapper = Enzyme.mount(<>
+        wrapper = Enzyme.mount(<div>
             <StoreProvider store={store1}>
                 <WithStore>{store => {
                     store.select().pipe(take(1)).subscribe(state => {
@@ -115,7 +116,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
                 }}
                 </WithStore>
             </StoreProvider>
-        </>
+        </div>
         )
     })
 
@@ -123,7 +124,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         const store1 = Store.create({ level: "level1" })
         const store2 = Store.create({ level: "level2" })
 
-        wrapper = Enzyme.mount(<>
+        wrapper = Enzyme.mount(<div>
             <StoreProvider store={store1}>
                 <WithStore>{level1Store => {
                     level1Store.select().pipe(take(1)).subscribe(state => {
@@ -142,7 +143,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
                 </WithStore>
                 }}
             </StoreProvider>
-        </>
+        </div>
         )
     })
 
@@ -187,6 +188,8 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
                 </StoreSlice>
             </StoreProvider>
         )
+        wrapper.update();
+        wrapper.update();
         wrapper.unmount();
         wrapper = null;
     })
@@ -224,12 +227,22 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         }
         store.destroyed.subscribe(() => done());
 
-        Enzyme.mount(<StoreProvider store={store}>
+        wrapper = Enzyme.mount(<div><StoreProvider store={store}>
             <WithStore>{theStore => <SampleSFC store={theStore} />}</WithStore>
-        </StoreProvider>
+        </StoreProvider></div>
         )
     })
 
+    it("should throw an error if StoreSlice is used outside of a StoreProvider context", () => {
+        const SampleSFC: React.SFC<{ store: Store<TestState> }> = (props) => {
+            return null;
+        }
+        expect(() => {
+            Enzyme.mount(
+                <StoreSlice slice={(store: Store<TestState>) => "slice"} />
+            )
+        }).to.throw();
+    })
 
     it("should throw an error if WithStore is used outside of a StoreProvider context", () => {
         const SampleSFC: React.SFC<{ store: Store<TestState> }> = (props) => {
