@@ -234,9 +234,6 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
     })
 
     it("should throw an error if StoreSlice is used outside of a StoreProvider context", () => {
-        const SampleSFC: React.SFC<{ store: Store<TestState> }> = (props) => {
-            return null;
-        }
         expect(() => {
             Enzyme.mount(
                 <StoreSlice slice={(store: Store<TestState>) => "slice"} />
