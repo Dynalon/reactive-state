@@ -50,13 +50,13 @@ function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, 
             onClick: globalClicked
         }
         if (connectResultOverride === null) {
-            return;
+            return {};
         }
         return {
             actionMap,
             mapStateToProps,
             ...connectResultOverride
-        }
+        };
     })
 }
 

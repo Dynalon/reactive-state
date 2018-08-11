@@ -16,13 +16,12 @@ export type MapStateToProps<TComponentOrProps, TState = any> = (store: Store<TSt
 
 // TODO better naming
 export interface ConnectResult<TAppState, TOriginalProps> {
-    mapStateToProps?: MapStateToProps<TOriginalProps>;
+    mapStateToProps?: MapStateToProps<TOriginalProps, TAppState>;
     actionMap?: ActionMap<TOriginalProps>;
     cleanup?: Subscription;
 }
 
-// TODO: remove undefined?!?
-export type ConnectCallback<S, P> = (store: Store<S>) => ConnectResult<S, P> | undefined;
+export type ConnectCallback<S, P> = (store: Store<S>) => ConnectResult<S, P>;
 
 export interface ConnectState {
     originalProps: object;
@@ -51,16 +50,14 @@ export function connect<TAppState, TOriginalProps extends {}>(
 
             const store = this.props.reactiveStateStore;
 
+            // we might use the connected component  without a store (i.e. in test scenarios). In this case we do
+            // not do anything and just behave as if we were not connected at all
             const weHaveNoStoreEnvironmentAndBehaveAsTheOriginalComponent = store === undefined;
             if (weHaveNoStoreEnvironmentAndBehaveAsTheOriginalComponent) {
                 return;
             }
 
-            let result = connectCallback(store);
-
-            if (result === undefined) {
-                result = {};
-            }
+            const result = connectCallback(store);
 
             if (result.actionMap) {
                 this.actionProps = assembleActionProps(result.actionMap);

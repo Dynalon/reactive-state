@@ -1,3 +1,9 @@
+v3.0 (unreleased)
+
+* Requires React >=16.4 for react bridge
+* Switch to reacts new context API for react bridge StoreProvider
+* Drop `undefined` as a valid return type for the `ConnectCallback` (you can use empty object `{}` though)
+
 v2.0.0
 
 * fully RxJS 6 based (without need for rxjs-compat)
