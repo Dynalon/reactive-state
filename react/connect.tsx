@@ -23,9 +23,9 @@ export interface ConnectResult<TAppState, TOriginalProps> {
 
 export type ConnectCallback<S, P> = (store: Store<S>) => ConnectResult<S, P>;
 
-export interface ConnectState {
-    originalProps: object;
-    connectedProps: object;
+export interface ConnectState<TOriginalProps> {
+    connectedProps?: Partial<TOriginalProps>;
+    ready: boolean;
 }
 
 /**
@@ -36,68 +36,99 @@ export function connect<TAppState, TOriginalProps extends {}>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
     connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>>
 ) {
-    class ConnectedComponent extends React.PureComponent<Partial<TOriginalProps> & { reactiveStateStore: Store<TAppState> }, ConnectState> {
+    class ConnectedComponent extends React.PureComponent<Partial<TOriginalProps> & { reactiveStateStore: Store<TAppState> }, ConnectState<TOriginalProps>> {
 
-        subscription: Subscription = new Subscription();
-        actionProps: Partial<TOriginalProps> = {};
+        private subscription: Subscription = new Subscription();
+        private actionProps: Partial<TOriginalProps> = {};
+        private connectResult?: ConnectResult<TAppState, Partial<TOriginalProps>>
+        private store: Store<TAppState>;
+
+        /**
+         * we might use the connected component  without a store (i.e. in test scenarios). In this case we do
+         * not do anything and just behave as if we were not connected at all
+         */
+        private get passthroughProps() {
+            return this.store === undefined;
+        }
+
+        state: ConnectState<TOriginalProps> = {
+            connectedProps: undefined,
+            ready: false
+        }
 
         constructor(props: any) {
             super(props)
+
+            this.store = this.props.reactiveStateStore;
+            this.connect();
         }
 
-        componentWillMount() {
-            this.setState((prevState) => ({ ...prevState, originalProps: this.props }));
-
-            const store = this.props.reactiveStateStore;
-
-            // we might use the connected component  without a store (i.e. in test scenarios). In this case we do
-            // not do anything and just behave as if we were not connected at all
-            const weHaveNoStoreEnvironmentAndBehaveAsTheOriginalComponent = store === undefined;
-            if (weHaveNoStoreEnvironmentAndBehaveAsTheOriginalComponent) {
+        private connect() {
+            if (this.passthroughProps)
                 return;
+
+            this.connectResult = connectCallback(this.store);
+
+            if (this.connectResult.actionMap) {
+                this.actionProps = assembleActionProps(this.connectResult.actionMap);
             }
 
-            const result = connectCallback(store);
-
-            if (result.actionMap) {
-                this.actionProps = assembleActionProps(result.actionMap);
+            if (this.connectResult.cleanup) {
+                this.subscription.add(this.connectResult.cleanup);
             }
+        }
 
-            if (result.mapStateToProps) {
-                const stateUpdates = result.mapStateToProps(store);
+        private subscribeToStateChanges() {
+            if (this.passthroughProps)
+                return;
+
+            const connectResult = this.connectResult!;
+            if (connectResult.mapStateToProps) {
+                const stateUpdates = connectResult.mapStateToProps(this.store);
                 this.subscription.add(stateUpdates.subscribe(connectedState => {
-                    this.setState((prevState: ConnectState) => {
+                    this.setState((prevState: ConnectState<TOriginalProps>) => {
                         return {
                             ...prevState,
+                            ready: true,
                             connectedProps: connectedState
                         }
                     });
                 }))
-            }
-
-            if (result.cleanup) {
-                this.subscription.add(result.cleanup);
+            } else {
+                this.setState((prevState: ConnectState<TOriginalProps>) => ({ ready: true }))
             }
         }
 
-        componentDidUpdate(prevProps: any, prevState: any) {
-            if (prevState === this.state) {
-                this.setState((prevState: ConnectState) => ({ ...prevState, originalProps: this.props }))
-            }
+        /**
+         * We need to remove the remoteReacticeState properties from our input props; the remainder input props
+         * are passed down to the connected component
+         */
+        private getProps(): TOriginalProps {
+            const props: TOriginalProps & { reactiveStateStore: any } = { ...(this.props as any) };
+            delete props.reactiveStateStore;
+            return props;
         }
 
         componentWillUnmount() {
             this.subscription.unsubscribe()
         }
 
+        componentDidMount() {
+            this.subscribeToStateChanges();
+        }
+
         render() {
-            return <div>
-                <ComponentToConnect {...this.state.connectedProps} {...this.actionProps} {...this.state.originalProps} />
-            </div>
+            const props = this.getProps();
+
+            if (this.passthroughProps || this.state.ready === true) {
+                return <ComponentToConnect {...this.state.connectedProps} {...this.actionProps} {...props} />
+            } else {
+                return null;
+            }
         }
     };
 
-    return class extends React.PureComponent<Partial<TOriginalProps>, ConnectState> {
+    return class extends React.PureComponent<Partial<TOriginalProps>, ConnectState<TOriginalProps>> {
         constructor(props: any) {
             super(props);
         }

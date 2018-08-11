@@ -2,6 +2,7 @@ v3.0 (unreleased)
 
 * Requires React >=16.4 for react bridge
 * Switch to reacts new context API for react bridge StoreProvider
+* Drop deprecated lifecycle hooks to be ready for React v17
 * Drop `undefined` as a valid return type for the `ConnectCallback` (you can use empty object `{}` though)
 
 v2.0.0

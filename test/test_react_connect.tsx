@@ -161,7 +161,7 @@ describe("react bridge: connect() tests", () => {
         wrapper.unmount();
     })
 
-    it("should allow the connect callback to return undefined and then use the provided props", (done) => {
+    it("should allow the connect callback to return empty result object and then use the provided props", (done) => {
         ConnectedTestComponent = getConnectedComponent(null);
         const onClick = () => done();
         const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
