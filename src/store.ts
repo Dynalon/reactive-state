@@ -1,4 +1,4 @@
-import { EMPTY, Observable, Subject, Subscription } from "rxjs";
+import { EMPTY, Observable, Subject, Subscription, isObservable } from "rxjs";
 import { distinctUntilChanged, filter, map, merge, publishReplay, refCount, scan, takeUntil, takeWhile } from "rxjs/operators";
 import { shallowEqual } from "./shallowEqual";
 import { ActionDispatch, CleanupState, NamedObservable, Reducer, RootStateChangeNotification, StateChangeNotification, StateMutation } from "./types";
@@ -184,22 +184,19 @@ export class Store<S> {
         const forwardProjections = [forwardProjection, ...this.forwardProjections];
         const backwardProjections = [backwardProjection, ...this.backwardProjections];
 
+        if (initial !== undefined) {
+            this.stateMutators.next(s => {
+                return mutateRootState(s, forwardProjections, backwardProjections, initial)
+            });
+        }
+
         const onDestroy = () => {
             if (cleanup !== undefined) {
                 this.stateMutators.next(s => {
                     const backward = [cleanup, ...this.backwardProjections]
-                    let [rootState] = mutateRootState(s, forwardProjections, backward, (s: any) => s, undefined)
-                    return rootState;
+                    return mutateRootState(s, forwardProjections, backward, (s: any) => s)
                 })
             }
-        }
-
-
-        if (initial !== undefined) {
-            this.stateMutators.next(s => {
-                let [rootState] = mutateRootState(s, forwardProjections, backwardProjections, initial, undefined)
-                return rootState;
-            });
         }
 
         const sliceStore = new Store<TProjectedState>(
@@ -243,44 +240,32 @@ export class Store<S> {
             name = actionName || action.name || undefined;
         }
 
-        let realAction = <NamedObservable<P>>this.actionDispatch.pipe(
-            takeWhile(s => name !== undefined && name.length > 0),
-            takeUntil(this.destroyed),
-            filter(s => s.actionName === name),
+        const actionFromStringBasedDispatch = <NamedObservable<P>>this.actionDispatch.pipe(
+            filter(s => s.actionName === name && name !== undefined),
             map(s => s.actionPayload),
-            merge(typeof action !== "string" ? action : EMPTY)
+            merge(isObservable(action) ? action : EMPTY),
+            takeUntil(this.destroyed),
         )
 
         const rootReducer: RootReducer<S, P> = (payload: P) => (rootState) => {
 
-            let nextEqualsPreviousState = false;
+            // transform the rootstate to a slice by applying all forward projections
+            const sliceReducer = (slice: any) => reducer(slice, payload);
+            rootState = mutateRootState(rootState, this.forwardProjections, this.backwardProjections, sliceReducer)
 
-            if (this.forwardProjections.length === 0) {
-                // assume R = S; reducer transforms the root state; this is a runtime assumption
-                const previousState = rootState;
-                rootState = reducer(rootState, payload);
-                nextEqualsPreviousState = previousState === rootState;
-            } else {
-                // transform the rootstate to a slice by applying all forward projections
-                [rootState, nextEqualsPreviousState] = mutateRootState(rootState, this.forwardProjections, this.backwardProjections, reducer, payload)
+            // Send state change notification
+            const changeNotification: RootStateChangeNotification = {
+                actionName: name,
+                actionPayload: payload,
+                newState: rootState
             }
-
-            if (!nextEqualsPreviousState) {
-                // Send state change notification
-                const changeNotification: RootStateChangeNotification = {
-                    actionName: name,
-                    actionPayload: payload,
-                    newState: rootState
-                }
-                this.rootStateChangedNotificationSubject.next(changeNotification);
-            }
+            this.rootStateChangedNotificationSubject.next(changeNotification);
 
             return rootState;
         }
 
-        return realAction.pipe(
+        return actionFromStringBasedDispatch.pipe(
             map(payload => rootReducer(payload)),
-            takeUntil(this._destroyed)
         ).subscribe(rootStateMutation => {
             this.stateMutators.next(rootStateMutation)
         });
@@ -368,24 +353,21 @@ export function notifyOnStateChange<S>(store: Store<S>)
     )
 }
 
-function mutateRootState<S>(
-    rootState: any,
+function mutateRootState<S, TSlice>(
+    rootState: S,
     forwardProjections: Function[],
     backwardProjections: Function[],
-    partialReducer: Function,
-    payload: any
+    sliceReducer: (state: TSlice) => TSlice,
 ) {
-    let nextEqualsPreviousState = false;
     // transform the rootstate to a slice by applying all forward projections
-    let forwardState = rootState;
+    let forwardState: any = rootState;
     const intermediaryState = [rootState] as any[];
     forwardProjections.map(fp => {
         forwardState = fp.call(undefined, forwardState)
         intermediaryState.push(forwardState)
     })
     // perform the reduction
-    const reducedState = partialReducer(forwardState, payload);
-    nextEqualsPreviousState = reducedState === forwardState;
+    const reducedState = sliceReducer(forwardState);
 
     // apply all backward projections to obtain the root state again
     let backwardState = reducedState;
@@ -394,8 +376,6 @@ function mutateRootState<S>(
         backwardState = bp.call(undefined, backwardState, intermediaryState[intermediaryIndex]);
     })
 
-    rootState = backwardState;
-
-    return [rootState, nextEqualsPreviousState];
+    return backwardState;
 }
 
