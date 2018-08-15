@@ -1,27 +1,13 @@
-import { Observable, Subject, Subscription } from "rxjs";
-import {
-    StateMutation, StateChangeNotification, RootStateChangeNotification, Reducer,
-    CleanupState, NamedObservable, ActionDispatch
-} from "./types";
+import { EMPTY, Observable, Subject, Subscription } from "rxjs";
+import { distinctUntilChanged, filter, map, merge, publishReplay, refCount, scan, takeUntil, takeWhile } from "rxjs/operators";
 import { shallowEqual } from "./shallowEqual";
+import { ActionDispatch, CleanupState, NamedObservable, Reducer, RootStateChangeNotification, StateChangeNotification, StateMutation } from "./types";
 
 // TODO use typings here
 declare var require: any;
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
-import {
-    filter,
-    merge,
-    scan,
-    map,
-    takeWhile,
-    takeUntil,
-    distinctUntilChanged,
-    publishReplay,
-    refCount
-} from "rxjs/operators";
-import { EMPTY } from "rxjs"
 
 // TODO: We currently do not allow Symbol properties on the root state. This types asserts that all properties
 // on the state object are strings (numbers get transformed to strings anyway)
@@ -38,7 +24,7 @@ type RootReducer<R, P> = (payload: P) => StateMutation<R>
  * @param stateMutators
  * @param initialState
  */
-function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
+export function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
     let initialStateCopy = createImmutableCopy(initialState);
     const state = stateMutators.pipe(
         scan((state: S, reducer: StateMutation<S>) => reducer(state), initialStateCopy),
@@ -52,7 +38,7 @@ function createState<S>(stateMutators: Observable<StateMutation<S>>, initialStat
 
 function createImmutableCopy(state: any) {
     if (isObject(state) && isPlainObject(state)) {
-        return {  ...state };
+        return { ...state };
     } else if (Array.isArray(state))
         return [...state];
     else {
@@ -76,11 +62,8 @@ export class Store<S> {
      */
     private readonly stateMutators: Subject<StateMutation<any>>;
 
-    /**
-     * A list of strings that represenet property names that lead to a given slice
-     * i.e. if keyChain = [ 'a', 'b', 'c' ] the slice points to ROOT['a']['b']['c']
-     */
-    private readonly keyChain: string[];
+    private readonly forwardProjections: Function[];
+    private readonly backwardProjections: Function[];
 
     /**
      * Is completed when the slice is unsubscribed and no longer needed.
@@ -103,14 +86,16 @@ export class Store<S> {
     private constructor(
         state: Observable<S>,
         stateMutators: Subject<StateMutation<S>>,
-        keyChain: string[],
+        forwardProjections: Function[],
+        backwardProjections: Function[],
         onDestroy: () => void,
         notifyRootStateChangedSubject: Subject<RootStateChangeNotification>,
         actionDispatch: Subject<ActionDispatch<any>>
     ) {
         this.state = state;
         this.stateMutators = stateMutators;
-        this.keyChain = keyChain;
+        this.forwardProjections = forwardProjections;
+        this.backwardProjections = backwardProjections;
 
         this._destroyed.subscribe(undefined, undefined, onDestroy);
         this.destroyed = this._destroyed.asObservable();
@@ -141,7 +126,7 @@ export class Store<S> {
         const stateSubscription = state.subscribe();
         const onDestroy = () => { stateSubscription.unsubscribe(); };
 
-        const store = new Store<S>(state, stateMutators, [], onDestroy, new Subject(), new Subject());
+        const store = new Store<S>(state, stateMutators, [], [], onDestroy, new Subject(), new Subject());
 
         // emit a single state mutation so that we emit the initial state on subscription
         stateMutators.next(s => s);
@@ -151,29 +136,77 @@ export class Store<S> {
     /**
      * Creates a new linked store, that Selects a slice on the main store.
      */
-    createSlice<K extends keyof S>(key: K, initialState?: S[K], cleanupState?: CleanupState<S[K]>): Store<S[K]> {
-        initialState = createImmutableCopy(initialState);
+
+    createSlice<K extends keyof S>(
+        key: K,
+        initialState?: S[K],
+        cleanupState?: CleanupState<S[K]>
+    ): Store<S[K]> {
+
         if (isObject(initialState) && !Array.isArray(initialState) && !isPlainObject(initialState))
             throw new Error("initialState must be a plain object, an array, or a primitive type");
         if (isObject(cleanupState) && !Array.isArray(cleanupState) && !isPlainObject(cleanupState))
             throw new Error("cleanupState must be a plain object, an array, or a primitive type");
 
-        // S[keyof S] is assumed to be of type K; this is a runtime assumption
-        const state: Observable<S[K]> = this.state.pipe(map(state => state[key]));
-        const keyChain = [...this.keyChain, key as string];
+        initialState = createImmutableCopy(initialState);
 
-        if (initialState !== undefined) {
+        const forward = (state: S) => (state as any)[key] as S[K];
+        const backward = (state: S[K], parentState: S) => {
+            (parentState as any)[key] = state;
+            return parentState;
+        };
+
+        const initial = initialState === undefined ? undefined : (state: S[K]) => initialState;
+
+        // legacy cleanup for slices
+        const cleanup = cleanupState === undefined ? undefined : (state: any, parentState: any) => {
+            if (cleanupState === "undefined") {
+                parentState[key] = undefined;
+            } else if (cleanupState === "delete")
+                delete parentState[key];
+            else {
+                parentState[key] = cleanupState;
+            }
+            return parentState;
+        }
+
+        return this.createProjection(forward, backward as any, initial as any, cleanup) as any;
+    }
+
+    createProjection<TProjectedState>(
+        forwardProjection: (state: S) => TProjectedState,
+        backwardProjection: (state: TProjectedState, parentState: S) => S,
+        initial?: (state: TProjectedState) => TProjectedState,
+        cleanup?: (state: TProjectedState, parentState: S) => S,
+    ): Store<TProjectedState> {
+
+        const state: Observable<TProjectedState> = this.state.pipe(map(state => forwardProjection(state)));
+        const forwardProjections = [forwardProjection, ...this.forwardProjections];
+        const backwardProjections = [backwardProjection, ...this.backwardProjections];
+
+        const onDestroy = () => {
+            if (cleanup !== undefined) {
+                this.stateMutators.next(s => {
+                    const backward = [cleanup, ...this.backwardProjections]
+                    let [rootState] = mutateRootState(s, forwardProjections, backward, (s: any) => s, undefined)
+                    return rootState;
+                })
+            }
+        }
+
+
+        if (initial !== undefined) {
             this.stateMutators.next(s => {
-                setNestedPropertyToValue(s, initialState, keyChain);
-                return s;
+                let [rootState] = mutateRootState(s, forwardProjections, backwardProjections, initial, undefined)
+                return rootState;
             });
         }
 
-        const onDestroy = this.getOnDestroyFunctionForSlice(key, cleanupState);
-        const sliceStore = new Store<S[K]>(
+        const sliceStore = new Store<TProjectedState>(
             state,
             this.stateMutators,
-            keyChain,
+            forwardProjections,
+            backwardProjections,
             onDestroy,
             this.rootStateChangedNotificationSubject,
             this.actionDispatch
@@ -222,15 +255,14 @@ export class Store<S> {
 
             let nextEqualsPreviousState = false;
 
-            if (this.keyChain.length === 0) {
+            if (this.forwardProjections.length === 0) {
                 // assume R = S; reducer transforms the root state; this is a runtime assumption
                 const previousState = rootState;
                 rootState = reducer(rootState, payload);
                 nextEqualsPreviousState = previousState === rootState;
             } else {
-                const updateFn = (currentValue: S) => reducer(currentValue, payload);
-                const { previousValue, nextValue } = setNestedProperty(rootState, updateFn, this.keyChain);
-                nextEqualsPreviousState = previousValue === nextValue;
+                // transform the rootstate to a slice by applying all forward projections
+                [rootState, nextEqualsPreviousState] = mutateRootState(rootState, this.forwardProjections, this.backwardProjections, reducer, payload)
             }
 
             if (!nextEqualsPreviousState) {
@@ -238,7 +270,6 @@ export class Store<S> {
                 const changeNotification: RootStateChangeNotification = {
                     actionName: name,
                     actionPayload: payload,
-                    path: this.keyChain,
                     newState: rootState
                 }
                 this.rootStateChangedNotificationSubject.next(changeNotification);
@@ -263,7 +294,7 @@ export class Store<S> {
      *       compared to a previous emit. A shallow copy test is performed to detect changes.
      *       This requires that your reducers update all nested properties in
      *       an immutable way, which is required practice with Redux and also with reactive-state.
-     *       To make the observable emit any time the state changes, use .selectAlways()
+     *       To make the observable emit any time the state changes, use .select() instead
      *       For correct nested reducer updates, see:
      *         http://redux.js.org/docs/recipes/reducers/ImmutableUpdatePatterns.html#updating-nested-objects
      *
@@ -277,6 +308,10 @@ export class Store<S> {
         )
     }
 
+    /**
+     * Same as .watch() except that EVERY state change is emitted. Use with care, you might want to pipe the output
+     * to your own implementation of .distinctUntilChanged() or use only for debugging purposes.
+     */
     select<T = S>(selectorFn?: (state: S) => T): Observable<T> {
         if (!selectorFn)
             selectorFn = (state: S) => <T><any>state;
@@ -310,56 +345,9 @@ export class Store<S> {
     public dispatch<P>(actionName: string, actionPayload: P) {
         this.actionDispatch.next({ actionName, actionPayload });
     }
-
-    private getOnDestroyFunctionForSlice<K>(key: keyof S, cleanupState?: CleanupState<K>): () => void {
-        let onDestroy = () => { };
-        if (cleanupState !== undefined) {
-            onDestroy = () => {
-                if (cleanupState === "undefined")
-                    this.stateMutators.next(s => { s[key] = undefined; return s; });
-                else if (cleanupState === "delete")
-                    this.stateMutators.next(s => { delete s[key]; return s; });
-                else {
-                    this.stateMutators.next(s => { s[key] = cleanupState; return s; });
-                }
-            }
-        }
-        return onDestroy;
-    }
 }
 
-
-/**
- * Updates a nested property in an object graph with the return value of a function
- * passed as argument.
- *
- * @param obj The object to apply the value to
- * @param updateFn Function whose return value is set to the prop. Receives the currentValue as first argument.
- * @param keychain A list of keys that are used to walk down the object graph from 0..n
- */
-function setNestedProperty(obj: SObject, updateFn: (currentValue: any) => any, keyChain: string[]) {
-    for (let i = 0; i < keyChain.length - 1; i++) {
-        obj = obj[keyChain[i]];
-    }
-    let lastKey = keyChain.slice(-1)[0];
-    const previousValue = obj[lastKey];
-    const nextValue = updateFn(previousValue);
-    obj[lastKey] = nextValue;
-    return { previousValue, nextValue }
-}
-
-/**
- * Updates a nested property in an object graph with a value
- *
- * @param obj The object to apply the value to
- * @param value The value that is assigned to the nested property
- * @param keychain A list of keys that are used to walk down the object graph from 0..n
- */
-function setNestedPropertyToValue(obj: SObject, value: any, keyChain: string[]) {
-    return setNestedProperty(obj, () => value, keyChain);
-}
-
-export function getNestedProperty(obj: SObject, keyChain: string[]) {
+export function getNestedProperty(obj: object, keyChain: string[]) {
     let current: any = obj;
     keyChain.map(property => {
         current = current[property]
@@ -376,11 +364,38 @@ export function notifyOnStateChange<S>(store: Store<S>)
             actionName: an.actionName,
             actionPayload: an.actionPayload,
             rootState: an.newState,
-
-            // WARNING: path and sliceState refer to the reducer of the slice that triggered the action
-            // It is NOT guaranteed that this is the slice's state you are subscribing to.
-            path: an.path,
-            sliceState: getNestedProperty(an.newState, an.path)
         }))
     )
 }
+
+function mutateRootState<S>(
+    rootState: any,
+    forwardProjections: Function[],
+    backwardProjections: Function[],
+    partialReducer: Function,
+    payload: any
+) {
+    let nextEqualsPreviousState = false;
+    // transform the rootstate to a slice by applying all forward projections
+    let forwardState = rootState;
+    const intermediaryState = [rootState] as any[];
+    forwardProjections.map(fp => {
+        forwardState = fp.call(undefined, forwardState)
+        intermediaryState.push(forwardState)
+    })
+    // perform the reduction
+    const reducedState = partialReducer(forwardState, payload);
+    nextEqualsPreviousState = reducedState === forwardState;
+
+    // apply all backward projections to obtain the root state again
+    let backwardState = reducedState;
+    [...backwardProjections].reverse().map((bp, index) => {
+        const intermediaryIndex = intermediaryState.length - index - 2;
+        backwardState = bp.call(undefined, backwardState, intermediaryState[intermediaryIndex]);
+    })
+
+    rootState = backwardState;
+
+    return [rootState, nextEqualsPreviousState];
+}
+

@@ -118,18 +118,6 @@ describe("String based action dispatch", () => {
             })
         });
 
-        it("should be possible to add an action by string on a slice and dispatch it on the root store", done => {
-            sliceStore.addReducer(INCREMENT_ACTION, sliceIncrementReducer);
-            store.dispatch(INCREMENT_ACTION, 1)
-            store.select().subscribe(state => {
-                expect(state.counter).to.equal(1);
-                sliceStore.select().subscribe(counter => {
-                    expect(counter).to.equal(1);
-                    done();
-                });
-            })
-        });
-
         it("should be possible to add an action by string on the root and dispatch it on the slice", done => {
             store.addReducer(INCREMENT_ACTION, incrementReducer);
             sliceStore.dispatch(INCREMENT_ACTION, 1)
