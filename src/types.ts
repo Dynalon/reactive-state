@@ -1,4 +1,4 @@
-import { Observable, isObservable } from "rxjs";
+import { Observable } from "rxjs";
 /**
  * A function which takes a State S and performs a transformation into a new state. The state mutation must be pure.
  * @returns A new state of type S

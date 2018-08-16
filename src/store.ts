@@ -1,5 +1,5 @@
-import { EMPTY, Observable, Subject, Subscription, isObservable } from "rxjs";
-import { distinctUntilChanged, filter, map, merge, publishReplay, refCount, scan, takeUntil, takeWhile } from "rxjs/operators";
+import { EMPTY, isObservable, Observable, Subject, Subscription } from "rxjs";
+import { distinctUntilChanged, filter, map, merge, publishReplay, refCount, scan, takeUntil } from "rxjs/operators";
 import { shallowEqual } from "./shallowEqual";
 import { ActionDispatch, CleanupState, NamedObservable, Reducer, StateChangeNotification, StateMutation } from "./types";
 
