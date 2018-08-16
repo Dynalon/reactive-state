@@ -67,12 +67,12 @@ describe("react bridge: connect() tests", () => {
     let ConnectedTestComponent: any;
     let cleanup: Subscription;
 
-    const initialState: TestState = Object.freeze({
+    const initialState: TestState = {
         message: "initialMessage",
         slice: {
             sliceMessage: "initialSliceMessage"
         }
-    })
+    }
 
     beforeEach(() => {
         setupJSDomEnv();

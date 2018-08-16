@@ -25,7 +25,7 @@ describe("Store .select() and .watch() tests", () => {
     const noChangesReducer = state => state;
     const shallowCopyReducer = (state) => ({ ...state });
 
-    const initialState = Object.freeze({
+    const initialState = {
         counter: 0,
         message: "initialMessage",
         bool: false,
@@ -33,7 +33,7 @@ describe("Store .select() and .watch() tests", () => {
         someObject: {
             foo: "bar"
         }
-    });
+    };
 
     beforeEach(() => {
 

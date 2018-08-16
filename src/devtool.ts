@@ -78,7 +78,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     });
 
 
-    store.rootStateChangedNotification.subscribe((notification: StateChangeNotification<S>) => {
+    store.stateChangedNotification.subscribe((notification: StateChangeNotification<S>) => {
         const { actionName, actionPayload, newState } = notification;
         if (actionName !== "__INTERNAL_SYNC")
             reactiveStateUpdate.next({ actionName: actionName || "UNNAMED", payload: actionPayload, state: newState });

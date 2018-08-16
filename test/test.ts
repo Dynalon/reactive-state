@@ -6,7 +6,6 @@ import "./test_initial_state";
 import "./test_reducer";
 import "./test_slicing";
 import "./test_stringbased_action_dispatch";
-import "./test_getnestedproperty";
 
 import "./test_react_connect";
 import "./test_react_storeprovider";

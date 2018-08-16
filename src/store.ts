@@ -25,25 +25,14 @@ type RootReducer<R, P> = (payload: P) => StateMutation<R>
  * @param initialState
  */
 export function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
-    let initialStateCopy = createImmutableCopy(initialState);
     const state = stateMutators.pipe(
-        scan((state: S, reducer: StateMutation<S>) => reducer(state), initialStateCopy),
+        scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState),
         // these two lines make our observable hot and have it emit the last state
         // upon subscription
         publishReplay(1),
         refCount()
     )
     return state;
-}
-
-function createImmutableCopy(state: any) {
-    if (isObject(state) && isPlainObject(state)) {
-        return { ...state };
-    } else if (Array.isArray(state))
-        return [...state];
-    else {
-        return state;
-    }
 }
 
 export class Store<S> {
@@ -62,7 +51,12 @@ export class Store<S> {
      */
     private readonly stateMutators: Subject<StateMutation<any>>;
 
+    /**
+     * A list of transformation functions that will transform the state to different projections
+     * and backwards. Use for scoped reducers.
+     */
     private readonly forwardProjections: Function[];
+
     private readonly backwardProjections: Function[];
 
     /**
@@ -75,13 +69,13 @@ export class Store<S> {
      */
     private readonly actionDispatch: Subject<ActionDispatch<any>>;
 
-    private readonly rootStateChangedNotificationSubject: Subject<StateChangeNotification>;
+    private readonly stateChangeNotificationSubject: Subject<StateChangeNotification>;
 
     /**
      * Only used for debugging purposes (so we can bridge Redux Devtools to the store)
      * Note: Do not use in day-to-day code, use .select() instead.
      */
-    public rootStateChangedNotification: Observable<StateChangeNotification>;
+    public stateChangedNotification: Observable<StateChangeNotification>;
 
     private constructor(
         state: Observable<S>,
@@ -102,15 +96,14 @@ export class Store<S> {
 
         this.actionDispatch = actionDispatch;
 
-        this.rootStateChangedNotificationSubject = notifyRootStateChangedSubject;
-        this.rootStateChangedNotification = this.rootStateChangedNotificationSubject.asObservable().pipe(takeUntil(this.destroyed));
+        this.stateChangeNotificationSubject = notifyRootStateChangedSubject;
+        this.stateChangedNotification = this.stateChangeNotificationSubject.asObservable().pipe(takeUntil(this.destroyed));
     }
 
     /**
      * Create a new Store based on an initial state
      */
     static create<S>(initialState?: S): Store<S> {
-        initialState = createImmutableCopy(initialState);
         if (initialState === undefined)
             initialState = {} as S;
         else {
@@ -147,8 +140,6 @@ export class Store<S> {
             throw new Error("initialState must be a plain object, an array, or a primitive type");
         if (isObject(cleanupState) && !Array.isArray(cleanupState) && !isPlainObject(cleanupState))
             throw new Error("cleanupState must be a plain object, an array, or a primitive type");
-
-        initialState = createImmutableCopy(initialState);
 
         const forward = (state: S) => (state as any)[key] as S[K];
         const backward = (state: S[K], parentState: S) => {
@@ -205,7 +196,7 @@ export class Store<S> {
             forwardProjections,
             backwardProjections,
             onDestroy,
-            this.rootStateChangedNotificationSubject,
+            this.stateChangeNotificationSubject,
             this.actionDispatch
         );
 
@@ -259,7 +250,7 @@ export class Store<S> {
                 actionPayload: payload,
                 newState: rootState
             }
-            this.rootStateChangedNotificationSubject.next(changeNotification);
+            this.stateChangeNotificationSubject.next(changeNotification);
 
             return rootState;
         }
@@ -330,14 +321,6 @@ export class Store<S> {
     public dispatch<P>(actionName: string, actionPayload: P) {
         this.actionDispatch.next({ actionName, actionPayload });
     }
-}
-
-export function getNestedProperty(obj: object, keyChain: string[]) {
-    let current: any = obj;
-    keyChain.map(property => {
-        current = current[property]
-    })
-    return current;
 }
 
 function mutateRootState<S, TSlice>(

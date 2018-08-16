@@ -1,5 +1,7 @@
 v3.0 (unreleased)
 
+* We do not create immutable copies for initial states anymore but re-use the object passed in
+  as initial state. Create immutable copies if needed before creating a store.
 * Requires React >=16.4 for react bridge
 * Switch to reacts new context API for react bridge StoreProvider
 * Drop deprecated lifecycle hooks to be ready for React v17

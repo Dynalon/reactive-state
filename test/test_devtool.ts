@@ -7,7 +7,7 @@ import { ExampleState } from "./test_common_types";
 
 describe("Devtool notification tests", () => {
 
-    let notifyOnStateChange = (store: Store<any>) => store.rootStateChangedNotification;
+    let notifyOnStateChange = (store: Store<any>) => store.stateChangedNotification;
 
     let store: Store<ExampleState>;
     let incrementAction: Action<number>;
@@ -15,9 +15,9 @@ describe("Devtool notification tests", () => {
     let incrementReducerSubscription: Subscription;
 
     beforeEach(() => {
-        const initialState = Object.freeze({
+        const initialState = {
             counter: 0
-        });
+        };
         store = Store.create(initialState);
         incrementAction = new Action<number>();
         incrementAction.name = "INCREMENT_ACTION";

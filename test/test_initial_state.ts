@@ -115,10 +115,10 @@ describe("initial state setting", () => {
         expect(() => genericStore.createSlice("value", undefined, Symbol())).not.to.throw();
     })
 
-    it("does clone the initialState object when creating the root store, so changes to it can not be noticed outside the store", done => {
-        const initialState: ExampleState = Object.freeze({
+    it("does not clone the initialState object when creating the root store, so changes to it will be reflected in our root store", done => {
+        const initialState: ExampleState = {
             counter: 0
-        })
+        }
 
         const store = Store.create(initialState);
         const counterAction = new Action<number>();
@@ -133,15 +133,15 @@ describe("initial state setting", () => {
         counterAction.next();
 
         store.select().subscribe(s => {
-            expect(initialState.counter).to.equal(0);
+            expect(initialState.counter).to.equal(1);
             done();
         });
     });
 
-    it("should create an immutable copy of the initialState object when creating a slice store, so changes to it can not be noticed outside the slice", done => {
-        const initialState: ExampleState = Object.freeze({
+    it("should not create an immutable copy of the initialState object when creating a slice store, so changes to it will be noticed outside the slice", done => {
+        const initialState: ExampleState = {
             counter: 0
-        })
+        }
         const store = Store.create(initialState);
         const counterAction = new Action<number>();
         const counterReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
@@ -151,7 +151,7 @@ describe("initial state setting", () => {
         counterAction.next();
 
         slice.select().pipe(take(2)).subscribe(s => {
-            expect(initialState.counter).to.equal(0);
+            expect(initialState.counter).to.equal(1);
             done();
         });
 
