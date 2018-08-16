@@ -1,6 +1,6 @@
 import { Action } from "./action";
 import { Store } from "./store";
-import { Reducer, NamedObservable } from "./types";
+import { Reducer, NamedObservable, StateChangeNotification } from "./types";
 import { shallowEqual } from "./shallowEqual"
 export {
     Action,
@@ -8,4 +8,5 @@ export {
     Reducer,
     NamedObservable,
     shallowEqual,
+    StateChangeNotification
 }

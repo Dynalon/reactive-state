@@ -62,7 +62,7 @@ export class Store<S> {
     /**
      * Used for manual dispatches without observables
      */
-    private readonly actionDispatch: Subject<ActionDispatch<any>>;
+    private readonly actionDispatch = new Subject<ActionDispatch<any>>();
 
     private readonly stateChangeNotificationSubject: Subject<StateChangeNotification>;
 
@@ -70,7 +70,7 @@ export class Store<S> {
      * Only used for debugging purposes (so we can bridge Redux Devtools to the store)
      * Note: Do not use in day-to-day code, use .select() instead.
      */
-    public stateChangedNotification: Observable<StateChangeNotification>;
+    public readonly stateChangedNotification: Observable<StateChangeNotification>;
 
     private constructor(
         state: Observable<S>,
@@ -79,7 +79,6 @@ export class Store<S> {
         backwardProjections: Function[],
         onDestroy: () => void,
         notifyRootStateChangedSubject: Subject<StateChangeNotification>,
-        actionDispatch: Subject<ActionDispatch<any>>
     ) {
         this.state = state;
         this.stateMutators = stateMutators;
@@ -88,8 +87,6 @@ export class Store<S> {
 
         this._destroyed.subscribe(undefined, undefined, onDestroy);
         this.destroyed = this._destroyed.asObservable();
-
-        this.actionDispatch = actionDispatch;
 
         this.stateChangeNotificationSubject = notifyRootStateChangedSubject;
         this.stateChangedNotification = this.stateChangeNotificationSubject.asObservable().pipe(takeUntil(this.destroyed));
@@ -114,7 +111,7 @@ export class Store<S> {
         const stateSubscription = state.subscribe();
         const onDestroy = () => { stateSubscription.unsubscribe(); };
 
-        const store = new Store<S>(state, stateMutators, [], [], onDestroy, new Subject(), new Subject());
+        const store = new Store<S>(state, stateMutators, [], [], onDestroy, new Subject())
 
         // emit a single state mutation so that we emit the initial state on subscription
         stateMutators.next(s => s);
@@ -123,8 +120,8 @@ export class Store<S> {
 
     /**
      * Creates a new linked store, that Selects a slice on the main store.
+     * @deprecated
      */
-
     createSlice<K extends keyof S>(
         key: K,
         initialState?: S[K],
@@ -156,7 +153,7 @@ export class Store<S> {
             return parentState;
         }
 
-        return this.createProjection(forward, backward as any, initial as any, cleanup) as any;
+        return this.createProjection(forward, backward, initial, cleanup);
     }
 
     createProjection<TProjectedState>(
@@ -192,7 +189,6 @@ export class Store<S> {
             backwardProjections,
             onDestroy,
             this.stateChangeNotificationSubject,
-            this.actionDispatch
         );
 
         // destroy the slice if the parent gets destroyed
