@@ -129,7 +129,6 @@ describe("String based action dispatch", () => {
                 });
             })
         });
-
     })
 
 });
