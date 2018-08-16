@@ -1,7 +1,10 @@
 v3.0 (unreleased)
 
+* Add .clone() method to Store which is like a slice without any transformation but uses the same state object.
+  Useful to scope .select()/.watch() subscriptions, as .destroy() will end all subscriptions of the clone but
+  will not affect the original.
 * We do not create immutable copies for initial states anymore but re-use the object passed in
-  as initial state. Create immutable copies if needed before creating a store.
+  as initial state. Create immutable copies yourself if needed before creating a store.
 * Remove fully bundled UMD module from published package, you should use your own bundler like webpack.
 * String-based action dispatch using the .dispatch() function now only triggers reducers that were registered
   on the exact same store/slice instance
