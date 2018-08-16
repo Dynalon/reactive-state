@@ -1,10 +1,9 @@
 {
   "name": "reactive-state",
-  "version": "2.0.5",
+  "version": "3.0.0-alpha1",
   "description": "Redux-like state management using RxJS and TypeScript",
   "main": "src/index.js",
   "files": [
-    "dist/**/*",
     "src/**/*.js",
     "src/**/*.js.map",
     "src/**/*.d.ts",
