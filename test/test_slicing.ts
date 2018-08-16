@@ -136,10 +136,8 @@ describe("Store slicing tests", () => {
 
     describe(" using projection based slicing", () => {
 
-        it("should be possible to create a slice with identity projections and their states should be equal", done => {
-            const forward = (state: ExampleState) => state;
-            const backward = (state: ExampleState, parent: ExampleState) => state;
-            const slice = store.createProjection(forward, backward);
+        it("should be possible to create a clone (with identity projections) and their states should be equal", done => {
+            const slice = store.clone();
 
             store.select().subscribe(storeState => {
                 slice.select().subscribe(sliceState => {
@@ -150,11 +148,8 @@ describe("Store slicing tests", () => {
             })
         })
 
-        it("should be possible to create a slice with identity projections, and after reducing their states should be equal", done => {
-            const forward = (state: ExampleState) => state;
-            const backward = (state: ExampleState, parent: ExampleState) => state;
-            const slice = store.createProjection(forward, backward);
-
+        it("should be possible to create a clone (with identity projections) and after reducing, their states should be equal", done => {
+            const slice = store.clone();
             slice.addReducer(incrementAction, (state) => ({ counter: state.counter + 1 }));
 
             incrementAction.next();

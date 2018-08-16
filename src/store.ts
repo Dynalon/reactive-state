@@ -156,6 +156,26 @@ export class Store<S> {
         return this.createProjection(forward, backward, initial, cleanup);
     }
 
+    /**
+     * Create a clone of the store which holds the same state. This is an alias to createProjection with
+     * the identity functions as forward/backwards projection. Usefull to unsubscribe from select()/watch()
+     * subscriptions as the destroy() event is specific to the new cloned instance (=will not destroy the original)
+     * Also usefull to scope string-based action dispatches to .dispatch() as action/reducers pairs added to the
+     * clone can not be dispatched by the original and vice versa.
+     */
+    clone() {
+        return this.createProjection((s: S) => s, (s: S, p: S) => p)
+    }
+
+    /**
+     * Creates a new slice of the store. The slice holds a transformed state that is created by applying the
+     * forwardProjection function. To transform the slice state back to the parent state, a backward projection
+     * function must be given.
+     * @param forwardProjection - Projection function that transforms a State S to a new projected state TProjectedState
+     * @param backwardProjection - Back-Projection to obtain state S from already projected state TProjectedState
+     * @param initial - Function to be called initially with state S that must return an initial state to use for TProjected
+     * @param cleanup  - Function to be called when the store is destroyed to return a cleanup state based on parent state S
+     */
     createProjection<TProjectedState>(
         forwardProjection: (state: S) => TProjectedState,
         backwardProjection: (state: TProjectedState, parentState: S) => S,
@@ -165,7 +185,7 @@ export class Store<S> {
 
         const state: Observable<TProjectedState> = this.state.pipe(map(state => forwardProjection(state)));
         const forwardProjections = [forwardProjection, ...this.forwardProjections];
-        const backwardProjections = [backwardProjection, ...this.backwardProjections];
+        const backwardProjections = [...this.backwardProjections, backwardProjection];
 
         if (initial !== undefined) {
             this.stateMutators.next(s => {
@@ -332,7 +352,7 @@ function mutateRootState<S, TSlice>(
 
     // apply all backward projections to obtain the root state again
     let backwardState = reducedState;
-    [...backwardProjections].reverse().map((bp, index) => {
+    [...backwardProjections].map((bp, index) => {
         const intermediaryIndex = intermediaryState.length - index - 2;
         backwardState = bp.call(undefined, backwardState, intermediaryState[intermediaryIndex]);
     })
