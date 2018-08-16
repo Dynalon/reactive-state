@@ -164,7 +164,7 @@ export class Store<S> {
      * clone can not be dispatched by the original and vice versa.
      */
     clone() {
-        return this.createProjection((s: S) => s, (s: S, p: S) => p)
+        return this.createProjection((s: S) => s, (s: S, p: S) => s)
     }
 
     /**

@@ -1,6 +1,6 @@
 import "mocha";
 import { expect } from "chai";
-import { Subscription } from "rxjs";
+import { Subscription, zip as zipStatic } from "rxjs";
 import { take, skip, toArray } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
 
@@ -161,6 +161,41 @@ describe("Store slicing tests", () => {
                     done()
                 })
             })
+
+        })
+
+        it("should change both states in clone and original but fire a NamedObservable action only on the store that registers it", done => {
+            const slice = store.clone();
+            store.addReducer(incrementAction, (state) => ({ ...state, counter: state.counter + 1 }))
+
+            zipStatic(
+                store.select().pipe(skip(1)),
+                slice.select().pipe(skip(1))
+            ).subscribe(([originalState, cloneState]) => {
+                expect(originalState.counter).to.equal(1);
+                expect(cloneState.counter).to.equal(1);
+                expect(cloneState).to.deep.equal(originalState);
+                done();
+            })
+
+            incrementAction.next();
+        })
+
+        it("should change both states in clone and original but fire a NamedObservable action only on the store that registers it", done => {
+            const slice = store.clone();
+            store.addReducer("INCREMENT_ACTION", (state) => ({ ...state, counter: state.counter + 1 }))
+
+            zipStatic(
+                store.select().pipe(skip(1)),
+                slice.select().pipe(skip(1))
+            ).subscribe(([originalState, cloneState]) => {
+                expect(originalState.counter).to.equal(1);
+                expect(cloneState.counter).to.equal(1);
+                expect(cloneState).to.deep.equal(originalState);
+                done();
+            })
+
+            store.dispatch("INCREMENT_ACTION", undefined);
 
         })
     })
