@@ -8,11 +8,6 @@ declare var require: any;
 const isPlainObject = require("lodash.isplainobject");
 const isObject = require("lodash.isobject");
 
-
-// TODO: We currently do not allow Symbol properties on the root state. This types asserts that all properties
-// on the state object are strings (numbers get transformed to strings anyway)
-export type SObject = { [key: string]: any };
-
 /**
  * A function which takes a Payload and return a state mutation function.
  */
