@@ -1,12 +1,13 @@
 import "mocha";
 import { expect } from "chai";
 import { Subscription, Subject, range, zip } from "rxjs";
-import { take, toArray } from "rxjs/operators";
+import { take, toArray } from "rxjs/operators";
 import { Store, Action, Reducer } from "../src/index";
-import { notifyOnStateChange } from "../src/store"
 import { ExampleState } from "./test_common_types";
 
 describe("Devtool notification tests", () => {
+
+    let notifyOnStateChange = (store: Store<any>) => store.rootStateChangedNotification;
 
     let store: Store<ExampleState>;
     let incrementAction: Action<number>;
@@ -29,19 +30,21 @@ describe("Devtool notification tests", () => {
     });
 
     it("should call the devtool callback function when a state change occurs", done => {
-        notifyOnStateChange(store).subscribe(({ rootState }) => {
-            expect(rootState).to.deep.equal({ counter: 1 });
+        notifyOnStateChange(store).subscribe(({ newState }) => {
+            expect(newState).to.deep.equal({ counter: 1 });
             done();
         })
         incrementAction.next();
     });
 
-    it("should not call the devtool callback function when the reducer returned the previous state", done => {
+    // This was changed in v3 - we can't relay on reference equal as our projections might change
+    // that. Consuming APIs must implement their on distinctUntilChanged()
+    it.skip("should not call the devtool callback function when the reducer returned the previous state", done => {
         const initialState = {};
         const store = Store.create(initialState)
         const identityAction = new Action("IDENTITY");
         store.addReducer(identityAction, state => state);
-        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
+        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
             done("Error, notifyOnStateChange called by action: " + actionName);
         });
 
@@ -50,7 +53,7 @@ describe("Devtool notification tests", () => {
     })
 
     it("should call the devtool callback function with the correct payload when a state change occurs", done => {
-        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
+        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
             expect(actionPayload).to.equal(3);
             done();
         });
@@ -59,7 +62,7 @@ describe("Devtool notification tests", () => {
 
     it("should give the action name from the NamedObservable in the devtool notification", done => {
         incrementAction.name = "INCREMENT_ACTION";
-        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
+        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
             expect(actionName).to.equal(incrementAction.name);
             done();
         });
@@ -69,8 +72,8 @@ describe("Devtool notification tests", () => {
     it("should use the overriden action name when one is given to addReducer", done => {
         incrementReducerSubscription.unsubscribe();
 
-        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
-            expect(rootState).to.deep.equal({ counter: 1 });
+        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
+            expect(newState).to.deep.equal({ counter: 1 });
             expect(actionName).to.equal("CUSTOM_ACTION_NAME");
             done();
         });
@@ -82,8 +85,8 @@ describe("Devtool notification tests", () => {
     it("should trigger a state change notification on a slice", done => {
         const slice = store.createSlice("counter");
 
-        notifyOnStateChange(slice).subscribe(({ actionName, actionPayload, rootState }) => {
-            expect(rootState).to.deep.equal({ counter: 1 });
+        notifyOnStateChange(slice).subscribe(({ actionName, actionPayload, newState }) => {
+            expect(newState).to.deep.equal({ counter: 1 });
             expect(actionName).to.equal(incrementAction.name);
             expect(actionPayload).to.equal(1);
             done();
@@ -102,7 +105,7 @@ describe("Devtool notification tests", () => {
         notifyOnStateChange(store).subscribe(notification => {
             expect(notification.actionName).to.equal("INCREMENT_ACTION");
             expect(notification.actionPayload).to.equal(1);
-            expect(notification.rootState).to.deep.equal({ counter: 1 })
+            expect(notification.newState).to.deep.equal({ counter: 1 })
             done();
         })
         const slice = store.createSlice("counter");
@@ -128,8 +131,8 @@ describe("Devtool notification tests", () => {
             toArray(),
         ).subscribe(() => done());
 
-        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, rootState }) => {
-            expect(rootState.value).to.equal(actionPayload);
+        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
+            expect(newState.value).to.equal(actionPayload);
             expect(actionName).to.equal("SET_VALUE");
             counter2.next();
         });

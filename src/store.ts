@@ -1,7 +1,7 @@
 import { EMPTY, Observable, Subject, Subscription, isObservable } from "rxjs";
 import { distinctUntilChanged, filter, map, merge, publishReplay, refCount, scan, takeUntil, takeWhile } from "rxjs/operators";
 import { shallowEqual } from "./shallowEqual";
-import { ActionDispatch, CleanupState, NamedObservable, Reducer, RootStateChangeNotification, StateChangeNotification, StateMutation } from "./types";
+import { ActionDispatch, CleanupState, NamedObservable, Reducer, StateChangeNotification, StateMutation } from "./types";
 
 // TODO use typings here
 declare var require: any;
@@ -75,13 +75,13 @@ export class Store<S> {
      */
     private readonly actionDispatch: Subject<ActionDispatch<any>>;
 
-    private readonly rootStateChangedNotificationSubject: Subject<RootStateChangeNotification>;
+    private readonly rootStateChangedNotificationSubject: Subject<StateChangeNotification>;
 
     /**
      * Only used for debugging purposes (so we can bridge Redux Devtools to the store)
      * Note: Do not use in day-to-day code, use .select() instead.
      */
-    public rootStateChangedNotification: Observable<RootStateChangeNotification>;
+    public rootStateChangedNotification: Observable<StateChangeNotification>;
 
     private constructor(
         state: Observable<S>,
@@ -89,7 +89,7 @@ export class Store<S> {
         forwardProjections: Function[],
         backwardProjections: Function[],
         onDestroy: () => void,
-        notifyRootStateChangedSubject: Subject<RootStateChangeNotification>,
+        notifyRootStateChangedSubject: Subject<StateChangeNotification>,
         actionDispatch: Subject<ActionDispatch<any>>
     ) {
         this.state = state;
@@ -254,7 +254,7 @@ export class Store<S> {
             rootState = mutateRootState(rootState, this.forwardProjections, this.backwardProjections, sliceReducer)
 
             // Send state change notification
-            const changeNotification: RootStateChangeNotification = {
+            const changeNotification: StateChangeNotification = {
                 actionName: name,
                 actionPayload: payload,
                 newState: rootState
@@ -338,19 +338,6 @@ export function getNestedProperty(obj: object, keyChain: string[]) {
         current = current[property]
     })
     return current;
-}
-
-export function notifyOnStateChange<S>(store: Store<S>)
-    : Observable<StateChangeNotification<S>> {
-
-    // return store.notifyAction;
-    return store.rootStateChangedNotification.pipe(
-        map(an => ({
-            actionName: an.actionName,
-            actionPayload: an.actionPayload,
-            rootState: an.newState,
-        }))
-    )
 }
 
 function mutateRootState<S, TSlice>(

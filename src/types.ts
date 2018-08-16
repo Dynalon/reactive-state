@@ -28,16 +28,8 @@ export interface ActionDispatch<P> {
     actionPayload: P
 }
 
-export interface RootStateChangeNotification {
+export interface StateChangeNotification<S = any> {
     actionName: string | undefined;
     actionPayload: any;
-
-    // always the rootState object
-    newState: any;
-}
-
-export interface StateChangeNotification<S> {
-    actionName: string | undefined;
-    actionPayload: any;
-    rootState: any;
+    newState: S;
 }

@@ -1,5 +1,5 @@
 import { createStore, StoreEnhancer, compose, Action as ReduxAction } from "redux";
-import { Store, notifyOnStateChange } from "./store";
+import { Store } from "./store";
 import { Subject } from "rxjs";
 import { take } from "rxjs/operators"
 import { StateChangeNotification } from "./types";
@@ -7,7 +7,7 @@ import { StateChangeNotification } from "./types";
 /* istanbul ignore next */
 
 // symbols only for debugging and devtools
-export { RootStateChangeNotification, StateChangeNotification } from "./types"
+export { StateChangeNotification } from "./types"
 
 export function enableDevTool<S extends object>(store: Store<S>) {
 
@@ -78,15 +78,13 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     });
 
 
-    notifyOnStateChange(store).subscribe((notification: StateChangeNotification<S>) => {
-        // console.info("CH NOTI: ", notification)
-        const { actionName, actionPayload, rootState } = notification;
+    store.rootStateChangedNotification.subscribe((notification: StateChangeNotification<S>) => {
+        const { actionName, actionPayload, newState } = notification;
         if (actionName !== "__INTERNAL_SYNC")
-            reactiveStateUpdate.next({ actionName: actionName || "UNNAMED", payload: actionPayload, state: rootState });
+            reactiveStateUpdate.next({ actionName: actionName || "UNNAMED", payload: actionPayload, state: newState });
     })
 
     const syncReducer = (state: S, payload: any) => {
-        // console.info("RDX STATE AS PAYLOAD", state, payload)
         return { ...payload };
     };
     store.addReducer(reduxToReactiveSync, syncReducer, "__INTERNAL_SYNC");
