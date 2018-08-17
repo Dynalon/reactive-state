@@ -20,14 +20,10 @@ export interface StoreSliceProps<TAppState, TKey extends keyof TAppState> {
     initialState?: TAppState[TKey]
     cleanupState?: TAppState[TKey] | "delete" | "undefined"
 }
-export interface StoreSliceState<TSliceState> {
-    slice: Store<TSliceState>
-}
 
-export const StoreSlice = class StoreSlice<TAppState, TSliceState, TKey extends keyof TAppState>
-    extends React.Component<StoreSliceProps<TAppState, TKey>, StoreSliceState<TSliceState>> {
+export class StoreSlice<TAppState, TKey extends keyof TAppState> extends React.Component<StoreSliceProps<TAppState, TKey>, {}> {
 
-    slice?: Store<TSliceState>;
+    slice?: Store<TAppState[TKey]>
 
     componentWillUnmount() {
         this.slice!.destroy();
@@ -35,17 +31,60 @@ export const StoreSlice = class StoreSlice<TAppState, TSliceState, TKey extends 
 
     render() {
         return <Consumer>
-            {(store: Store<TAppState> | undefined) => {
+            {
+                (store: Store<TAppState> | undefined) => {
 
-                if (!store)
-                    throw new Error("StoreSlice used outside of a Store context. Did forget to add a <StoreProvider>?")
+                    if (!store)
+                        throw new Error("StoreSlice used outside of a Store context. Did forget to add a <StoreProvider>?")
 
-                if (this.slice === undefined) {
-                    const key: any = this.props.slice(store);
-                    this.slice = store.createSlice(key, this.props.initialState as any, this.props.cleanupState as any) as any;
+                    if (this.slice === undefined) {
+                        this.slice = store.createSlice(
+                            this.props.slice(store),
+                            this.props.initialState,
+                            this.props.cleanupState
+                        )
+                    }
+                    return <Provider value={this.slice}>{this.props.children}</Provider>
                 }
-                return <Provider value={this.slice}>{this.props.children}</Provider>
             }
+        </Consumer>
+    }
+}
+
+export interface StoreProjectionProps<TState, TProjected> {
+    forwardProjection: (state: TState) => TProjected;
+    backwardProjection: (projectedState: TProjected, parentState: TState) => TState;
+    cleanup?: (state: TProjected, parentState: TState) => TState;
+    initial?: (state: TState) => TProjected;
+}
+
+export const StoreProjection = class StoreProjection<TState, TProjected>
+    extends React.Component<StoreProjectionProps<TState, TProjected>, {}> {
+
+    slice?: Store<TProjected>;
+
+    componentWillUnmount() {
+        this.slice!.destroy();
+    }
+
+    render() {
+        return <Consumer>
+            {
+                (store: Store<TState> | undefined) => {
+
+                    if (!store)
+                        throw new Error("StoreProjection/Slice used outside of a Store context. Did forget to add a <StoreProvider>?")
+
+                    if (this.slice === undefined) {
+                        this.slice = store.createProjection(
+                            this.props.forwardProjection,
+                            this.props.backwardProjection,
+                            this.props.initial,
+                            this.props.cleanup
+                        )
+                    }
+                    return <Provider value={this.slice}>{this.props.children}</Provider>
+                }
             }
         </Consumer>
     }

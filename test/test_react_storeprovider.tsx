@@ -4,7 +4,7 @@ import { expect } from "chai";
 
 import { take, map, toArray } from "rxjs/operators";
 import { Store, Action } from "../src/index";
-import { connect, MapStateToProps, StoreProvider, StoreSlice, WithStore } from "../react"
+import { connect, MapStateToProps, StoreProvider, StoreSlice, StoreProjection, WithStore } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 import { TestComponent, TestState, SliceState } from "./test_react_connect";
@@ -218,6 +218,33 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         expect(messageText).to.equal("stringslice");
     })
 
+    it("can use StoreProjection", () => {
+        const ConnectedTestComponent = connect(TestComponent, () => {
+            const mapStateToProps = (store: Store<string>) => {
+                return store.select().pipe(
+                    map(message => ({ message }))
+                )
+            }
+            return {
+                mapStateToProps
+            }
+        });
+
+        const forward = state => state.message;
+        const backward = (state: string, parent) => ({ ...parent, message: state });
+
+        wrapper = Enzyme.mount(
+            <StoreProvider store={store}>
+                <StoreProjection forwardProjection={forward} backwardProjection={backward}>
+                    <ConnectedTestComponent />
+                </StoreProjection>
+            </StoreProvider>
+        )
+        nextMessage.next("stringprojection");
+        const messageText = wrapper.find("h1").text();
+        expect(messageText).to.equal("stringprojection");
+    })
+
 
     it("should be possible to get a context store instance with the WithStore render prop", (done) => {
         const SampleSFC: React.SFC<{ store: Store<TestState> }> = (props) => {
@@ -237,6 +264,17 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         expect(() => {
             Enzyme.mount(
                 <StoreSlice slice={(store: Store<TestState>) => "slice"} />
+            )
+        }).to.throw();
+    })
+
+    it("should throw an error if StoreProjection is used outside of a StoreProvider context", () => {
+        const forward = (state: any) => state;
+        const backward = forward;
+
+        expect(() => {
+            Enzyme.mount(
+                <StoreProjection forwardProjection={forward} backwardProjection={backward} />
             )
         }).to.throw();
     })

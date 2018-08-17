@@ -139,7 +139,7 @@ export class Store<S> {
             return parentState;
         };
 
-        const initial = initialState === undefined ? undefined : (state: S[K]) => initialState;
+        const initial = initialState === undefined ? undefined : () => initialState;
 
         // legacy cleanup for slices
         const cleanup = cleanupState === undefined ? undefined : (state: any, parentState: any) => {
@@ -179,7 +179,7 @@ export class Store<S> {
     createProjection<TProjectedState>(
         forwardProjection: (state: S) => TProjectedState,
         backwardProjection: (state: TProjectedState, parentState: S) => S,
-        initial?: (state: TProjectedState) => TProjectedState,
+        initial?: (state: S) => TProjectedState,
         cleanup?: (state: TProjectedState, parentState: S) => S,
     ): Store<TProjectedState> {
 
@@ -189,7 +189,8 @@ export class Store<S> {
 
         if (initial !== undefined) {
             this.stateMutators.next(s => {
-                return mutateRootState(s, forwardProjections, backwardProjections, initial)
+                const initialReducer = () => initial(s);
+                return mutateRootState(s, forwardProjections, backwardProjections, initialReducer)
             });
         }
 
