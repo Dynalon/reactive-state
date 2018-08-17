@@ -30,13 +30,12 @@ export interface ConnectState<TOriginalProps> {
 
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
- * Note: The returned component is a PureComponent - so make sure to update a prop immutably
  */
 export function connect<TAppState, TOriginalProps extends {}>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
     connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>>
 ) {
-    class ConnectedComponent extends React.PureComponent<Partial<TOriginalProps> & { reactiveStateStore: Store<TAppState> }, ConnectState<TOriginalProps>> {
+    class ConnectedComponent extends React.Component<Partial<TOriginalProps> & { reactiveStateStore: Store<TAppState> }, ConnectState<TOriginalProps>> {
 
         private subscription: Subscription = new Subscription();
         private actionProps: Partial<TOriginalProps> = {};
@@ -128,7 +127,7 @@ export function connect<TAppState, TOriginalProps extends {}>(
         }
     };
 
-    return class extends React.PureComponent<Partial<TOriginalProps>, ConnectState<TOriginalProps>> {
+    return class extends React.Component<Partial<TOriginalProps>, ConnectState<TOriginalProps>> {
         constructor(props: any) {
             super(props);
         }

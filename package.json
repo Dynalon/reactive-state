@@ -54,7 +54,7 @@
     "chai": "^3.5.0",
     "concurrently": "^3.4.0",
     "coveralls": "^3.0.0",
-    "enzyme": "^3.4.1",
+    "enzyme": "^3.4.3",
     "enzyme-adapter-react-16": "^1.2.0",
     "istanbul": "^0.4.5",
     "jsdom": "^11.10.0",
