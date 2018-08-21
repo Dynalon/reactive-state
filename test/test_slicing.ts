@@ -198,5 +198,40 @@ describe("Store slicing tests", () => {
             store.dispatch("INCREMENT_ACTION", undefined);
 
         })
+
+        // was a regression
+        it("should correctly apply recursive state transformations", done => {
+            const action = new Action<void>();
+            const is = {
+                prop: {
+                    someArray: [] as number[]
+                }
+            }
+            const rootStore = Store.create(is);
+            const slice1 = rootStore.createProjection(
+                state => state.prop,
+                (state, parent) => ({ ...parent, prop: state })
+            )
+            // const slice1 = rootStore.createSlice("prop");
+            const slice2 = slice1.createSlice("someArray");
+
+            const reducer: Reducer<number[]> = state => {
+                expect(state).to.deep.equal([]);
+                return [1];
+            }
+            slice2.addReducer(action, reducer);
+
+            rootStore.select().pipe(skip(1)).subscribe(state => {
+                expect(state).to.deep.equal({
+                    prop: {
+                        someArray: [1]
+                    }
+                });
+                rootStore.destroy();
+                done();
+            })
+
+            action.next(undefined);
+        })
     })
 })

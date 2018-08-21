@@ -37,6 +37,9 @@ export class StoreSlice<TAppState, TKey extends keyof TAppState> extends React.C
                     if (!store)
                         throw new Error("StoreSlice used outside of a Store context. Did forget to add a <StoreProvider>?")
 
+                    // we ignore this else due to a limitation in enzyme - we can't trigger a
+                    // forceUpdate here to test the else branch;
+                    /* istanbul ignore else */
                     if (this.slice === undefined) {
                         this.slice = store.createSlice(
                             this.props.slice(store),
@@ -75,6 +78,9 @@ export const StoreProjection = class StoreProjection<TState, TProjected>
                     if (!store)
                         throw new Error("StoreProjection/Slice used outside of a Store context. Did forget to add a <StoreProvider>?")
 
+                    // we ignore this else due to a limitation in enzyme - we can't trigger a
+                    // forceUpdate here to test the else branch;
+                    /* istanbul ignore else */
                     if (this.slice === undefined) {
                         this.slice = store.createProjection(
                             this.props.forwardProjection,

@@ -184,8 +184,8 @@ export class Store<S> {
     ): Store<TProjectedState> {
 
         const state: Observable<TProjectedState> = this.state.pipe(map(state => forwardProjection(state)));
-        const forwardProjections = [forwardProjection, ...this.forwardProjections];
-        const backwardProjections = [...this.backwardProjections, backwardProjection];
+        const forwardProjections = [...this.forwardProjections, forwardProjection ];
+        const backwardProjections = [backwardProjection, ...this.backwardProjections ];
 
         if (initial !== undefined) {
             this.stateMutators.next(s => {
@@ -360,4 +360,3 @@ function mutateRootState<S, TSlice>(
 
     return backwardState;
 }
-
