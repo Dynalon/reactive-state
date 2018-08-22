@@ -62,7 +62,7 @@ export class Store<S> {
     /**
      * Used for manual dispatches without observables
      */
-    private readonly actionDispatch = new Subject<ActionDispatch<any>>();
+    private readonly actionDispatch: Subject<ActionDispatch<any>>;
 
     private readonly stateChangeNotificationSubject: Subject<StateChangeNotification>;
 
@@ -79,6 +79,7 @@ export class Store<S> {
         backwardProjections: Function[],
         onDestroy: () => void,
         notifyRootStateChangedSubject: Subject<StateChangeNotification>,
+        actionDispatch: Subject<ActionDispatch<any>>
     ) {
         this.state = state;
         this.stateMutators = stateMutators;
@@ -87,6 +88,8 @@ export class Store<S> {
 
         this._destroyed.subscribe(undefined, undefined, onDestroy);
         this.destroyed = this._destroyed.asObservable();
+
+        this.actionDispatch = actionDispatch;
 
         this.stateChangeNotificationSubject = notifyRootStateChangedSubject;
         this.stateChangedNotification = this.stateChangeNotificationSubject.asObservable().pipe(takeUntil(this.destroyed));
@@ -111,7 +114,7 @@ export class Store<S> {
         const stateSubscription = state.subscribe();
         const onDestroy = () => { stateSubscription.unsubscribe(); };
 
-        const store = new Store<S>(state, stateMutators, [], [], onDestroy, new Subject())
+        const store = new Store<S>(state, stateMutators, [], [], onDestroy, new Subject(), new Subject())
 
         // emit a single state mutation so that we emit the initial state on subscription
         stateMutators.next(s => s);
@@ -210,6 +213,7 @@ export class Store<S> {
             backwardProjections,
             onDestroy,
             this.stateChangeNotificationSubject,
+            this.actionDispatch
         );
 
         // destroy the slice if the parent gets destroyed
