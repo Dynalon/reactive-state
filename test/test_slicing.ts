@@ -1,20 +1,20 @@
 import "mocha";
 import { expect } from "chai";
-import { Subscription, zip as zipStatic } from "rxjs";
+import { Subscription, zip as zipStatic, Subject } from "rxjs";
 import { take, skip, toArray } from "rxjs/operators";
-import { Store, Action, Reducer } from "../src/index";
+import { Store, Reducer } from "../src/index";
 
 import { ExampleState, RootState, SliceState } from "./test_common_types";
 
 describe("Store slicing tests", () => {
     let store: Store<ExampleState>;
     let counterSlice: Store<number>;
-    let incrementAction: Action<void>;
+    let incrementAction: Subject<void>;
     let incrementReducer: Reducer<number, void>;
     let incrementSubscription: Subscription;
 
     beforeEach(() => {
-        incrementAction = new Action<void>();
+        incrementAction = new Subject<void>();
         incrementReducer = (state) => state + 1;
         store = Store.create({ counter: 0 });
     })
@@ -69,29 +69,29 @@ describe("Store slicing tests", () => {
         })
 
         it("should emit a state change on the slice if the root store changes even when the subtree is not affected and forceEmitEveryChange is set", done => {
-            const simpleAction = new Action<void>();
+            const simpleSubject = new Subject<void>();
             const simpleMutation: Reducer<ExampleState, void> = (state) => ({ ...state });
-            store.addReducer(simpleAction, simpleMutation);
+            store.addReducer(simpleSubject, simpleMutation);
 
             counterSlice.select().pipe(skip(1), take(1)).subscribe(counter => {
                 expect(counter).to.equal(0);
                 done();
             });
 
-            simpleAction.next();
+            simpleSubject.next();
         })
 
         it("should not emit a state change on the slice if the root store changes and forceEmitEveryChange is not set", done => {
-            const simpleAction = new Action<void>();
+            const simpleSubject = new Subject<void>();
             const simpleMutation: Reducer<ExampleState, void> = (state) => ({ ...state });
-            store.addReducer(simpleAction, simpleMutation);
+            store.addReducer(simpleSubject, simpleMutation);
 
             counterSlice.watch().pipe(skip(1), toArray()).subscribe(changes => {
                 expect(changes).to.deep.equal([]);
                 done();
             });
 
-            simpleAction.next();
+            simpleSubject.next();
             store.destroy();
         })
 
@@ -110,7 +110,7 @@ describe("Store slicing tests", () => {
             const rootStore: Store<RootState> = Store.create<RootState>({
                 slice: { foo: "bar" }
             });
-            const action = new Action<void>();
+            const action = new Subject<void>();
             const reducer: Reducer<SliceState, void> = (state) => {
                 return { ...state, foo: "baz" }
             };
@@ -164,7 +164,7 @@ describe("Store slicing tests", () => {
 
         })
 
-        it("should change both states in clone and original but fire a NamedObservable action only on the store that registers it", done => {
+        it("should change both states in clone and original but fire a NamedObservable Subject only on the store that registers it", done => {
             const slice = store.clone();
             store.addReducer(incrementAction, (state) => ({ ...state, counter: state.counter + 1 }))
 
@@ -181,9 +181,9 @@ describe("Store slicing tests", () => {
             incrementAction.next();
         })
 
-        it("should change both states in clone and original but fire a NamedObservable action only on the store that registers it", done => {
+        it("should change both states in clone and original but fire a NamedObservable Subject only on the store that registers it", done => {
             const slice = store.clone();
-            store.addReducer("INCREMENT_ACTION", (state) => ({ ...state, counter: state.counter + 1 }))
+            store.addReducer("INCREMENT_Subject", (state) => ({ ...state, counter: state.counter + 1 }))
 
             zipStatic(
                 store.select().pipe(skip(1)),
@@ -195,13 +195,13 @@ describe("Store slicing tests", () => {
                 done();
             })
 
-            store.dispatch("INCREMENT_ACTION", undefined);
+            store.dispatch("INCREMENT_Subject", undefined);
 
         })
 
         // was a regression
         it("should correctly apply recursive state transformations", done => {
-            const action = new Action<void>();
+            const action = new Subject<void>();
             const is = {
                 prop: {
                     someArray: [] as number[]

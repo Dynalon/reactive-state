@@ -1,4 +1,3 @@
-import { Observable } from "rxjs";
 /**
  * A function which takes a State S and performs a transformation into a new state. The state mutation must be pure.
  * @returns A new state of type S
@@ -18,10 +17,6 @@ export type Reducer<S, P = void> = (state: S, actionPayload: P) => S;
  * Using "delete" will remove the whole prop key from the state object (use this to leave no traces)
  */
 export type CleanupState<K> = K | null | "undefined" | "delete";
-
-export interface NamedObservable<T> extends Observable<T> {
-    name?: string;
-}
 
 export interface ActionDispatch<P> {
     actionName: string;

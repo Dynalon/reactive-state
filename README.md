@@ -40,7 +40,8 @@ Example Usage
 ----
 
 ```typescript
-import { Store, Action } from "reactive-state";
+import { Store } from "reactive-state";
+import { Subject } from "rxjs";
 import { take } from "rxjs/operators";
 
 // The state for our example app
@@ -55,27 +56,27 @@ const store = Store.create(initialState);
 // The .select() function returns an Observable that emits every state change, so we can subscribe to it
 store.select().subscribe(newState => console.log("ROOT STATE:", JSON.stringify(newState)));
 
-// the state Observable always caches the last emitted state, so we will immediately print our inital state:
+// the select() observable always caches the last emitted state, so we will immediately print our inital state:
 // [CONSOLE.LOG]: ROOT STATE: {"counter":0}
 
 // Actions are just extended RxJS Subjects
-const incrementAction = new Action<number>();
+const incrementAction = new Subject<number>();
 
 // A reducer is a function that takes a state and an optional payload, and returns a new state
-function incrementReducer (state, payload) {
+function incrementReducer(state, payload) {
     return { ...state, counter: state.counter + payload };
 };
 
 store.addReducer(incrementAction, incrementReducer);
 
-// lets dispatch some actions!
+// lets dispatch some actions
 
 incrementAction.next(1);
 // [CONSOLE.LOG]: ROOT STATE: {"counter":1}
 incrementAction.next(1);
 // [CONSOLE.LOG]: ROOT STATE: {"counter":2}
 
-// async actions? No problem, no need for a "middleware", just use RxJS:
+// async actions? No problem, no need for a "middleware", just use RxJS
 interval(1000).pipe(take(3)).subscribe(() => incrementAction.next(1));
 // <PAUSE 1sec>
 // [CONSOLE.LOG]: ROOT STATE: {"counter":3}

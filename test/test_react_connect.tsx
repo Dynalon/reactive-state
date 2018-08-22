@@ -4,13 +4,13 @@ import { expect } from "chai";
 
 import { Subject, Subscription } from "rxjs";
 import { take, map } from "rxjs/operators";
-import { Store, Action } from "../src/index";
+import { Store } from "../src/index";
 import { connect, ConnectResult, MapStateToProps, StoreProvider, ActionMap } from "../react"
 import * as Enzyme from "enzyme";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 
 const globalClicked = new Subject<void>();
-const nextMessage = new Action<string>();
+const nextMessage = new Subject<string>();
 
 export interface TestState {
     message: string;

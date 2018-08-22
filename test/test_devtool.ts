@@ -2,7 +2,7 @@ import "mocha";
 import { expect } from "chai";
 import { Subscription, Subject, range, zip } from "rxjs";
 import { take, toArray } from "rxjs/operators";
-import { Store, Action, Reducer } from "../src/index";
+import { Store, Reducer } from "../src/index";
 import { ExampleState } from "./test_common_types";
 
 describe("Devtool notification tests", () => {
@@ -10,7 +10,7 @@ describe("Devtool notification tests", () => {
     let notifyOnStateChange = (store: Store<any>) => store.stateChangedNotification;
 
     let store: Store<ExampleState>;
-    let incrementAction: Action<number>;
+    let incrementAction: Subject<number>;
     let incrementReducer: Reducer<ExampleState, number>;
     let incrementReducerSubscription: Subscription;
 
@@ -19,8 +19,7 @@ describe("Devtool notification tests", () => {
             counter: 0
         };
         store = Store.create(initialState);
-        incrementAction = new Action<number>();
-        incrementAction.name = "INCREMENT_ACTION";
+        incrementAction = new Subject<number>();
         incrementReducer = (state, payload = 1) => ({ ...state, counter: state.counter + payload });
         incrementReducerSubscription = store.addReducer(incrementAction, incrementReducer);
     });
@@ -42,8 +41,8 @@ describe("Devtool notification tests", () => {
     it.skip("should not call the devtool callback function when the reducer returned the previous state", done => {
         const initialState = {};
         const store = Store.create(initialState)
-        const identityAction = new Action("IDENTITY");
-        store.addReducer(identityAction, state => state);
+        const identityAction = new Subject();
+        store.addReducer(identityAction, state => state, "IDENTITY");
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
             done("Error, notifyOnStateChange called by action: " + actionName);
         });
@@ -58,15 +57,6 @@ describe("Devtool notification tests", () => {
             done();
         });
         incrementAction.next(3);
-    });
-
-    it("should give the action name from the NamedObservable in the devtool notification", done => {
-        incrementAction.name = "INCREMENT_ACTION";
-        notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
-            expect(actionName).to.equal(incrementAction.name);
-            done();
-        });
-        incrementAction.next();
     });
 
     it("should use the overriden action name when one is given to addReducer", done => {
@@ -87,14 +77,14 @@ describe("Devtool notification tests", () => {
 
         notifyOnStateChange(slice).subscribe(({ actionName, actionPayload, newState }) => {
             expect(newState).to.deep.equal({ counter: 1 });
-            expect(actionName).to.equal(incrementAction.name);
+            expect(actionName).to.equal("INCREMENT_ACTION");
             expect(actionPayload).to.equal(1);
             done();
         });
 
-        const incrementAction = new Action<number>("INCREMENT_ACTION");
+        const incrementAction = new Subject<number>();
         const incrementReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
-        slice.addReducer(incrementAction, incrementReducer);
+        slice.addReducer(incrementAction, incrementReducer, "INCREMENT_ACTION");
 
         incrementAction.next(1);
     })
@@ -109,18 +99,18 @@ describe("Devtool notification tests", () => {
             done();
         })
         const slice = store.createSlice("counter");
-        const incrementAction = new Action<number>("INCREMENT_ACTION");
+        const incrementAction = new Subject<number>();
         const incrementReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
-        slice.addReducer(incrementAction, incrementReducer);
+        slice.addReducer(incrementAction, incrementReducer, "INCREMENT_ACTION");
 
         incrementAction.next(1);
     })
 
     it("should trigger the correct actions matching to the state", done => {
-        const setValueAction = new Action<number>("SET_VALUE");
+        const setValueAction = new Subject<number>();
         const store = Store.create({ value: 0 })
         const N_ACTIONS = 100000;
-        store.addReducer(setValueAction, (state, value) => ({ value }));
+        store.addReducer(setValueAction, (state, value) => ({ value }), "SET_VALUE");
 
         const counter1 = new Subject<any>();
         const counter2 = new Subject<any>();

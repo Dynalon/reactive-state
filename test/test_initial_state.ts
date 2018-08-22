@@ -1,23 +1,23 @@
-import "mocha";
 import { expect } from "chai";
-import { range } from "rxjs";
-import { take, skip } from "rxjs/operators";
+import "mocha";
+import { range, Subject } from "rxjs";
+import { skip, take } from "rxjs/operators";
+import { Reducer, Store } from "../src/index";
+import { ExampleState, GenericState, RootState, SliceState } from "./test_common_types";
 
-import { Store, Action, Reducer } from "../src/index";
-import { RootState, SliceState, GenericState, ExampleState } from "./test_common_types";
 
 describe("initial state setting", () => {
 
     class Foo { };
     let store: Store<RootState>;
     let genericStore: Store<GenericState>
-    let genericAction: Action<any>;
+    let genericAction: Subject<any>;
     const genericReducer: Reducer<GenericState, any> = (state, payload) => ({ ...state, value: payload });
 
     beforeEach(() => {
         store = Store.create<RootState>();
         genericStore = Store.create();
-        genericAction = new Action<any>();
+        genericAction = new Subject<any>();
         genericStore.addReducer(genericAction, genericReducer);
     })
 
@@ -121,7 +121,7 @@ describe("initial state setting", () => {
         }
 
         const store = Store.create(initialState);
-        const counterAction = new Action<number>();
+        const counterAction = new Subject<number>();
         const counterReducer: Reducer<ExampleState, number> = (state, payload = 1) => {
             // WARNING this is not immutable and should not be done in production code
             // we just do it here for the test...
@@ -143,7 +143,7 @@ describe("initial state setting", () => {
             counter: 0
         }
         const store = Store.create(initialState);
-        const counterAction = new Action<number>();
+        const counterAction = new Subject<number>();
         const counterReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
 
         const slice = store.createSlice("counter");

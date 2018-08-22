@@ -1,17 +1,17 @@
-import * as React from "react";
-import "mocha";
 import { expect } from "chai";
-
-import { take, map, toArray } from "rxjs/operators";
-import { Store, Action } from "../src/index";
-import { connect, MapStateToProps, StoreProvider, StoreSlice, StoreProjection, WithStore } from "../react"
 import * as Enzyme from "enzyme";
+import "mocha";
+import * as React from "react";
+import { Subject } from "rxjs";
+import { map, take, toArray } from "rxjs/operators";
+import { connect, MapStateToProps, StoreProjection, StoreProvider, StoreSlice, WithStore } from "../react";
+import { Store } from "../src/index";
 import { setupJSDomEnv } from "./test_enzyme_helper";
-import { TestComponent, TestState, SliceState } from "./test_react_connect";
+import { SliceState, TestComponent, TestState } from "./test_react_connect";
 
 describe("react bridge: StoreProvider and StoreSlice tests", () => {
 
-    const nextMessage = new Action<string>();
+    const nextMessage = new Subject<string>();
     let store: Store<TestState>;
     let wrapper: Enzyme.ReactWrapper | null | undefined;
     beforeEach(() => {
@@ -40,7 +40,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
 
     it("can use StoreSlice with an object slice and delete slice state after unmount", (done) => {
 
-        const nextSliceMessage = new Action<string>("NEXT_SLICE_MESSAGE");
+        const nextSliceMessage = new Subject<string>();
 
         const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
             const mapStateToProps: MapStateToProps<TestComponent, SliceState> = (store) => {

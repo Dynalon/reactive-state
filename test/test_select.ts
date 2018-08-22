@@ -1,18 +1,18 @@
-import "mocha";
 import { expect } from "chai";
+import "mocha";
+import { Subject } from "rxjs";
 import { skip, take, toArray } from "rxjs/operators";
-import { Store, Action, Reducer } from "../src/index";
-
+import { Reducer, Store } from "../src/index";
 import { ExampleState } from "./test_common_types";
 
 describe("Store .select() and .watch() tests", () => {
 
     let store: Store<ExampleState>;
-    let incrementAction: Action<void>;
+    let incrementAction: Subject<void>;
     let incrementReducer: Reducer<ExampleState, void>;
-    let mergeAction: Action<Partial<ExampleState>>;
-    let noChangesAction: Action<void>;
-    let shallowCopyAction: Action<void>;
+    let mergeAction: Subject<Partial<ExampleState>>;
+    let noChangesAction: Subject<void>;
+    let shallowCopyAction: Subject<void>;
 
     const mergeReducer = (state, patch) => {
         const newState: ExampleState = {
@@ -38,15 +38,15 @@ describe("Store .select() and .watch() tests", () => {
     beforeEach(() => {
 
         store = Store.create(initialState);
-        incrementAction = new Action<void>();
+        incrementAction = new Subject<void>();
         incrementReducer = (state) => ({ ...state, counter: state.counter + 1 });
         store.addReducer(incrementAction, incrementReducer);
 
-        mergeAction = new Action<Partial<ExampleState>>();
+        mergeAction = new Subject<Partial<ExampleState>>();
         store.addReducer(mergeAction, mergeReducer);
-        noChangesAction = new Action<void>();
+        noChangesAction = new Subject<void>();
         store.addReducer(noChangesAction, noChangesReducer);
-        shallowCopyAction = new Action<void>();
+        shallowCopyAction = new Subject<void>();
         store.addReducer(shallowCopyAction, shallowCopyReducer);
     });
 

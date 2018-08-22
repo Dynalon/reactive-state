@@ -1,4 +1,5 @@
-import { Store, Reducer, Action } from "./index";
+import { Store, Reducer } from "./index";
+import { Subject } from "rxjs";
 
 // you can run this example with node: "node dist/example" from the project root.
 
@@ -36,12 +37,11 @@ const store = Store.create(initialState);
 // Log all state changes using the .select() function
 store.select().subscribe(newState => console.log(JSON.stringify(newState)));
 
-// Actions are just extended RxJS Subjects
-const incrementAction = new Action<void>();
+// Any Observable can be an action - we use a Subject here
+const incrementAction = new Subject<void>();
 const incrementReducer: Reducer<number, void> = (state: number, payload: void) => state + 1;
 
-// actions can have optional names to identify them for logging, debugging, replaying etc.
-const decrementAction = new Action<void>('DECREMENT');
+const decrementAction = new Subject<void>();
 const decrementReducer: Reducer<number, void> = (state: number, payload: void) => state - 1;
 
 // while it looks like a magic string, it is NOT: 'counter' is of type "keyof AppState"; so putting
@@ -57,15 +57,16 @@ incrementAction.next();
 decrementAction.next();
 
 // wire up ToDos
-const deleteToDoAction = new Action<number>('DELETE_TODO');
+const deleteToDoAction = new Subject<number>();
 const deleteToDoReducer: Reducer<TodoState, number> = (state, payload) => {
     const filteredTodos = state.todos.filter(todo => todo.id != payload);
     return { ...state, todos: filteredTodos };
 };
 
-const markTodoAsDoneAction = new Action<number>('MARK_AS_DONE');
+const markTodoAsDoneAction = new Subject<number>();
 // This reducer purposely is more complicated than it needs to be, but shows how you would do it in Redux
 // you will find a little easier solution using a more specific slice below
+
 const markTodoAsDoneReducer: Reducer<TodoState, number> = (state: TodoState, payload: number) => {
     const todos = state.todos.map(todo => {
         if (todo.id != payload)

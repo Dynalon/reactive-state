@@ -1,7 +1,7 @@
 import "mocha";
-import { zip, interval } from "rxjs";
-import  {  map, take } from "rxjs/operators";
-import { Store, Action, Reducer } from "../src/index";
+import { interval, Subject, zip } from "rxjs";
+import { map, take } from "rxjs/operators";
+import { Reducer, Store } from "../src/index";
 
 // make sure the example in the README.md actually works and compiles
 // use this test as playground
@@ -23,7 +23,7 @@ export function testExample() {
     // [CONSOLE.LOG]: ROOT STATE: {"counter":0}
 
     // Actions are just extended RxJS Subjects
-    const incrementAction = new Action<number>();
+    const incrementAction = new Subject<number>();
 
     // A reducer is a function that takes a state and an optional payload, and returns a new state
     function incrementReducer(state, payload) {
@@ -90,7 +90,7 @@ export function testComputedValuesExample() {
         ]
     });
 
-    const markTodoAsDone = new Action<number>();
+    const markTodoAsDone = new Subject<number>();
     const markTodoAsDoneReducer: Reducer<Todo[], number> = (state, id) => {
         let todo = state.filter(t => t.id === id)[0];
         todo = { ...todo, done: true };

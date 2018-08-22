@@ -1,7 +1,7 @@
 import { EMPTY, isObservable, Observable, Subject, Subscription } from "rxjs";
 import { distinctUntilChanged, filter, map, merge, publishReplay, refCount, scan, takeUntil } from "rxjs/operators";
 import { shallowEqual } from "./shallowEqual";
-import { ActionDispatch, CleanupState, NamedObservable, Reducer, StateChangeNotification, StateMutation } from "./types";
+import { ActionDispatch, CleanupState, Reducer, StateChangeNotification, StateMutation } from "./types";
 
 // TODO use typings here
 declare var require: any;
@@ -184,8 +184,8 @@ export class Store<S> {
     ): Store<TProjectedState> {
 
         const state: Observable<TProjectedState> = this.state.pipe(map(state => forwardProjection(state)));
-        const forwardProjections = [...this.forwardProjections, forwardProjection ];
-        const backwardProjections = [backwardProjection, ...this.backwardProjections ];
+        const forwardProjections = [...this.forwardProjections, forwardProjection];
+        const backwardProjections = [backwardProjection, ...this.backwardProjections];
 
         if (initial !== undefined) {
             this.stateMutators.next(s => {
@@ -223,28 +223,25 @@ export class Store<S> {
     /**
      * Adds an Action/Reducer pair. This will make the reducer become active whenever the action observable emits a
      * value.
-     * @param action The action observable whichs payload will be fed to the reducer on each emit
-     * @param reducer
-     * @param actionName An optional name (only used during development/debugging) to assign to the action. Overrides
-     *  possible name set when using a NamedObservable as input
+     * @param action An observable whose payload will be passed to the reducer on each emit
+     * @param reducer function
+     * @param actionName An optional name (only used during development/debugging) to assign to the action
      */
-    addReducer<P>(action: NamedObservable<P> | string, reducer: Reducer<S, P>, actionName?: string): Subscription {
-        if (typeof action === "string" && typeof actionName === "string") {
-            throw new Error("Can not specify action as string and actionName as string as same time");
-        }
+    addReducer<P>(action: Observable<P> | string, reducer: Reducer<S, P>, actionName?: string): Subscription {
+        if (typeof action === "string" && typeof actionName !== "undefined")
+            throw new Error("cannot specify a string-action AND a string alias at the same time")
+        if (!isObservable(action) && typeof action !== "string")
+            throw new Error("first argument must be an observable or a string");
+        if (typeof reducer !== "function")
+            throw new Error("reducer argument must be a function");
+        if ((typeof actionName === "string" && actionName.length === 0) ||
+            (typeof action === "string" && action.length === 0))
+            throw new Error("action/actionName must have non-zero length")
 
-        let name: string | undefined;
-        if (typeof action === "string") {
-            if (action.length === 0) {
-                throw new Error("When passing an action string, it must have non-zero length");
-            }
-            name = action;
-        } else {
-            name = actionName || action.name || undefined;
-        }
+        const name = typeof action === "string" ? action : actionName!;
 
-        const actionFromStringBasedDispatch = <NamedObservable<P>>this.actionDispatch.pipe(
-            filter(s => s.actionName === name && name !== undefined),
+        const actionFromStringBasedDispatch = this.actionDispatch.pipe(
+            filter(s => s.actionName === name),
             map(s => s.actionPayload),
             merge(isObservable(action) ? action : EMPTY),
             takeUntil(this.destroyed),

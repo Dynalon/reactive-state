@@ -1,7 +1,7 @@
 v3.0
 
-* New way of creating slices: Projections. Use .createProjection() to map any properties from a state to
-  another (sliced) state.
+* Removed `Action` type (use Subject and specify a name as 3rd argument to .addReducer() instead)
+* New way of creating slices: Projections. Use .createProjection() to map any properties from a state to another (sliced) state.
 * Add .clone() method to Store which is like a slice without any transformation but uses the same state object.
   Useful to scope .select()/.watch() subscriptions, as .destroy() will end all subscriptions of the clone but
   will not affect the original.
