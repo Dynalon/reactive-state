@@ -8,8 +8,6 @@ v3.0
 * We do not create immutable copies for initial states anymore but re-use the object passed in
   as initial state. Create immutable copies yourself if needed before creating a store.
 * Remove fully bundled UMD module from published package, you should use your own bundler like webpack.
-* String-based action dispatch using the .dispatch() function now only triggers reducers that were registered
-  on the exact same store/slice instance
 * Requires React >=16.4 for react bridge
 * Switch to reacts new context API for react bridge StoreProvider
 * Drop deprecated lifecycle hooks to be ready for React v17
