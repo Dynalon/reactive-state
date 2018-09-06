@@ -227,9 +227,12 @@ export class Store<S> {
     /**
      * Adds an Action/Reducer pair. This will make the reducer become active whenever the action observable emits a
      * value.
-     * @param action An observable whose payload will be passed to the reducer on each emit
-     * @param reducer function
-     * @param actionName An optional name (only used during development/debugging) to assign to the action
+     * @param action An observable whose payload will be passed to the reducer on each emit, or a string identifier
+     *        as an action name. In the later case, .dispatch() can be used to manually dispatch actions based
+     *        on their string name.
+     * @param reducer A reducer function. @see Reducer
+     * @param actionName An optional name (only used during development/debugging) to assign to the action when an
+     *        Observable is passed as first argument. Must not be specified if the action argument is a string.
      */
     addReducer<P>(action: Observable<P> | string, reducer: Reducer<S, P>, actionName?: string): Subscription {
         if (typeof action === "string" && typeof actionName !== "undefined")
