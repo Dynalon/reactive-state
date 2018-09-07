@@ -22,7 +22,7 @@ export function testExample() {
     // the select() observable always caches the last emitted state, so we will immediately print our inital state:
     // [CONSOLE.LOG]: STATE: {"counter":0}
 
-    // Actions are just extended RxJS Subjects
+    // use a RxJS Subjects as an action
     const incrementAction = new Subject<number>();
 
     // A reducer is a function that takes a state and an optional payload, and returns a new state
