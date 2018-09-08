@@ -28,8 +28,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     const reduxToReactiveSync = new Subject<S>();
     const reactiveStateUpdate = new Subject<any>();
 
-    // TODO: initialState: S should be auto-infered, maybe a bug in TS or RxJS?
-    store.select().pipe(take(1)).subscribe((initialState: S) => {
+    store.select().pipe(take(1)).subscribe((initialState) => {
 
         const enhancer: StoreEnhancer<any, any> = (next) => {
             return (reducer, preloadedState) => {

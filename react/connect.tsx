@@ -9,14 +9,8 @@ import { ActionMap, assembleActionProps } from "./actions";
 // See: https://stackoverflow.com/questions/50084643/typescript-conditional-types-extract-component-props-type-from-react-component/50084862#50084862
 export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.Component<infer TProps, any> ? TProps : TComponentOrTProps;
 
-// if TS should get Exact Types feature one day (https://github.com/Microsoft/TypeScript/issues/12936)
-// we should change Partial<T> to be an Exact<Partial<T>> (so we cannot have excess properties on the returned object
-// that do not correspond to any component prop)
-export type MapStateToProps<TComponentOrProps, TState = any> = (store: Store<TState>) => Observable<Partial<ExtractProps<TComponentOrProps>>>;
-
-// TODO better naming
 export interface ConnectResult<TAppState, TOriginalProps> {
-    mapStateToProps?: MapStateToProps<TOriginalProps, TAppState>;
+    props?: Observable<TOriginalProps>;
     actionMap?: ActionMap<TOriginalProps>;
     cleanup?: Subscription;
 }
@@ -82,14 +76,13 @@ export function connect<TAppState, TOriginalProps extends {}>(
                 return;
 
             const connectResult = this.connectResult!;
-            if (connectResult.mapStateToProps) {
-                const stateUpdates = connectResult.mapStateToProps(this.store);
-                this.subscription.add(stateUpdates.subscribe(connectedState => {
+            if (connectResult.props) {
+                this.subscription.add(connectResult.props.subscribe(connectedProps => {
                     this.setState((prevState: ConnectState<TOriginalProps>) => {
                         return {
                             ...prevState,
-                            ready: true,
-                            connectedProps: connectedState
+                            connectedProps,
+                            ready: true
                         }
                     });
                 }))

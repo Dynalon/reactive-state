@@ -1,12 +1,11 @@
-import * as React from "react";
-import "mocha";
 import { expect } from "chai";
-
-import { Subject, Subscription } from "rxjs";
-import { take, map } from "rxjs/operators";
-import { Store } from "../src/index";
-import { connect, ConnectResult, MapStateToProps, StoreProvider, ActionMap } from "../react"
 import * as Enzyme from "enzyme";
+import "mocha";
+import * as React from "react";
+import { Subject, Subscription } from "rxjs";
+import { take } from "rxjs/operators";
+import { ActionMap, connect, ConnectResult, StoreProvider } from "../react";
+import { Store } from "../src/index";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 
 const globalClicked = new Subject<void>();
@@ -41,11 +40,7 @@ export class TestComponent extends React.Component<TestComponentProps, {}> {
 
 function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, TestComponentProps> | null) {
     return connect(TestComponent, (store: Store<TestState>) => {
-        const mapStateToProps: MapStateToProps<TestComponent, TestState> = (store) => {
-            return store.createSlice("message").select().pipe(
-                map(message => ({ message }))
-            )
-        }
+        const props = store.createSlice("message").watch(message => ({ message }));
         const actionMap: ActionMap<TestComponent> = {
             onClick: globalClicked
         }
@@ -54,7 +49,7 @@ function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, 
         }
         return {
             actionMap,
-            mapStateToProps,
+            props,
             ...connectResultOverride
         };
     })
@@ -176,7 +171,7 @@ describe("react bridge: connect() tests", () => {
             onClick
         };
         onClick.subscribe(() => done());
-        ConnectedTestComponent = getConnectedComponent({ actionMap, mapStateToProps: undefined });
+        ConnectedTestComponent = getConnectedComponent({ actionMap });
         const wrapper = mount(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
     })
@@ -185,7 +180,7 @@ describe("react bridge: connect() tests", () => {
         const actionMap: ActionMap<TestComponent> = {
             onClick: () => done()
         };
-        ConnectedTestComponent = getConnectedComponent({ actionMap, mapStateToProps: undefined });
+        ConnectedTestComponent = getConnectedComponent({ actionMap });
         const wrapper = mount(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
     })
@@ -195,7 +190,7 @@ describe("react bridge: connect() tests", () => {
             onClick: (5 as any)
         };
         expect(() => {
-            ConnectedTestComponent = getConnectedComponent({ actionMap, mapStateToProps: undefined });
+            ConnectedTestComponent = getConnectedComponent({ actionMap });
             const wrapper = mount(<ConnectedTestComponent />);
             wrapper.find("button").simulate("click");
         }).to.throw();
@@ -216,13 +211,10 @@ describe("react bridge: connect() tests", () => {
     it("should be possible for mapStatetoProps to operator on any store/slice", () => {
         const ConnectedTestComponent = connect(TestComponent, (store: Store<TestState>) => {
             const slice = store.createSlice("message", "Blafoo");
-            const mapStateToProps: MapStateToProps<TestComponent> = () => {
-                return slice.select().pipe(
-                    map(message => ({ message }))
-                )
-            };
+            const props = slice.watch(message => ({ message }))
+
             return {
-                mapStateToProps
+                props
             }
         });
 

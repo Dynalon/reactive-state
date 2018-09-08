@@ -3,8 +3,8 @@ import * as Enzyme from "enzyme";
 import "mocha";
 import * as React from "react";
 import { Subject } from "rxjs";
-import { map, take, toArray } from "rxjs/operators";
-import { connect, MapStateToProps, StoreProjection, StoreProvider, StoreSlice, WithStore } from "../react";
+import { take, toArray } from "rxjs/operators";
+import { connect, StoreProjection, StoreProvider, StoreSlice, WithStore } from "../react";
 import { Store } from "../src/index";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 import { SliceState, TestComponent, TestState } from "./test_react_connect";
@@ -43,11 +43,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         const nextSliceMessage = new Subject<string>();
 
         const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
-            const mapStateToProps: MapStateToProps<TestComponent, SliceState> = (store) => {
-                return store.select().pipe(
-                    map(state => ({ message: state.sliceMessage }))
-                )
-            }
+            const props = store.select(state => ({ message: state.sliceMessage }))
             store.addReducer(nextSliceMessage, (state, newMessage) => {
                 return {
                     ...state,
@@ -55,7 +51,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
                 };
             })
             return {
-                mapStateToProps
+                props
             }
         });
 
@@ -151,13 +147,9 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         const store1 = Store.create({ level: "level1" })
         const store2 = Store.create({ level: "level2" })
         const ConnectedTestComponent = connect(TestComponent, (store: Store<{ level: string }>) => {
-            const mapStateToProps: MapStateToProps<TestComponent> = (mapStateToPropsStore: Store<any>) => {
-                return store.select().pipe(
-                    map(state => ({ message: state.level }))
-                );
-            }
+            const props = store.select(state => ({ message: state.level }))
             return {
-                mapStateToProps
+                props
             }
         })
 
@@ -195,14 +187,10 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
     })
 
     it("can use StoreSlice with a string slice", () => {
-        const ConnectedTestComponent = connect(TestComponent, () => {
-            const mapStateToProps = (store: Store<string>) => {
-                return store.select().pipe(
-                    map(message => ({ message }))
-                )
-            }
+        const ConnectedTestComponent = connect(TestComponent, (store: Store<string>) => {
+            const props = store.select(message => ({ message }))
             return {
-                mapStateToProps
+                props
             }
         });
 
@@ -219,14 +207,10 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
     })
 
     it("can use StoreProjection", () => {
-        const ConnectedTestComponent = connect(TestComponent, () => {
-            const mapStateToProps = (store: Store<string>) => {
-                return store.select().pipe(
-                    map(message => ({ message }))
-                )
-            }
+        const ConnectedTestComponent = connect(TestComponent, (store: Store<string>) => {
+            const props = store.select(message => ({ message }))
             return {
-                mapStateToProps
+                props
             }
         });
 

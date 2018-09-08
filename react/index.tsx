@@ -1,5 +1,5 @@
 import { ActionFunction, ActionMap } from './actions';
-import { connect, MapStateToProps, ConnectResult } from './connect';
+import { connect, ConnectResult } from './connect';
 import { StoreProvider, StoreSlice, StoreProjection, WithStore } from './provider'
 
 export {
@@ -8,7 +8,6 @@ export {
     ActionMap,
 
     // connect
-    MapStateToProps,
     connect,
     ConnectResult,
 
