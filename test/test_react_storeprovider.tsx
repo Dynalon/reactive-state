@@ -38,12 +38,16 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         }
     })
 
+    // TODO this test exposes a bug in the destroy logic of .clone(), see connect.tsx TODO
     it("can use StoreSlice with an object slice and delete slice state after unmount", (done) => {
 
         const nextSliceMessage = new Subject<string>();
 
         const ConnectedTestComponent = connect(TestComponent, (store: Store<SliceState>) => {
-            const props = store.select(state => ({ message: state.sliceMessage }))
+            const props = store.select(state => {
+                return ({ message: state.sliceMessage })
+            })
+
             store.addReducer(nextSliceMessage, (state, newMessage) => {
                 return {
                     ...state,
@@ -55,7 +59,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
             }
         });
 
-        store.select(s => s.slice).pipe(
+        store.watch(s => s.slice).pipe(
             take(4),
             toArray()
         ).subscribe(arr => {

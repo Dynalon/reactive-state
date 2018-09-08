@@ -4,6 +4,7 @@ import { Store } from "../src/store";
 import { StoreConsumer } from "./provider"
 
 import { ActionMap, assembleActionProps } from "./actions";
+import { takeUntil } from "rxjs/operators";
 
 // Allows to get the props of a component, or pass the props themselves.
 // See: https://stackoverflow.com/questions/50084643/typescript-conditional-types-extract-component-props-type-from-react-component/50084862#50084862
@@ -34,15 +35,13 @@ export function connect<TAppState, TOriginalProps extends {}>(
         private subscription: Subscription = new Subscription();
         private actionProps: Partial<TOriginalProps> = {};
         private connectResult?: ConnectResult<TAppState, Partial<TOriginalProps>>
-        private store: Store<TAppState>;
+        private parentDestroyed?: Observable<void>;
 
         /**
          * we might use the connected component  without a store (i.e. in test scenarios). In this case we do
-         * not do anything and just behave as if we were not connected at all
+         * not do anything and just behave as if we were not connected at all. So we allow undefined here.
          */
-        private get passthroughProps() {
-            return this.store === undefined;
-        }
+        private store?: Store<TAppState>;
 
         state: ConnectState<TOriginalProps> = {
             connectedProps: undefined,
@@ -52,12 +51,16 @@ export function connect<TAppState, TOriginalProps extends {}>(
         constructor(props: any) {
             super(props)
 
-            this.store = this.props.reactiveStateStore;
+            if (this.props.reactiveStateStore) {
+                this.store = this.props.reactiveStateStore.clone();
+                // TODO this hack is necesseary becaseu we seem to have a bug in the destroy logic for clones
+                this.parentDestroyed = this.props.reactiveStateStore.destroyed;
+            }
             this.connect();
         }
 
         private connect() {
-            if (this.passthroughProps)
+            if (this.store === undefined)
                 return;
 
             this.connectResult = connectCallback(this.store);
@@ -72,12 +75,12 @@ export function connect<TAppState, TOriginalProps extends {}>(
         }
 
         private subscribeToStateChanges() {
-            if (this.passthroughProps)
+            if (this.store === undefined)
                 return;
 
             const connectResult = this.connectResult!;
             if (connectResult.props) {
-                this.subscription.add(connectResult.props.subscribe(connectedProps => {
+                this.subscription.add(connectResult.props.pipe(takeUntil(this.parentDestroyed!)).subscribe(connectedProps => {
                     this.setState((prevState: ConnectState<TOriginalProps>) => {
                         return {
                             ...prevState,
@@ -102,6 +105,9 @@ export function connect<TAppState, TOriginalProps extends {}>(
         }
 
         componentWillUnmount() {
+            if (this.store !== undefined) {
+                this.store.destroy();
+            }
             this.subscription.unsubscribe()
         }
 
@@ -112,7 +118,7 @@ export function connect<TAppState, TOriginalProps extends {}>(
         render() {
             const props = this.getProps();
 
-            if (this.passthroughProps || this.state.ready === true) {
+            if (this.store === undefined || this.state.ready === true) {
                 return <ComponentToConnect {...this.state.connectedProps} {...this.actionProps} {...props} />
             } else {
                 return null;
