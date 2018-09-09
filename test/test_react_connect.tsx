@@ -83,7 +83,7 @@ describe("react bridge: connect() tests", () => {
         mount = (elem: JSX.Element) => Enzyme.mount(<StoreProvider store={store}>{elem}</StoreProvider>);
     })
 
-    it("should map a prop from the state to the prop of the component using mapStateToProps", () => {
+    it("should map a prop from the state to the prop of the component using props observable", () => {
         const wrapper = mount(<ConnectedTestComponent />);
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal(initialState.message);
@@ -131,6 +131,7 @@ describe("react bridge: connect() tests", () => {
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("Barfoos");
         wrapper.find("button").simulate("click");
+        wrapper.unmount();
     })
 
     it("should use a props if it updated later on", done => {
