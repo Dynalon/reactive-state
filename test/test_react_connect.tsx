@@ -2,8 +2,8 @@ import { expect } from "chai";
 import * as Enzyme from "enzyme";
 import "mocha";
 import * as React from "react";
-import { Subject, Subscription } from "rxjs";
-import { take } from "rxjs/operators";
+import { Subject, Subscription, Observable, of } from "rxjs";
+import { take, skip } from "rxjs/operators";
 import { ActionMap, connect, ConnectResult, StoreProvider } from "../react";
 import { Store } from "../src/index";
 import { setupJSDomEnv } from "./test_enzyme_helper";
@@ -58,7 +58,7 @@ function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, 
 describe("react bridge: connect() tests", () => {
 
     let store: Store<TestState>;
-    let mount: (elem: JSX.Element) => Enzyme.ReactWrapper<any, any>;
+    let mountInsideStoreProvider: (elem: JSX.Element) => Enzyme.ReactWrapper<any, any>;
     let ConnectedTestComponent: any;
     let cleanup: Subscription;
 
@@ -80,17 +80,17 @@ describe("react bridge: connect() tests", () => {
                 message
             }
         })
-        mount = (elem: JSX.Element) => Enzyme.mount(<StoreProvider store={store}>{elem}</StoreProvider>);
+        mountInsideStoreProvider = (elem: JSX.Element) => Enzyme.mount(<StoreProvider store={store}>{elem}</StoreProvider>);
     })
 
     it("should map a prop from the state to the prop of the component using props observable", () => {
-        const wrapper = mount(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal(initialState.message);
     });
 
     it("should receive prop updates from the store using mapStateToProps", () => {
-        const wrapper = mount(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         expect(wrapper.find("h1").text()).to.equal(initialState.message);
 
         nextMessage.next("Message1");
@@ -102,7 +102,7 @@ describe("react bridge: connect() tests", () => {
 
 
     it("should trigger an action on a callback function in the actionMap", done => {
-        const wrapper = mount(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         globalClicked.pipe(take(1)).subscribe(() => {
             expect(true).to.be.true;
             done();
@@ -114,7 +114,7 @@ describe("react bridge: connect() tests", () => {
         const onClick = () => {
             done();
         };
-        const wrapper = mount(<ConnectedTestComponent message="Barfoos" onClick={onClick} />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent message="Barfoos" onClick={onClick} />);
 
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("Barfoos");
@@ -153,14 +153,14 @@ describe("react bridge: connect() tests", () => {
 
     it("unsubscribe the cleanup subscription on component unmount", (done) => {
         cleanup.add(() => done());
-        const wrapper = mount(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         wrapper.unmount();
     })
 
     it("should allow the connect callback to return empty result object and then use the provided props", (done) => {
         ConnectedTestComponent = getConnectedComponent(null);
         const onClick = () => done();
-        const wrapper = mount(<ConnectedTestComponent message="Bla" onClick={onClick} />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent message="Bla" onClick={onClick} />);
         const textMessage = wrapper.find("h1").text();
         expect(textMessage).to.equal("Bla");
         wrapper.find("button").simulate("click");
@@ -173,7 +173,7 @@ describe("react bridge: connect() tests", () => {
         };
         onClick.subscribe(() => done());
         ConnectedTestComponent = getConnectedComponent({ actionMap });
-        const wrapper = mount(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
     })
 
@@ -182,7 +182,7 @@ describe("react bridge: connect() tests", () => {
             onClick: () => done()
         };
         ConnectedTestComponent = getConnectedComponent({ actionMap });
-        const wrapper = mount(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
     })
 
@@ -192,7 +192,7 @@ describe("react bridge: connect() tests", () => {
         };
         expect(() => {
             ConnectedTestComponent = getConnectedComponent({ actionMap });
-            const wrapper = mount(<ConnectedTestComponent />);
+            const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
             wrapper.find("button").simulate("click");
         }).to.throw();
     })
@@ -203,13 +203,13 @@ describe("react bridge: connect() tests", () => {
         };
         ConnectedTestComponent = getConnectedComponent({ actionMap, cleanup });
         cleanup.add(() => done());
-        const wrapper = mount(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
         wrapper.unmount();
     })
 
     // Typing regression
-    it("should be possible for mapStatetoProps to operator on any store/slice", () => {
+    it("should be possible for props to operate on any store/slice", () => {
         const ConnectedTestComponent = connect(TestComponent, (store: Store<TestState>) => {
             const slice = store.createSlice("message", "Blafoo");
             const props = slice.watch(message => ({ message }))
@@ -219,8 +219,43 @@ describe("react bridge: connect() tests", () => {
             }
         });
 
-        const wrapper = mount(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("Blafoo")
+    })
+
+    it("should be possible to add additional props to a connected component and subscribe to it in the connect callback", (done) => {
+        // add another prop field to our component
+        type ComponentProps = { message?: string }
+        const Component: React.SFC<ComponentProps> = (props) => <h1>{props.message}</h1>;
+
+        type InputProps = ComponentProps & { test: number };
+        const ConnectedTestComponent = connect(Component, (store: Store<TestState>, inputProps: Observable<InputProps>) => {
+            inputProps.pipe(
+                take(1)
+            ).subscribe(props => {
+                expect(props).to.deep.equal({ test: 1 })
+            })
+
+            inputProps.pipe(
+                skip(1),
+                take(1)
+            ).subscribe(props => {
+                expect(props).to.deep.equal({ test: 2 })
+                setTimeout(() => done(), 100);
+            })
+            return {
+                props: of({ message: "Foobar" })
+            }
+        })
+
+        const Root: React.SFC<any> = (props: any) => <StoreProvider store={store}><ConnectedTestComponent {...props} /></StoreProvider>;
+        const wrapper = Enzyme.mount(<Root test={1} />)
+        wrapper.setProps({
+            test: 2
+        });
+        const messageText = wrapper.find("h1").text();
+        expect(messageText).to.equal("Foobar")
+        wrapper.unmount();
     })
 })
