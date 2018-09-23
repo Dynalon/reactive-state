@@ -12,5 +12,5 @@ before_script:
 script:
   - yarn run build
   - yarn run build-tests
-  - # yarn run test
-  - yarn run coveralls
+  - yarn run test
+  - # yarn run coveralls
