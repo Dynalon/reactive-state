@@ -12,7 +12,9 @@ export function setupJSDomEnv() {
             }), {});
         Object.defineProperties(target, props);
     }
-    const jsdom = new JSDOM('<!doctype html><html><body></body></html>');
+    const jsdom = new JSDOM('<!doctype html><html><body></body></html>', {
+        url: "http://localhost"
+    });
     (global as any).window = jsdom.window;
     (global as any).document = jsdom.window.document;
     (global as any).navigator = {
