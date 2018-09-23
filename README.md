@@ -10,16 +10,16 @@ A typed, wrist-friendly state container aimed as an alternative to Redux when us
 Features
 ----
 
-  * wrist-friendly with no boilerplate code, no string constants, and not a single switch statement
+  * wrist-friendly with no boilerplate code, no mandatory string constants, and not a single switch statement
   * Actions are just Observables, so are Subjects. Just call `.next()` to dispatch an action.
-  * dynamically add and remove reducers during runtime (usefull for lazy-loading application modules)
+  * dynamically add and remove reducers during runtime
   * no need for async middlewares such as redux-thunk/redux-saga; actions are Observables and can be composed and transformed async using RxJS operators
   * no need for selector libraries like MobX or Reselect, RxJS already ships it
-  * single, application-wide Store concept as in Redux, but with linked standalone stores representing slices/substates for easy reducer composition and state separation
+  * single, application-wide Store concept as in Redux. Possibility to create slices/substates for decoupling (easier reducer composition and state separation by module)
   * Strictly typed to find errors during compile time
   * Heavily unit tested, 100+ tests for ~250 lines of code
   * React bridge (like `react-redux`) included, though using React is not mandatory
-  * Support for React-Devtool Extension (not all features supported, work in progress)
+  * Support for React-Devtool Extension
 
 Installation
 ----
