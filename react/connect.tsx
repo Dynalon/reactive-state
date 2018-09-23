@@ -26,7 +26,7 @@ export interface ConnectState<TOriginalProps> {
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
  */
-export function connect<TAppState, TOriginalProps extends {}, TInputProps extends TOriginalProps = TOriginalProps>(
+export function connect<TAppState, TOriginalProps extends {}, TInputProps = TOriginalProps>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
     connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TInputProps>
 ) {

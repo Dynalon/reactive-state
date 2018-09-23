@@ -2,6 +2,7 @@ v3.2
 
 * react bridge: Removed `mapStatetoProps` function and use much simpler `props` which is just an Observable emitting
   the props of the connected component
+* react bridge: Pass down an Observable of the input props given to a connected component
 * react bridge: The `store` argument passed as the `ConnectCallback` in the `connect()` function now calls .clone()
   on the store internally and automatically calls .destroy() on the clone when the component is unmount. That way we
   don't need custom cleanup logic inside `connect()`.
