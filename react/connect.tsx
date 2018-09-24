@@ -13,7 +13,6 @@ export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.
 export interface ConnectResult<TAppState, TOriginalProps> {
     props?: Observable<TOriginalProps>;
     actionMap?: ActionMap<TOriginalProps>;
-    cleanup?: Subscription;
 }
 
 export type ConnectCallback<S, P, TInputProps> = (store: Store<S>, inputProps: Observable<TInputProps>) => ConnectResult<S, P>;
@@ -71,10 +70,6 @@ export function connect<TAppState, TInputProps = Partial<TOriginalProps>, TOrigi
 
             if (this.connectResult.actionMap) {
                 this.actionProps = assembleActionProps(this.connectResult.actionMap);
-            }
-
-            if (this.connectResult.cleanup) {
-                this.subscription.add(this.connectResult.cleanup);
             }
         }
 

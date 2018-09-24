@@ -40,6 +40,7 @@ export class TestComponent extends React.Component<TestComponentProps, {}> {
 
 function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, TestComponentProps> | null) {
     return connect(TestComponent, (store: Store<TestState>) => {
+        store.destroyed.subscribe(() => cleanup.unsubscribe())
         const props = store.createSlice("message").watch(message => ({ message }));
         const actionMap: ActionMap<TestComponent> = {
             onClick: globalClicked
@@ -55,12 +56,12 @@ function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, 
     })
 }
 
+let cleanup: Subscription;
 describe("react bridge: connect() tests", () => {
 
     let store: Store<TestState>;
     let mountInsideStoreProvider: (elem: JSX.Element) => Enzyme.ReactWrapper<any, any>;
     let ConnectedTestComponent: any;
-    let cleanup: Subscription;
 
     const initialState: TestState = {
         message: "initialMessage",
@@ -72,7 +73,7 @@ describe("react bridge: connect() tests", () => {
     beforeEach(() => {
         setupJSDomEnv();
         cleanup = new Subscription();
-        ConnectedTestComponent = getConnectedComponent({ cleanup });
+        ConnectedTestComponent = getConnectedComponent();
         store = Store.create(initialState);
         store.addReducer(nextMessage, (state, message) => {
             return {
@@ -80,6 +81,7 @@ describe("react bridge: connect() tests", () => {
                 message
             }
         })
+        store.destroyed.subscribe(() => cleanup.unsubscribe())
         mountInsideStoreProvider = (elem: JSX.Element) => Enzyme.mount(<StoreProvider store={store}>{elem}</StoreProvider>);
     })
 
@@ -201,7 +203,7 @@ describe("react bridge: connect() tests", () => {
         const actionMap: ActionMap<TestComponent> = {
             onClick: undefined
         };
-        ConnectedTestComponent = getConnectedComponent({ actionMap, cleanup });
+        ConnectedTestComponent = getConnectedComponent({ actionMap });
         cleanup.add(() => done());
         const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
         wrapper.find("button").simulate("click");
