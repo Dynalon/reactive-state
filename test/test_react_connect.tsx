@@ -227,11 +227,11 @@ describe("react bridge: connect() tests", () => {
     })
 
     it("should be possible to add additional props to a connected component and subscribe to it in the connect callback", (done) => {
-        // add another prop field to our component
-        type ComponentProps = { message?: string }
+        type ComponentProps = { message: string }
         const Component: React.SFC<ComponentProps> = (props) => <h1>{props.message}</h1>;
 
-        type InputProps = ComponentProps & { test: number };
+        // add another prop field to our component
+        type InputProps = ComponentProps & { additionalProp: number };
         const ConnectedTestComponent = connect(Component, (store: Store<TestState>, inputProps: Observable<InputProps>) => {
             inputProps.pipe(
                 take(1)
@@ -259,5 +259,20 @@ describe("react bridge: connect() tests", () => {
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("Foobar")
         wrapper.unmount();
+    })
+
+    // this is a compilation test to assert that the type inference for connect() works when manually specifing type arguments
+    it("should be possible to infer the inputProps type", done => {
+        type ComponentProps = { message: string };
+        const Component: React.SFC<ComponentProps> = (props) => <h1>{props.message}</h1>;
+
+        // add another prop field to our component
+        type InputProps = ComponentProps & { additionalProp: number };
+        const ConnectedTestComponent = connect<TestState, InputProps, ComponentProps>(Component, (store, inputProps) => {
+            const props = of({ message: "Foobar", additionalProp: 5 })
+            return { props }
+        })
+        console.info(ConnectedTestComponent)
+        done();
     })
 })
