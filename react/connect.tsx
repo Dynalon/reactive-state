@@ -25,7 +25,9 @@ export interface ConnectState<TOriginalProps> {
 /**
  * Connects a Component's props to a set of props of the application state coming from a Store object.
  */
-export function connect<TAppState, TInputProps extends Partial<TOriginalProps>, TOriginalProps extends {}>(
+// TODO: earlier TS version could infer TOriginalProps, why is this not working anymore? Bug in TS?
+// possible candidate: https://github.com/Microsoft/TypeScript/issues/21734
+export function connect<TAppState, TOriginalProps extends {}, TInputProps extends {} = {}>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
     connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TInputProps>
 ) {

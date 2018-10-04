@@ -267,8 +267,8 @@ describe("react bridge: connect() tests", () => {
         const Component: React.SFC<ComponentProps> = (props) => <h1>{props.message}</h1>;
 
         // add another prop field to our component
-        type InputProps = ComponentProps & { additionalProp: number };
-        const ConnectedTestComponent = connect<TestState, InputProps, ComponentProps>(Component, (store, inputProps) => {
+        type InputProps = { additionalProp: number };
+        const ConnectedTestComponent = connect<TestState, ComponentProps, InputProps>(Component, (store, inputProps) => {
             const props = of({ message: "Foobar", additionalProp: 5 })
             return { props }
         })
@@ -276,3 +276,4 @@ describe("react bridge: connect() tests", () => {
         done();
     })
 })
+
