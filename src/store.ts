@@ -1,4 +1,4 @@
-import { EMPTY, isObservable, Observable, Subject, Subscription } from "rxjs";
+import { EMPTY, isObservable, Observable, Subject, Subscription, AsyncSubject } from "rxjs";
 import { distinctUntilChanged, filter, map, merge, publishReplay, refCount, scan, takeUntil } from "rxjs/operators";
 import { shallowEqual } from "./shallowEqual";
 import { ActionDispatch, CleanupState, Reducer, StateChangeNotification, StateMutation } from "./types";
@@ -57,7 +57,7 @@ export class Store<S> {
     /**
      * Is completed when the slice is unsubscribed and no longer needed.
      */
-    private readonly _destroyed = new Subject<void>();
+    private readonly _destroyed = new AsyncSubject<void>();
 
     /**
      * Used for manual dispatches without observables
@@ -320,7 +320,7 @@ export class Store<S> {
      * Destroys the Store/Slice. All Observables obtained via .select() will complete when called.
      */
     destroy(): void {
-        this._destroyed.next();
+        this._destroyed.next(undefined);
         this._destroyed.complete();
     }
 
