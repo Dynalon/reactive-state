@@ -24,10 +24,7 @@ interface TodoState {
 const initialState: AppState = {
     counter: 0,
     todoState: {
-        todos: [
-            { id: 1, title: 'Homework', done: false },
-            { id: 2, title: 'Walk dog', done: false }
-        ]
+        todos: [{ id: 1, title: "Homework", done: false }, { id: 2, title: "Walk dog", done: false }],
     },
 };
 
@@ -46,7 +43,7 @@ const decrementReducer: Reducer<number, void> = (state: number, payload: void) =
 
 // while it looks like a magic string, it is NOT: 'counter' is of type "keyof AppState"; so putting
 // any non-property name of AppState here is actually a compilation error!
-const counterStore = store.createSlice('counter');
+const counterStore = store.createSlice("counter");
 
 counterStore.addReducer(incrementAction, incrementReducer);
 counterStore.addReducer(decrementAction, decrementReducer);
@@ -69,16 +66,16 @@ const markTodoAsDoneAction = new Subject<number>();
 
 const markTodoAsDoneReducer: Reducer<TodoState, number> = (state: TodoState, payload: number) => {
     const todos = state.todos.map(todo => {
-        if (todo.id != payload)
-            return todo;
+        if (todo.id != payload) return todo;
         return {
-            ...todo, done: true
+            ...todo,
+            done: true,
         };
-    })
+    });
     return { ...state, todos };
 };
 
-const todoStore = store.createSlice('todoState');
+const todoStore = store.createSlice("todoState");
 todoStore.addReducer(deleteToDoAction, deleteToDoReducer);
 const reducerSubscription = todoStore.addReducer(markTodoAsDoneAction, markTodoAsDoneReducer);
 
@@ -91,19 +88,18 @@ deleteToDoAction.next(1);
 reducerSubscription.unsubscribe();
 
 // create a slice pointing directly to the todos array
-const todosArraySlice = store.createSlice('todoState').createSlice('todos');
+const todosArraySlice = store.createSlice("todoState").createSlice("todos");
 
 // create simpler reducer
 const markTodoAsDoneSimpleReducer: Reducer<Todo[], number> = (state: Todo[], payload: number) => {
     return state.map(todo => {
-        if (todo.id != payload)
-            return todo;
+        if (todo.id != payload) return todo;
         return {
             ...todo,
-            done: true
-        }
-    })
-}
+            done: true,
+        };
+    });
+};
 
 todosArraySlice.addReducer(markTodoAsDoneAction, markTodoAsDoneSimpleReducer);
 markTodoAsDoneAction.next(2);

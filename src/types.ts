@@ -20,7 +20,7 @@ export type CleanupState<K> = K | null | "undefined" | "delete";
 
 export interface ActionDispatch<P> {
     actionName: string;
-    actionPayload: P
+    actionPayload: P;
 }
 
 export interface StateChangeNotification<S = any> {
