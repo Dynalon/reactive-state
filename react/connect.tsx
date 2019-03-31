@@ -71,7 +71,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
             this.connectResult = connectCallback(this.store, this.inputProps.asObservable());
 
             if (this.connectResult.actionMap) {
-                this.actionProps = assembleActionProps(this.connectResult.actionMap);
+                this.actionProps = assembleActionProps(this.connectResult.actionMap) as TOriginalProps;
             }
         }
 
@@ -126,7 +126,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
             const props = this.getProps();
 
             if (this.store === undefined || this.state.ready === true) {
-                return <ComponentToConnect {...this.state.connectedProps} {...this.actionProps} {...props} />
+                return <ComponentToConnect {...this.state.connectedProps} {...this.actionProps as TOriginalProps} {...props} />
             } else {
                 return null;
             }
