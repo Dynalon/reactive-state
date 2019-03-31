@@ -4,7 +4,7 @@ import "mocha";
 import * as React from "react";
 import { Subject } from "rxjs";
 import { take, toArray } from "rxjs/operators";
-import { connect, StoreProjection, StoreProvider, StoreSlice, WithStore } from "../react";
+import { connect, StoreProjection, StoreProvider, StoreSlice, WithStore, useStore } from "../react";
 import { Store } from "../src/index";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 import { SliceState, TestComponent, TestState } from "./test_react_connect";
@@ -282,6 +282,19 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
                 <WithStore><h1>Not a function</h1></WithStore>
             </StoreProvider>)
         }).to.throw();
+    })
+
+    it("should be possible to get a store using the useStore hook", (done) => {
+        const TestComponent = () => {
+            const storeFromHook = useStore();
+            expect(storeFromHook).to.equal(store);
+            done();
+            return null;
+        }
+
+        Enzyme.mount(<StoreProvider store={store}>
+            <TestComponent />
+        </StoreProvider>)
     })
 
 

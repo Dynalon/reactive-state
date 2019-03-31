@@ -1,7 +1,8 @@
 import { Store } from "../src/index";
 import * as React from "react";
 
-const { Provider, Consumer } = React.createContext<Store<any> | undefined>(undefined);
+const context = React.createContext<Store<any> | undefined>(undefined);
+const { Provider, Consumer } = context;
 
 export interface StoreProviderProps {
     store: Store<{}>;
@@ -14,6 +15,7 @@ export class StoreProvider extends React.Component<StoreProviderProps, {}> {
 }
 
 export const StoreConsumer = Consumer;
+
 
 export interface StoreSliceProps<TAppState, TKey extends keyof TAppState> {
     slice: (store: Store<TAppState>) => TKey
@@ -109,4 +111,12 @@ export class WithStore extends React.Component<{}, {}> {
         }
         }</Consumer>
     }
+}
+
+/**
+ * A react hook to obtain the current store, depending on the context.
+ */
+export function useStore<T = any>() {
+    const store = React.useContext(context);
+    return store as Store<T>;
 }
