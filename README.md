@@ -53,8 +53,8 @@ const initialState: AppState = { counter: 0 }
 
 const store = Store.create(initialState);
 
-// The .select() function returns an Observable that emits every state change, so we can subscribe to it
-store.select().subscribe(newState => console.log("STATE:", JSON.stringify(newState)));
+// The .watch() function returns an Observable that emits the selected state change, so we can subscribe to it
+store.watch().subscribe(newState => console.log("STATE:", JSON.stringify(newState)));
 
 // the select() observable always caches the last emitted state, so we will immediately print our inital state:
 // [CONSOLE.LOG]: STATE: {"counter":0}
