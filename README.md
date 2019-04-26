@@ -56,7 +56,7 @@ const store = Store.create(initialState);
 // The .watch() function returns an Observable that emits the selected state change, so we can subscribe to it
 store.watch().subscribe(newState => console.log("STATE:", JSON.stringify(newState)));
 
-// the select() observable always caches the last emitted state, so we will immediately print our inital state:
+// the watch() observable always caches the last emitted state, so we will immediately print our inital state:
 // [CONSOLE.LOG]: STATE: {"counter":0}
 
 // use a RxJS Subjects as an action
