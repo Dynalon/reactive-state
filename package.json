@@ -73,7 +73,7 @@
   "dependencies": {
     "lodash.isobject": "^3.0.2",
     "lodash.isplainobject": "^4.0.6",
-    "rxjs": "^6.4.0",
+    "rxjs": "^6.5.1",
     "typescript": "^3.4.3"
   },
   "optionalDependencies": {
