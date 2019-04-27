@@ -1,3 +1,7 @@
+v3.3
+
+* add useStore() hook to consume a store provided via <StoreProvider> through new Hooks API
+
 v3.2
 
 * react bridge: Removed `mapStatetoProps` function and use much simpler `props` which is just an Observable emitting
