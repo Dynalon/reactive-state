@@ -6,7 +6,6 @@ import { Store, Reducer } from "../src/index";
 import { ExampleState } from "./test_common_types";
 
 describe("Devtool notification tests", () => {
-
     let notifyOnStateChange = (store: Store<any>) => store.stateChangedNotification;
 
     let store: Store<ExampleState>;
@@ -16,7 +15,7 @@ describe("Devtool notification tests", () => {
 
     beforeEach(() => {
         const initialState = {
-            counter: 0
+            counter: 0,
         };
         store = Store.create(initialState);
         incrementAction = new Subject<number>();
@@ -32,7 +31,7 @@ describe("Devtool notification tests", () => {
         notifyOnStateChange(store).subscribe(({ newState }) => {
             expect(newState).to.deep.equal({ counter: 1 });
             done();
-        })
+        });
         incrementAction.next();
     });
 
@@ -40,7 +39,7 @@ describe("Devtool notification tests", () => {
     // that. Consuming APIs must implement their on distinctUntilChanged()
     it.skip("should not call the devtool callback function when the reducer returned the previous state", done => {
         const initialState = {};
-        const store = Store.create(initialState)
+        const store = Store.create(initialState);
         const identityAction = new Subject();
         store.addReducer(identityAction, state => state, "IDENTITY");
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
@@ -49,7 +48,7 @@ describe("Devtool notification tests", () => {
 
         identityAction.next(undefined);
         setTimeout(done, 50);
-    })
+    });
 
     it("should call the devtool callback function with the correct payload when a state change occurs", done => {
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
@@ -87,28 +86,27 @@ describe("Devtool notification tests", () => {
         slice.addReducer(incrementAction, incrementReducer, "INCREMENT_ACTION");
 
         incrementAction.next(1);
-    })
+    });
 
     it("should trigger a state change notification on the parent if a slice changes", done => {
-
-        const store = Store.create({ counter: 0 })
+        const store = Store.create({ counter: 0 });
         notifyOnStateChange(store).subscribe(notification => {
             expect(notification.actionName).to.equal("INCREMENT_ACTION");
             expect(notification.actionPayload).to.equal(1);
-            expect(notification.newState).to.deep.equal({ counter: 1 })
+            expect(notification.newState).to.deep.equal({ counter: 1 });
             done();
-        })
+        });
         const slice = store.createSlice("counter");
         const incrementAction = new Subject<number>();
         const incrementReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
         slice.addReducer(incrementAction, incrementReducer, "INCREMENT_ACTION");
 
         incrementAction.next(1);
-    })
+    });
 
     it("should trigger the correct actions matching to the state", done => {
         const setValueAction = new Subject<number>();
-        const store = Store.create({ value: 0 })
+        const store = Store.create({ value: 0 });
         const N_ACTIONS = 100000;
         store.addReducer(setValueAction, (state, value) => ({ value }), "SET_VALUE");
 
@@ -116,10 +114,12 @@ describe("Devtool notification tests", () => {
         const counter2 = new Subject<any>();
         // finish after 100 actions dispatched
 
-        zip(counter1, counter2).pipe(
-            take(N_ACTIONS),
-            toArray(),
-        ).subscribe(() => done());
+        zip(counter1, counter2)
+            .pipe(
+                take(N_ACTIONS),
+                toArray(),
+            )
+            .subscribe(() => done());
 
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
             expect(newState.value).to.equal(actionPayload);
@@ -134,8 +134,6 @@ describe("Devtool notification tests", () => {
                 setValueAction.next(n);
                 counter1.next();
             }, wait);
-        })
-
-    }).timeout(10000)
-
+        });
+    }).timeout(10000);
 });

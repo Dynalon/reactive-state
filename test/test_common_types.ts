@@ -16,5 +16,5 @@ export interface RootState {
 }
 
 export interface GenericState {
-    value: any
+    value: any;
 }

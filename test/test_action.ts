@@ -7,7 +7,7 @@ describe("Action tests", () => {
     interface GenericState {
         value?: any;
     }
-    class Foo { };
+    class Foo {}
 
     let store: Store<GenericState>;
     let genericAction: Subject<any>;
@@ -18,7 +18,7 @@ describe("Action tests", () => {
         genericAction = new Subject<any>();
         genericReducer = (state, payload) => ({ ...state, value: payload });
         store.addReducer(genericAction, genericReducer);
-    })
+    });
 
     it("should not throw an error when an action emits a non-plain object", () => {
         expect(() => genericAction.next(new Foo())).not.to.throw();
@@ -52,5 +52,4 @@ describe("Action tests", () => {
     it("should not throw an error when an action emits undefined", () => {
         expect(() => genericAction.next(undefined)).not.to.throw();
     });
-
-})
+});

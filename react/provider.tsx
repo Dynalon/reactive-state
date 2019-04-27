@@ -118,5 +118,8 @@ export class WithStore extends React.Component<{}, {}> {
  */
 export function useStore<T = any>() {
     const store = React.useContext(context);
+    if (store === undefined) {
+        throw new Error("No store found in context, did you forget to add a Provider for it?")
+    }
     return store as Store<T>;
 }

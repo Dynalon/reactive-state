@@ -6,13 +6,12 @@ import { Reducer, Store } from "../src/index";
 // make sure the example in the README.md actually works and compiles
 // use this test as playground
 export function testExample() {
-
     // The state for our example app
     interface AppState {
         counter: number;
     }
 
-    const initialState: AppState = { counter: 0 }
+    const initialState: AppState = { counter: 0 };
 
     const store = Store.create(initialState);
 
@@ -28,7 +27,7 @@ export function testExample() {
     // A reducer is a function that takes a state and an optional payload, and returns a new state
     function incrementReducer(state, payload) {
         return { ...state, counter: state.counter + payload };
-    };
+    }
 
     store.addReducer(incrementAction, incrementReducer);
 
@@ -40,7 +39,9 @@ export function testExample() {
     // [CONSOLE.LOG]: STATE: {"counter":2}
 
     // async actions? No problem, no need for a "middleware", just use RxJS
-    interval(1000).pipe(take(3)).subscribe(() => incrementAction.next(1));
+    interval(1000)
+        .pipe(take(3))
+        .subscribe(() => incrementAction.next(1));
     // <PAUSE 1sec>
     // [CONSOLE.LOG]: STATE: {"counter":3}
     // <PAUSE 1sec>
@@ -55,9 +56,8 @@ describe.skip("example", () => {
         setTimeout(() => {
             done();
         }, 10000);
-
-    })
-})
+    });
+});
 
 export function testComputedValuesExample() {
     interface Todo {
@@ -75,19 +75,19 @@ export function testComputedValuesExample() {
             {
                 id: 0,
                 title: "Walk the dog",
-                done: false
+                done: false,
             },
             {
                 id: 1,
                 title: "Homework",
-                done: false
+                done: false,
             },
             {
                 id: 2,
                 title: "Do laundry",
-                done: false
-            }
-        ]
+                done: false,
+            },
+        ],
     });
 
     const markTodoAsDone = new Subject<number>();
@@ -100,7 +100,7 @@ export function testComputedValuesExample() {
     const todoStore = store.createSlice("todos");
     todoStore.addReducer(markTodoAsDone, markTodoAsDoneReducer);
 
-    const todos = todoStore.select()
+    const todos = todoStore.select();
 
     // create an auto computed observables using RxJS basic operators
 
@@ -108,8 +108,9 @@ export function testComputedValuesExample() {
     const completedTodos = todos.pipe(map(todos => todos.filter(t => t.done == true).length));
 
     // whenever the number of open or completed todos changes, log a message
-    zip(openTodos, completedTodos)
-        .subscribe(([open, completed]) => console.log(`I have ${open} open todos and ${completed} completed todos`));
+    zip(openTodos, completedTodos).subscribe(([open, completed]) =>
+        console.log(`I have ${open} open todos and ${completed} completed todos`),
+    );
 
     markTodoAsDone.next(0);
     markTodoAsDone.next(1);
