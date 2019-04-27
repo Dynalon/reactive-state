@@ -16,28 +16,30 @@ export class StoreProvider extends React.Component<StoreProviderProps, {}> {
 
 export const StoreConsumer = Consumer;
 
-
 export interface StoreSliceProps<TAppState, TKey extends keyof TAppState> {
-    slice: (store: Store<TAppState>) => TKey
-    initialState?: TAppState[TKey]
-    cleanupState?: TAppState[TKey] | "delete" | "undefined"
+    slice: (store: Store<TAppState>) => TKey;
+    initialState?: TAppState[TKey];
+    cleanupState?: TAppState[TKey] | "delete" | "undefined";
 }
 
-export class StoreSlice<TAppState, TKey extends keyof TAppState> extends React.Component<StoreSliceProps<TAppState, TKey>, {}> {
-
-    slice?: Store<TAppState[TKey]>
+export class StoreSlice<TAppState, TKey extends keyof TAppState> extends React.Component<
+    StoreSliceProps<TAppState, TKey>,
+    {}
+> {
+    slice?: Store<TAppState[TKey]>;
 
     componentWillUnmount() {
         this.slice!.destroy();
     }
 
     render() {
-        return <Consumer>
-            {
-                (store: Store<TAppState> | undefined) => {
-
+        return (
+            <Consumer>
+                {(store: Store<TAppState> | undefined) => {
                     if (!store)
-                        throw new Error("StoreSlice used outside of a Store context. Did forget to add a <StoreProvider>?")
+                        throw new Error(
+                            "StoreSlice used outside of a Store context. Did forget to add a <StoreProvider>?",
+                        );
 
                     // we ignore this else due to a limitation in enzyme - we can't trigger a
                     // forceUpdate here to test the else branch;
@@ -46,13 +48,13 @@ export class StoreSlice<TAppState, TKey extends keyof TAppState> extends React.C
                         this.slice = store.createSlice(
                             this.props.slice(store),
                             this.props.initialState,
-                            this.props.cleanupState
-                        )
+                            this.props.cleanupState,
+                        );
                     }
-                    return <Provider value={this.slice}>{this.props.children}</Provider>
-                }
-            }
-        </Consumer>
+                    return <Provider value={this.slice}>{this.props.children}</Provider>;
+                }}
+            </Consumer>
+        );
     }
 }
 
@@ -63,9 +65,10 @@ export interface StoreProjectionProps<TState, TProjected> {
     initial?: (state: TState) => TProjected;
 }
 
-export const StoreProjection = class StoreProjection<TState, TProjected>
-    extends React.Component<StoreProjectionProps<TState, TProjected>, {}> {
-
+export const StoreProjection = class StoreProjection<TState, TProjected> extends React.Component<
+    StoreProjectionProps<TState, TProjected>,
+    {}
+> {
     slice?: Store<TProjected>;
 
     componentWillUnmount() {
@@ -73,12 +76,13 @@ export const StoreProjection = class StoreProjection<TState, TProjected>
     }
 
     render() {
-        return <Consumer>
-            {
-                (store: Store<TState> | undefined) => {
-
+        return (
+            <Consumer>
+                {(store: Store<TState> | undefined) => {
                     if (!store)
-                        throw new Error("StoreProjection/Slice used outside of a Store context. Did forget to add a <StoreProvider>?")
+                        throw new Error(
+                            "StoreProjection/Slice used outside of a Store context. Did forget to add a <StoreProvider>?",
+                        );
 
                     // we ignore this else due to a limitation in enzyme - we can't trigger a
                     // forceUpdate here to test the else branch;
@@ -88,38 +92,42 @@ export const StoreProjection = class StoreProjection<TState, TProjected>
                             this.props.forwardProjection,
                             this.props.backwardProjection,
                             this.props.initial,
-                            this.props.cleanup
-                        )
+                            this.props.cleanup,
+                        );
                     }
-                    return <Provider value={this.slice}>{this.props.children}</Provider>
-                }
-            }
-        </Consumer>
+                    return <Provider value={this.slice}>{this.props.children}</Provider>;
+                }}
+            </Consumer>
+        );
     }
-}
+};
 
 export class WithStore extends React.Component<{}, {}> {
     render() {
-        return <Consumer>{store => {
-            const child = this.props.children as (store: Store<any>) => React.ReactNode;
-            if (!store)
-                throw new Error("WithStore used but no store could be found in context. Did you suppliy a StoreProvider?")
-            else if (typeof this.props.children !== "function")
-                throw new Error("WithStore used but its child is not a function.")
-            else
-                return child(store)
-        }
-        }</Consumer>
+        return (
+            <Consumer>
+                {store => {
+                    const child = this.props.children as (store: Store<any>) => React.ReactNode;
+                    if (!store)
+                        throw new Error(
+                            "WithStore used but no store could be found in context. Did you suppliy a StoreProvider?",
+                        );
+                    else if (typeof this.props.children !== "function")
+                        throw new Error("WithStore used but its child is not a function.");
+                    else return child(store);
+                }}
+            </Consumer>
+        );
     }
 }
 
 /**
  * A react hook to obtain the current store, depending on the context.
  */
-export function useStore<T = any>() {
+export function useStore<T = {}>() {
     const store = React.useContext(context);
     if (store === undefined) {
-        throw new Error("No store found in context, did you forget to add a Provider for it?")
+        throw new Error("No store found in context, did you forget to add a Provider for it?");
     }
     return store as Store<T>;
 }

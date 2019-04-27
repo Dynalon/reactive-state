@@ -1,4 +1,4 @@
-import { Observer, Observable } from 'rxjs';
+import { Observer, Observable } from "rxjs";
 import { ExtractProps } from "./connect";
 
 // Taken from the TypeScript docs, allows to extract all functions of a type
@@ -14,8 +14,10 @@ export type ActionFunction = (...args: any[]) => any;
 // An ActionMap is a map with a list of properties, that are functions in the component props, and assigns these properties
 // either a ActionFunction or an Observer
 export type ActionMap<TComponentOrProps> = {
-    [P in keyof FunctionProperties<ExtractProps<TComponentOrProps>>]?: ActionFunction | Observer<FunctionProperties<ExtractProps<TComponentOrProps>>[P] extends UnaryFunction<infer A> ? A : never>
-}
+    [P in keyof FunctionProperties<ExtractProps<TComponentOrProps>>]?:
+        | ActionFunction
+        | Observer<FunctionProperties<ExtractProps<TComponentOrProps>>[P] extends UnaryFunction<infer A> ? A : never>
+};
 
 /**
  * A map specifying which property on the components state should be populated with
@@ -26,9 +28,7 @@ export type ActionMap<TComponentOrProps> = {
  *        secondsPassed: Observable.interval(1000)
  *     }
  */
-export type UnpackMap<TComponentState> = {
-    [P in keyof TComponentState]?: Observable<TComponentState[P]>
-}
+export type UnpackMap<TComponentState> = { [P in keyof TComponentState]?: Observable<TComponentState[P]> };
 
 export function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOriginalProps>): Partial<TOriginalProps> {
     const actionProps: any = {};
@@ -46,7 +46,9 @@ export function assembleActionProps<TOriginalProps>(actionMap: ActionMap<TOrigin
         else if (typeof observerField.next === "function") {
             actionProps[ownProp] = (arg1: any, ...args: any[]) => observerField.next(arg1);
         } else {
-            throw new Error(`unknown property value for property named "${ownProp}" in action map. Expected function or Observer`)
+            throw new Error(
+                `unknown property value for property named "${ownProp}" in action map. Expected function or Observer`,
+            );
         }
     }
     return actionProps;

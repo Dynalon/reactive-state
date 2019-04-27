@@ -1,21 +1,26 @@
 import * as React from "react";
 import { Subscription, Observable, ReplaySubject } from "rxjs";
 import { Store } from "../src/store";
-import { StoreConsumer } from "./provider"
+import { StoreConsumer } from "./provider";
 
 import { ActionMap, assembleActionProps } from "./actions";
 import { takeUntil } from "rxjs/operators";
 
 // Allows to get the props of a component, or pass the props themselves.
 // See: https://stackoverflow.com/questions/50084643/typescript-conditional-types-extract-component-props-type-from-react-component/50084862#50084862
-export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.Component<infer TProps, any> ? TProps : TComponentOrTProps;
+export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.Component<infer TProps, any>
+    ? TProps
+    : TComponentOrTProps;
 
 export interface ConnectResult<TAppState, TOriginalProps> {
     props?: Observable<TOriginalProps>;
     actionMap?: ActionMap<TOriginalProps>;
 }
 
-export type ConnectCallback<S, P, TInputProps> = (store: Store<S>, inputProps: Observable<TInputProps>) => ConnectResult<S, P>;
+export type ConnectCallback<S, P, TInputProps> = (
+    store: Store<S>,
+    inputProps: Observable<TInputProps>,
+) => ConnectResult<S, P>;
 
 export interface ConnectState<TOriginalProps> {
     connectedProps?: Partial<TOriginalProps>;
@@ -29,13 +34,15 @@ export interface ConnectState<TOriginalProps> {
 // possible candidate: https://github.com/Microsoft/TypeScript/issues/21734
 export function connect<TAppState, TOriginalProps extends {}, TInputProps extends {} = {}>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
-    connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TInputProps>
+    connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TInputProps>,
 ) {
-    class ConnectedComponent extends React.Component<Partial<TOriginalProps> & { reactiveStateStore: Store<TAppState> }, ConnectState<TOriginalProps>> {
-
+    class ConnectedComponent extends React.Component<
+        Partial<TOriginalProps> & { reactiveStateStore: Store<TAppState> },
+        ConnectState<TOriginalProps>
+    > {
         private subscription: Subscription = new Subscription();
         private actionProps: Partial<TOriginalProps> = {};
-        private connectResult?: ConnectResult<TAppState, Partial<TOriginalProps>>
+        private connectResult?: ConnectResult<TAppState, Partial<TOriginalProps>>;
         private parentDestroyed?: Observable<void>;
         private inputProps = new ReplaySubject<TInputProps>(1);
 
@@ -47,8 +54,8 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
 
         state: ConnectState<TOriginalProps> = {
             connectedProps: undefined,
-            ready: false
-        }
+            ready: false,
+        };
 
         constructor(props: TInputProps) {
             super(props as any);
@@ -65,8 +72,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
         }
 
         private connect() {
-            if (this.store === undefined)
-                return;
+            if (this.store === undefined) return;
 
             this.connectResult = connectCallback(this.store, this.inputProps.asObservable());
 
@@ -76,22 +82,23 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
         }
 
         private subscribeToStateChanges() {
-            if (this.store === undefined)
-                return;
+            if (this.store === undefined) return;
 
             const connectResult = this.connectResult!;
             if (connectResult.props) {
-                this.subscription.add(connectResult.props.pipe(takeUntil(this.parentDestroyed!)).subscribe(connectedProps => {
-                    this.setState((prevState: ConnectState<TOriginalProps>) => {
-                        return {
-                            ...prevState,
-                            connectedProps,
-                            ready: true
-                        }
-                    });
-                }))
+                this.subscription.add(
+                    connectResult.props.pipe(takeUntil(this.parentDestroyed!)).subscribe(connectedProps => {
+                        this.setState((prevState: ConnectState<TOriginalProps>) => {
+                            return {
+                                ...prevState,
+                                connectedProps,
+                                ready: true,
+                            };
+                        });
+                    }),
+                );
             } else {
-                this.setState((prevState: ConnectState<TOriginalProps>) => ({ ready: true }))
+                this.setState((prevState: ConnectState<TOriginalProps>) => ({ ready: true }));
             }
         }
 
@@ -109,7 +116,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
             if (this.store !== undefined) {
                 this.store.destroy();
             }
-            this.subscription.unsubscribe()
+            this.subscription.unsubscribe();
         }
 
         componentDidMount() {
@@ -126,12 +133,18 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
             const props = this.getProps();
 
             if (this.store === undefined || this.state.ready === true) {
-                return <ComponentToConnect {...this.state.connectedProps} {...this.actionProps as TOriginalProps} {...props} />
+                return (
+                    <ComponentToConnect
+                        {...this.state.connectedProps}
+                        {...this.actionProps as TOriginalProps}
+                        {...props}
+                    />
+                );
             } else {
                 return null;
             }
         }
-    };
+    }
 
     return class extends React.Component<TInputProps & Partial<TOriginalProps>, ConnectState<TOriginalProps>> {
         constructor(props: any) {
@@ -139,9 +152,11 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
         }
 
         render() {
-            return <StoreConsumer>
-                {value => <ConnectedComponent reactiveStateStore={value} {...this.props as any} />}
-            </StoreConsumer>
+            return (
+                <StoreConsumer>
+                    {value => <ConnectedComponent reactiveStateStore={value} {...this.props as any} />}
+                </StoreConsumer>
+            );
         }
-    }
+    };
 }
