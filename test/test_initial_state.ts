@@ -33,6 +33,12 @@ describe("initial state setting", () => {
             });
     });
 
+    it("should set the initial state and have it available as currentState immediately", () => {
+        const initialState = {}
+        const store = Store.create(initialState);
+        expect(store.currentState).to.equal(initialState)
+    })
+
     it("should accept an initial state of undefined and use undefined as initial state", done => {
         const sliceStore = store.createSlice("slice", undefined);
 
@@ -140,6 +146,10 @@ describe("initial state setting", () => {
 
         store.addReducer(counterAction, counterReducer);
         counterAction.next();
+
+        // verify currentState (=synchronous state access) works, too
+        expect(store.currentState.counter).to.equal(1)
+
 
         store.select().subscribe(s => {
             expect(initialState.counter).to.equal(1);

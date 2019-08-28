@@ -1,3 +1,7 @@
+v3.4
+
+* Make current state of a store available in `store.currentState` just as in a BehaviorSubject. This helps in synchronous code (i.e. react state init).
+
 v3.3
 
 * add useStore() hook to consume a store provided via <StoreProvider> through new Hooks API

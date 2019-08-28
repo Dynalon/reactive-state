@@ -30,6 +30,10 @@ describe("Store slicing tests", () => {
         });
 
         it("should emit the initial state when subscribing to a freshly sliced store", done => {
+            // sync
+            expect(counterSlice.currentState).to.equal(0);
+
+            // async
             counterSlice.select().subscribe(counter => {
                 expect(counter).to.equal(0);
                 done();
@@ -38,7 +42,10 @@ describe("Store slicing tests", () => {
 
         it("should select a slice and emit the slice value", done => {
             incrementAction.next();
+            // sync
+            expect(counterSlice.currentState).to.equal(1);
 
+            // async
             counterSlice.select().subscribe(counter => {
                 expect(counter).to.equal(1);
                 done();
@@ -58,8 +65,11 @@ describe("Store slicing tests", () => {
                 });
 
             incrementAction.next();
+            expect(counterSlice.currentState).to.equal(1);
             incrementAction.next();
+            expect(counterSlice.currentState).to.equal(2);
             incrementAction.next();
+            expect(counterSlice.currentState).to.equal(3);
         });
 
         it("should not invoke reducers which have been unsubscribed", done => {
@@ -118,6 +128,7 @@ describe("Store slicing tests", () => {
         it("should trigger state changes on slice siblings", done => {
             const siblingStore = store.createSlice("counter");
 
+            // async
             siblingStore
                 .select()
                 .pipe(skip(1))
@@ -127,6 +138,9 @@ describe("Store slicing tests", () => {
                 });
 
             incrementAction.next();
+
+            // sync
+            expect(siblingStore.currentState).to.equal(1);
         });
 
         it("should trigger state changes on slice siblings for complex states", done => {
@@ -179,7 +193,11 @@ describe("Store slicing tests", () => {
 
             incrementAction.next();
 
+            // sync
+            expect(slice.currentState).to.equal(store.currentState);
+
             store.select().subscribe(storeState => {
+                // async
                 slice.select().subscribe(sliceState => {
                     expect(storeState).to.equal(sliceState);
                     expect(storeState).to.deep.equal(sliceState);

@@ -32,7 +32,13 @@ export class Store<S> {
      */
     public readonly destroyed: Observable<void>;
 
+    // TODO This is truly an BehaviorSubject but due to some typing issues we need to cast it as Observable?
     private readonly state: Observable<S>;
+
+    public get currentState(): S {
+        // TODO see above: this.state is actually a BehaviorSubject but typescript or rxjs typings make trouble
+        return (this.state as any).value;
+    }
 
     /**
      * All reducers always produce a state mutation of the original root store type R;
@@ -68,7 +74,7 @@ export class Store<S> {
     public readonly stateChangedNotification: Observable<StateChangeNotification>;
 
     private constructor(
-        state: Observable<S>,
+        state: BehaviorSubject<S>,
         stateMutators: Subject<StateMutation<S>>,
         forwardProjections: Function[],
         backwardProjections: Function[],
@@ -169,20 +175,26 @@ export class Store<S> {
     createProjection<TProjectedState>(
         forwardProjection: (state: S) => TProjectedState,
         backwardProjection: (state: TProjectedState, parentState: S) => S,
+        // TODO make this a flat object instead of a function?
         initial?: (state: S) => TProjectedState,
         cleanup?: (state: TProjectedState, parentState: S) => S,
     ): Store<TProjectedState> {
         const forwardProjections = [...this.forwardProjections, forwardProjection];
         const backwardProjections = [backwardProjection, ...this.backwardProjections];
 
+        const initialState = initial
+            ? initial((this.state as any).value)
+            : forwardProjection((this.state as any).value);
+
         if (initial !== undefined) {
             this.stateMutators.next(s => {
-                const initialReducer = () => initial(s);
+                const initialReducer = () => initialState;
                 return mutateRootState(s, forwardProjections, backwardProjections, initialReducer);
             });
         }
 
-        const state = this.state.pipe(map(state => forwardProjection(state)));
+        const state = new BehaviorSubject<TProjectedState>(initialState);
+        this.state.pipe(map(state => forwardProjection(state))).subscribe(state);
 
         const onDestroy = () => {
             if (cleanup !== undefined) {
