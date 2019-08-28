@@ -1,5 +1,5 @@
-import { EMPTY, isObservable, Observable, Subject, Subscription, AsyncSubject } from "rxjs";
-import { distinctUntilChanged, filter, map, merge, publishReplay, refCount, scan, takeUntil } from "rxjs/operators";
+import { EMPTY, isObservable, Observable, Subject, Subscription, AsyncSubject, BehaviorSubject } from "rxjs";
+import { distinctUntilChanged, filter, map, merge, scan, takeUntil } from "rxjs/operators";
 import { shallowEqual } from "./shallowEqual";
 import { ActionDispatch, CleanupState, Reducer, StateChangeNotification, StateMutation } from "./types";
 
@@ -19,14 +19,10 @@ type RootReducer<R, P> = (payload: P) => StateMutation<R>;
  * @param stateMutators
  * @param initialState
  */
-export function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): Observable<S> {
-    const state = stateMutators.pipe(
-        scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState),
-        // these two lines make our observable hot and have it emit the last state
-        // upon subscription
-        publishReplay(1),
-        refCount(),
-    );
+function createState<S>(stateMutators: Observable<StateMutation<S>>, initialState: S): BehaviorSubject<S> {
+    const state = new BehaviorSubject<S>(initialState);
+    stateMutators.pipe(scan((state: S, reducer: StateMutation<S>) => reducer(state), initialState)).subscribe(state);
+
     return state;
 }
 
@@ -76,7 +72,6 @@ export class Store<S> {
         stateMutators: Subject<StateMutation<S>>,
         forwardProjections: Function[],
         backwardProjections: Function[],
-        onDestroy: () => void,
         notifyRootStateChangedSubject: Subject<StateChangeNotification>,
         actionDispatch: Subject<ActionDispatch<any>>,
     ) {
@@ -85,7 +80,6 @@ export class Store<S> {
         this.forwardProjections = forwardProjections;
         this.backwardProjections = backwardProjections;
 
-        this._destroyed.subscribe(undefined, undefined, onDestroy);
         this.destroyed = this._destroyed.asObservable();
 
         this.actionDispatch = actionDispatch;
@@ -110,13 +104,7 @@ export class Store<S> {
 
         const state = createState(stateMutators, initialState);
 
-        // to make publishReplay become effective, we need a subscription that lasts
-        const stateSubscription = state.subscribe();
-        const onDestroy = () => {
-            stateSubscription.unsubscribe();
-        };
-
-        const store = new Store<S>(state, stateMutators, [], [], onDestroy, new Subject(), new Subject());
+        const store = new Store<S>(state, stateMutators, [], [], new Subject(), new Subject());
 
         // emit a single state mutation so that we emit the initial state on subscription
         stateMutators.next(s => s);
@@ -184,7 +172,6 @@ export class Store<S> {
         initial?: (state: S) => TProjectedState,
         cleanup?: (state: TProjectedState, parentState: S) => S,
     ): Store<TProjectedState> {
-        const state: Observable<TProjectedState> = this.state.pipe(map(state => forwardProjection(state)));
         const forwardProjections = [...this.forwardProjections, forwardProjection];
         const backwardProjections = [backwardProjection, ...this.backwardProjections];
 
@@ -194,6 +181,8 @@ export class Store<S> {
                 return mutateRootState(s, forwardProjections, backwardProjections, initialReducer);
             });
         }
+
+        const state = this.state.pipe(map(state => forwardProjection(state)));
 
         const onDestroy = () => {
             if (cleanup !== undefined) {
@@ -209,10 +198,11 @@ export class Store<S> {
             this.stateMutators,
             forwardProjections,
             backwardProjections,
-            onDestroy,
             this.stateChangeNotificationSubject,
             this.actionDispatch,
         );
+
+        sliceStore.destroyed.subscribe(undefined, undefined, onDestroy);
 
         // destroy the slice if the parent gets destroyed
         this._destroyed.subscribe(undefined, undefined, () => {
