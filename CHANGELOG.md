@@ -1,3 +1,7 @@
+vNEXT
+ * Fix a typing bug that made it impossible to use hooks-based (functional) Components with react bridge
+ * Bump dependencies to latest version
+
 v3.4
 
 * Make current state of a store available in `store.currentState` just as in a BehaviorSubject. This helps in synchronous code (i.e. react state init).
