@@ -54,8 +54,8 @@
     "@types/mocha": "^5.2.6",
     "@types/node": "^9.6.7",
     "@types/node-fetch": "^1.6.7",
-    "@types/react": "^16.8.10",
-    "@types/react-dom": "^16.8.3",
+    "@types/react": "^16.9.2",
+    "@types/react-dom": "^16.9.0",
     "chai": "^4.2.0",
     "concurrently": "^3.4.0",
     "coveralls": "^3.0.0",
@@ -73,13 +73,13 @@
   "dependencies": {
     "lodash.isobject": "^3.0.2",
     "lodash.isplainobject": "^4.0.6",
-    "rxjs": "^6.5.2",
+    "rxjs": "^6.5.3",
     "typescript": "^3.5.3"
   },
   "optionalDependencies": {
     "istanbul": "^0.4.5",
-    "react": "^16.8.2",
-    "react-dom": "^16.8.2",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
     "redux": "^4.0.0"
   }
 }
