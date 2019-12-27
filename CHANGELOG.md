@@ -1,6 +1,7 @@
-vNEXT
+v3.5
  * Fix a typing bug that made it impossible to use hooks-based (functional) Components with react bridge
  * Bump dependencies to latest version
+ * Due to a change in @types/react we can no longer use ActionMap<TComponent> - use ActionMap<typeof TComponent> instead
 
 v3.4
 

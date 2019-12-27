@@ -36,7 +36,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
             const enhancer: StoreEnhancer<any, any> = next => {
                 return (reducer, preloadedState) => {
                     // run any other store enhancers
-                    const reduxStore = next(reducer, initialState);
+                    const reduxStore = next(reducer, initialState as any);
 
                     // write back the state from DevTools/Redux to our ReactiveState
                     reduxStore.subscribe(() => {

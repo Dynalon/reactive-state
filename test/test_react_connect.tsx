@@ -44,7 +44,7 @@ function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, 
         (store: Store<TestState>) => {
             store.destroyed.subscribe(() => cleanup.unsubscribe());
             const props = store.createSlice("message").watch(message => ({ message }));
-            const actionMap: ActionMap<TestComponent> = {
+            const actionMap: ActionMap<typeof TestComponent> = {
                 onClick: globalClicked,
             };
             if (connectResultOverride === null) {
@@ -176,7 +176,7 @@ describe("react bridge: connect() tests", () => {
 
     it("should allow an observer in an actionMap", done => {
         const onClick = new Subject<void>();
-        const actionMap: ActionMap<TestComponent> = {
+        const actionMap: ActionMap<typeof TestComponent> = {
             onClick,
         };
         onClick.subscribe(() => done());
@@ -186,7 +186,7 @@ describe("react bridge: connect() tests", () => {
     });
 
     it("should allow callback functions in an actionMap", done => {
-        const actionMap: ActionMap<TestComponent> = {
+        const actionMap: ActionMap<typeof TestComponent> = {
             onClick: () => done(),
         };
         ConnectedTestComponent = getConnectedComponent({ actionMap });
@@ -195,7 +195,7 @@ describe("react bridge: connect() tests", () => {
     });
 
     it("should throw an error for invalid entries in the action map", () => {
-        const actionMap: ActionMap<TestComponent> = {
+        const actionMap: ActionMap<typeof TestComponent> = {
             onClick: 5 as any,
         };
         expect(() => {
@@ -206,7 +206,7 @@ describe("react bridge: connect() tests", () => {
     });
 
     it("should allow undefined fields in an actionMap to ignore callbacks", done => {
-        const actionMap: ActionMap<TestComponent> = {
+        const actionMap: ActionMap<typeof TestComponent> = {
             onClick: undefined,
         };
         ConnectedTestComponent = getConnectedComponent({ actionMap });
