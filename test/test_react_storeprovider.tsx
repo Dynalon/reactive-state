@@ -115,7 +115,6 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
                             return <h1>foo</h1>;
                         }}
                     </WithStore>
-                    }}
                 </StoreProvider>
                 <StoreProvider store={store2}>
                     <WithStore>
@@ -169,7 +168,6 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
                             );
                         }}
                     </WithStore>
-                    }}
                 </StoreProvider>
             </div>,
         );
