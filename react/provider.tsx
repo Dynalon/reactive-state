@@ -155,8 +155,8 @@ export function useStoreState<TState extends object, TSlice extends object = TSt
  * Useful mainly for infering the type of the slice; when the type of slice is known, useStoreState is cleaner.
  */
 export function useStoreSlices<TState extends object>(): <TSlice extends object>(projection: (state: TState) => TSlice) => TSlice {
-    // note: a named function (useSlice) is needed here to keep react devtools looking clean
-    return function useSlice<TSlice extends object>(projection: (state: TState) => TSlice): TSlice {
+    // note: a named function is needed here to keep react devtools looking clean
+    return function useStoreSlice<TSlice extends object>(projection: (state: TState) => TSlice): TSlice {
         return useStoreState<TState, TSlice>(projection);
     };
 }
