@@ -156,14 +156,6 @@ export function useStoreState<TState extends object, TSlice extends object = TSt
  */
 export function useSlicer<TState extends object>(): <TSlice extends object>(projection: (state: TState) => TSlice) => TSlice {
     return function useSlice<TSlice extends object>(projection: (state: TState) => TSlice): TSlice {
-        const store = useStore<TState>();
-        const [slice, setSlice] = React.useState<TSlice>(projection ? projection(store.currentState) : store.currentState as unknown as TSlice);
-    
-        React.useEffect(() => {
-            const sub = store.watch(projection).subscribe(setSlice);
-            return () => sub.unsubscribe();
-        }, [store]);
-    
-        return slice;
+        return useStoreState<TState, TSlice>(projection);
     };
 }
