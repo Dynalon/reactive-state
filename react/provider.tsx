@@ -154,7 +154,7 @@ export function useStoreState<TState extends object, TSlice extends object = TSt
  * A react hook to create a fluent interface for producing a hook that makes state slices.
  * Useful mainly for infering the type of the slice; when the type of slice is known, useStoreState is cleaner.
  */
-export function useSlicer<TState extends object>(): <TSlice extends object>(projection: (state: TState) => TSlice) => TSlice {
+export function useStoreSlices<TState extends object>(): <TSlice extends object>(projection: (state: TState) => TSlice) => TSlice {
     // note: a named function (useSlice) is needed here to keep react devtools looking clean
     return function useSlice<TSlice extends object>(projection: (state: TState) => TSlice): TSlice {
         return useStoreState<TState, TSlice>(projection);
