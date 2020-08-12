@@ -131,3 +131,35 @@ export function useStore<T = {}>() {
     }
     return store as Store<T>;
 }
+
+/**
+ * A react hook to mirror the pattern of connect through a hooks-based interface.
+ */
+export function useStoreState(): object;
+export function useStoreState<TState extends object>(): TState;
+export function useStoreState<TState extends object, TSlice extends object>(projection: (state: TState) => TSlice): TSlice;
+export function useStoreState<TState extends object, TSlice extends object = TState>(projection?: (state: TState) => TSlice): TSlice {
+    const store = useStore<TState>();
+    const [slice, setSlice] = React.useState<TSlice>(projection ? projection(store.currentState) : store.currentState as unknown as TSlice);
+
+    React.useEffect(() => {
+        const sub = store.watch(projection).subscribe(setSlice);
+        return () => sub.unsubscribe();
+    }, [store]);
+
+    return slice;
+}
+
+export function useSlicer<TState extends object>(): <TSlice extends object>(projection: (state: TState) => TSlice) => TSlice {
+    return function useSlice<TSlice extends object>(projection: (state: TState) => TSlice): TSlice {
+        const store = useStore<TState>();
+        const [slice, setSlice] = React.useState<TSlice>(projection ? projection(store.currentState) : store.currentState as unknown as TSlice);
+    
+        React.useEffect(() => {
+            const sub = store.watch(projection).subscribe(setSlice);
+            return () => sub.unsubscribe();
+        }, [store]);
+    
+        return slice;
+    };
+}
