@@ -8,6 +8,7 @@ import { connect, StoreProjection, StoreProvider, StoreSlice, WithStore, useStor
 import { Store } from "../src/index";
 import { setupJSDomEnv } from "./test_enzyme_helper";
 import { SliceState, TestComponent, TestState } from "./test_react_connect";
+import { useStoreState, useStoreSlices } from "../react/provider";
 
 describe("react bridge: StoreProvider and StoreSlice tests", () => {
     const nextMessage = new Subject<string>();
@@ -352,5 +353,35 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
             return null;
         };
         expect(() => Enzyme.mount(<TestComponent />)).to.throw();
+    });
+
+    it("should be possible to get a state slice using useStoreState", done => {
+        const TestComponent = () => {
+            const slice = useStoreState<TestState, {message: string}>(({message}) => ({ message }));
+            expect(slice.message).to.equal(store.currentState.message);
+            done();
+            return null;
+        };
+
+        Enzyme.mount(
+            <StoreProvider store={store}>
+                <TestComponent />
+            </StoreProvider>,
+        );
+    });
+
+    it("should be possible to get a state slice using useSlicer", done => {
+        const TestComponent = () => {
+            const slice = useStoreSlices<TestState>()(({message}) => ({ message }));
+            expect(slice.message).to.equal(store.currentState.message);
+            done();
+            return null;
+        };
+
+        Enzyme.mount(
+            <StoreProvider store={store}>
+                <TestComponent />
+            </StoreProvider>,
+        );
     });
 });
