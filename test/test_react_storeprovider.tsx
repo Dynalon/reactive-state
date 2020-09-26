@@ -357,31 +357,56 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
 
     it("should be possible to get a state slice using useStoreState", done => {
         const TestComponent = () => {
-            const slice = useStoreState<TestState, {message: string}>(({message}) => ({ message }));
+            const slice = useStoreState<TestState, { message: string }>(({ message }) => ({ message }));
             expect(slice.message).to.equal(store.currentState.message);
             done();
             return null;
         };
 
-        Enzyme.mount(
+        wrapper = Enzyme.mount(
             <StoreProvider store={store}>
                 <TestComponent />
             </StoreProvider>,
         );
     });
+
+    it("should receive store updates when using useStoreState", done => {
+        const TestComponent = () => {
+            const state = useStoreState<TestState>()
+            const firstRender = React.useRef(true)
+            if (!firstRender.current) {
+                expect(state.message).to.equal("msg2")
+                done();
+            }
+            firstRender.current = false
+            return null;
+        };
+
+        wrapper = Enzyme.mount(
+            <StoreProvider store={store}>
+                <TestComponent />
+            </StoreProvider>,
+        );
+
+        setTimeout(() => {
+            nextMessage.next("msg2")
+        }, 50)
+    });
+
 
     it("should be possible to get a state slice using useSlicer", done => {
         const TestComponent = () => {
-            const slice = useStoreSlices<TestState>()(({message}) => ({ message }));
+            const slice = useStoreSlices<TestState>()(({ message }) => ({ message }));
             expect(slice.message).to.equal(store.currentState.message);
             done();
             return null;
         };
 
-        Enzyme.mount(
+        wrapper = Enzyme.mount(
             <StoreProvider store={store}>
                 <TestComponent />
             </StoreProvider>,
         );
     });
+
 });

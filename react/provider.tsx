@@ -25,7 +25,7 @@ export interface StoreSliceProps<TAppState, TKey extends keyof TAppState> {
 export class StoreSlice<TAppState, TKey extends keyof TAppState> extends React.Component<
     StoreSliceProps<TAppState, TKey>,
     {}
-> {
+    > {
     slice?: Store<TAppState[TKey]>;
 
     componentWillUnmount() {
@@ -68,7 +68,7 @@ export interface StoreProjectionProps<TState, TProjected> {
 export const StoreProjection = class StoreProjection<TState, TProjected> extends React.Component<
     StoreProjectionProps<TState, TProjected>,
     {}
-> {
+    > {
     slice?: Store<TProjected>;
 
     componentWillUnmount() {
@@ -142,8 +142,16 @@ export function useStoreState<TState extends object, TSlice extends object = TSt
     const store = useStore<TState>();
     const [slice, setSlice] = React.useState<TSlice>(projection ? projection(store.currentState) : store.currentState as unknown as TSlice);
 
+    // do not introduce a unneeded second re-render whenever using this hook
+    const firstRender = React.useRef(true)
+
     React.useEffect(() => {
-        const sub = store.watch(projection).subscribe(setSlice);
+        const sub = store.watch(projection).subscribe((slice) => {
+            if (!firstRender.current) {
+                setSlice(slice)
+            }
+        });
+        firstRender.current = false;
         return () => sub.unsubscribe();
     }, [store]);
 
