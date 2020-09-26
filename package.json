@@ -16,7 +16,6 @@
   "scripts": {
     "build": "tsc",
     "build-tests": "tsc -p test",
-    "bundle": "webpack",
     "coverage": "node node_modules/.bin/istanbul cover _mocha -- test/test",
     "coveralls": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "prepublishOnly": "npm run build",
@@ -61,16 +60,13 @@
     "jsdom": "^15.2.1",
     "mocha": "^6.0.2",
     "mocha-lcov-reporter": "^1.3.0",
-    "prettier": "^2.1.2",
-    "uglifyjs-webpack-plugin": "^2.1.2",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.3.0"
+    "prettier": "^2.1.2"
   },
   "dependencies": {
     "lodash.isobject": "^3.0.2",
     "lodash.isplainobject": "^4.0.6",
     "rxjs": "^7.0.0-beta.7",
-    "typescript": "^3.9.6"
+    "typescript": "^4.1.0-dev.20200926"
   },
   "optionalDependencies": {
     "istanbul": "^0.4.5",
