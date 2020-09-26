@@ -16,13 +16,13 @@ describe("destroy logic", () => {
         store = Store.create<RootState>();
     });
 
-    it("should trigger the onCompleted subscription for the state observable returned by .select() when the store is destroyed", done => {
+    it("should trigger the onCompleted subscription for the state observable returned by .select() when the store is destroyed", (done) => {
         store.select().subscribe(undefined, undefined, done);
 
         store.destroy();
     });
 
-    it("should trigger the onCompleted on the state observable returned by select for any child slice when the parent store is destroyed", done => {
+    it("should trigger the onCompleted on the state observable returned by select for any child slice when the parent store is destroyed", (done) => {
         const sliceStore = store.createSlice("slice");
 
         sliceStore.select().subscribe(undefined, undefined, done);
@@ -30,7 +30,7 @@ describe("destroy logic", () => {
         store.destroy();
     });
 
-    it("should unsubscribe any reducer subscription when the store is destroyed for the root store", done => {
+    it("should unsubscribe any reducer subscription when the store is destroyed for the root store", (done) => {
         const store = Store.create<ExampleState>({ counter: 0 });
         const incrementAction = new Subject<void>();
         const incrementReducer: Reducer<ExampleState, void> = (state, payload) => ({
@@ -44,10 +44,10 @@ describe("destroy logic", () => {
         store.destroy();
     });
 
-    it("should unsubscribe any reducer subscription when a sliceStore is destroyed", done => {
+    it("should unsubscribe any reducer subscription when a sliceStore is destroyed", (done) => {
         const store = Store.create<ExampleState>({ counter: 0 });
         const sliceStore = store.createSlice("counter");
-        const incrementReducer: Reducer<number, void> = state => state + 1;
+        const incrementReducer: Reducer<number, void> = (state) => state + 1;
 
         const subscription = sliceStore.addReducer(new Subject<void>(), incrementReducer);
         subscription.add(done);
@@ -55,11 +55,11 @@ describe("destroy logic", () => {
         sliceStore.destroy();
     });
 
-    it("should unsubscribe any reducer subscription for a sliceStore when the root store is destroyed", done => {
+    it("should unsubscribe any reducer subscription for a sliceStore when the root store is destroyed", (done) => {
         const store = Store.create<ExampleState>({ counter: 0 });
         const sliceStore = store.createSlice("counter");
         const incrementAction = new Subject<void>();
-        const incrementReducer: Reducer<number, void> = state => state + 1;
+        const incrementReducer: Reducer<number, void> = (state) => state + 1;
 
         const subscription = sliceStore.addReducer(incrementAction, incrementReducer);
         subscription.add(done);
@@ -67,7 +67,7 @@ describe("destroy logic", () => {
         store.destroy();
     });
 
-    it("should trigger the public destroyed observable when destroyed", done => {
+    it("should trigger the public destroyed observable when destroyed", (done) => {
         const sliceStore = store.createSlice("slice");
 
         sliceStore.destroyed.subscribe(done);

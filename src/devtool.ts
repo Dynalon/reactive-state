@@ -32,8 +32,8 @@ export function enableDevTool<S extends object>(store: Store<S>) {
     store
         .select()
         .pipe(take(1))
-        .subscribe(initialState => {
-            const enhancer: StoreEnhancer<any, any> = next => {
+        .subscribe((initialState) => {
+            const enhancer: StoreEnhancer<any, any> = (next) => {
                 return (reducer, preloadedState) => {
                     // run any other store enhancers
                     const reduxStore = next(reducer, initialState as any);
@@ -71,14 +71,7 @@ export function enableDevTool<S extends object>(store: Store<S>) {
                 return { ...action.state };
             };
 
-            createStore(
-                reduxReducer as any,
-                initialState,
-                compose(
-                    enhancer,
-                    devtoolExtension,
-                ),
-            );
+            createStore(reduxReducer as any, initialState, compose(enhancer, devtoolExtension));
         });
 
     store.stateChangedNotification.subscribe((notification: StateChangeNotification<S>) => {

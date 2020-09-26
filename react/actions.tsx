@@ -16,7 +16,7 @@ export type ActionFunction = (...args: any[]) => any;
 export type ActionMap<TComponentOrProps> = {
     [P in keyof FunctionProperties<ExtractProps<TComponentOrProps>>]?:
         | ActionFunction
-        | Observer<FunctionProperties<ExtractProps<TComponentOrProps>>[P] extends UnaryFunction<infer A> ? A : never>
+        | Observer<FunctionProperties<ExtractProps<TComponentOrProps>>[P] extends UnaryFunction<infer A> ? A : never>;
 };
 
 /**

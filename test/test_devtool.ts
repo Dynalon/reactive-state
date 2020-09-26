@@ -19,7 +19,7 @@ describe("Devtool notification tests", () => {
         };
         store = Store.create(initialState);
         incrementAction = new Subject<number>();
-        incrementReducer = (state, payload = 1) => ({ ...state, counter: state.counter + payload });
+        incrementReducer = (state, payload) => ({ ...state, counter: state.counter + payload });
         incrementReducerSubscription = store.addReducer(incrementAction, incrementReducer);
     });
 
@@ -27,21 +27,21 @@ describe("Devtool notification tests", () => {
         store.destroy();
     });
 
-    it("should call the devtool callback function when a state change occurs", done => {
+    it("should call the devtool callback function when a state change occurs", (done) => {
         notifyOnStateChange(store).subscribe(({ newState }) => {
             expect(newState).to.deep.equal({ counter: 1 });
             done();
         });
-        incrementAction.next();
+        incrementAction.next(1);
     });
 
     // This was changed in v3 - we can't relay on reference equal as our projections might change
     // that. Consuming APIs must implement their on distinctUntilChanged()
-    it.skip("should not call the devtool callback function when the reducer returned the previous state", done => {
+    it.skip("should not call the devtool callback function when the reducer returned the previous state", (done) => {
         const initialState = {};
         const store = Store.create(initialState);
         const identityAction = new Subject();
-        store.addReducer(identityAction, state => state, "IDENTITY");
+        store.addReducer(identityAction, (state) => state, "IDENTITY");
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
             done("Error, notifyOnStateChange called by action: " + actionName);
         });
@@ -50,7 +50,7 @@ describe("Devtool notification tests", () => {
         setTimeout(done, 50);
     });
 
-    it("should call the devtool callback function with the correct payload when a state change occurs", done => {
+    it("should call the devtool callback function with the correct payload when a state change occurs", (done) => {
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
             expect(actionPayload).to.equal(3);
             done();
@@ -58,7 +58,7 @@ describe("Devtool notification tests", () => {
         incrementAction.next(3);
     });
 
-    it("should use the overriden action name when one is given to addReducer", done => {
+    it("should use the overriden action name when one is given to addReducer", (done) => {
         incrementReducerSubscription.unsubscribe();
 
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
@@ -68,10 +68,10 @@ describe("Devtool notification tests", () => {
         });
 
         store.addReducer(incrementAction, incrementReducer, "CUSTOM_ACTION_NAME");
-        incrementAction.next();
+        incrementAction.next(1);
     });
 
-    it("should trigger a state change notification on a slice", done => {
+    it("should trigger a state change notification on a slice", (done) => {
         const slice = store.createSlice("counter");
 
         notifyOnStateChange(slice).subscribe(({ actionName, actionPayload, newState }) => {
@@ -88,9 +88,9 @@ describe("Devtool notification tests", () => {
         incrementAction.next(1);
     });
 
-    it("should trigger a state change notification on the parent if a slice changes", done => {
+    it("should trigger a state change notification on the parent if a slice changes", (done) => {
         const store = Store.create({ counter: 0 });
-        notifyOnStateChange(store).subscribe(notification => {
+        notifyOnStateChange(store).subscribe((notification) => {
             expect(notification.actionName).to.equal("INCREMENT_ACTION");
             expect(notification.actionPayload).to.equal(1);
             expect(notification.newState).to.deep.equal({ counter: 1 });
@@ -104,21 +104,18 @@ describe("Devtool notification tests", () => {
         incrementAction.next(1);
     });
 
-    it("should trigger the correct actions matching to the state", done => {
+    it("should trigger the correct actions matching to the state", (done) => {
         const setValueAction = new Subject<number>();
         const store = Store.create({ value: 0 });
         const N_ACTIONS = 100000;
         store.addReducer(setValueAction, (state, value) => ({ value }), "SET_VALUE");
 
-        const counter1 = new Subject<any>();
-        const counter2 = new Subject<any>();
+        const counter1 = new Subject<void>();
+        const counter2 = new Subject<void>();
         // finish after 100 actions dispatched
 
         zip(counter1, counter2)
-            .pipe(
-                take(N_ACTIONS),
-                toArray(),
-            )
+            .pipe(take(N_ACTIONS), toArray())
             .subscribe(() => done());
 
         notifyOnStateChange(store).subscribe(({ actionName, actionPayload, newState }) => {
@@ -127,7 +124,7 @@ describe("Devtool notification tests", () => {
             counter2.next();
         });
 
-        range(1, N_ACTIONS).subscribe(n => {
+        range(1, N_ACTIONS).subscribe((n) => {
             // random wait between 1 ms and 500ms
             const wait = Math.ceil(Math.random() * 500);
             setTimeout(() => {

@@ -16,7 +16,7 @@ export function testExample() {
     const store = Store.create(initialState);
 
     // The .select() function returns an Observable that emits every state change, so we can subscribe to it
-    store.select().subscribe(newState => console.log("STATE:", JSON.stringify(newState)));
+    store.select().subscribe((newState) => console.log("STATE:", JSON.stringify(newState)));
 
     // the select() observable always caches the last emitted state, so we will immediately print our inital state:
     // [CONSOLE.LOG]: STATE: {"counter":0}
@@ -51,7 +51,7 @@ export function testExample() {
 }
 
 describe.skip("example", () => {
-    it("should run the example", done => {
+    it("should run the example", (done) => {
         testExample();
         setTimeout(() => {
             done();
@@ -92,9 +92,9 @@ export function testComputedValuesExample() {
 
     const markTodoAsDone = new Subject<number>();
     const markTodoAsDoneReducer: Reducer<Todo[], number> = (state, id) => {
-        let todo = state.filter(t => t.id === id)[0];
+        let todo = state.filter((t) => t.id === id)[0];
         todo = { ...todo, done: true };
-        return [...state.filter(t => t.id !== id), todo];
+        return [...state.filter((t) => t.id !== id), todo];
     };
 
     const todoStore = store.createSlice("todos");
@@ -104,8 +104,8 @@ export function testComputedValuesExample() {
 
     // create an auto computed observables using RxJS basic operators
 
-    const openTodos = todos.pipe(map(todos => todos.filter(t => t.done == false).length));
-    const completedTodos = todos.pipe(map(todos => todos.filter(t => t.done == true).length));
+    const openTodos = todos.pipe(map((todos) => todos.filter((t) => t.done == false).length));
+    const completedTodos = todos.pipe(map((todos) => todos.filter((t) => t.done == true).length));
 
     // whenever the number of open or completed todos changes, log a message
     zip(openTodos, completedTodos).subscribe(([open, completed]) =>

@@ -24,7 +24,10 @@ interface TodoState {
 const initialState: AppState = {
     counter: 0,
     todoState: {
-        todos: [{ id: 1, title: "Homework", done: false }, { id: 2, title: "Walk dog", done: false }],
+        todos: [
+            { id: 1, title: "Homework", done: false },
+            { id: 2, title: "Walk dog", done: false },
+        ],
     },
 };
 
@@ -32,7 +35,7 @@ const initialState: AppState = {
 const store = Store.create(initialState);
 
 // Log all state changes using the .select() function
-store.select().subscribe(newState => console.log(JSON.stringify(newState)));
+store.select().subscribe((newState) => console.log(JSON.stringify(newState)));
 
 // Any Observable can be an action - we use a Subject here
 const incrementAction = new Subject<void>();
@@ -56,7 +59,7 @@ decrementAction.next();
 // wire up ToDos
 const deleteToDoAction = new Subject<number>();
 const deleteToDoReducer: Reducer<TodoState, number> = (state, payload) => {
-    const filteredTodos = state.todos.filter(todo => todo.id != payload);
+    const filteredTodos = state.todos.filter((todo) => todo.id != payload);
     return { ...state, todos: filteredTodos };
 };
 
@@ -65,7 +68,7 @@ const markTodoAsDoneAction = new Subject<number>();
 // you will find a little easier solution using a more specific slice below
 
 const markTodoAsDoneReducer: Reducer<TodoState, number> = (state: TodoState, payload: number) => {
-    const todos = state.todos.map(todo => {
+    const todos = state.todos.map((todo) => {
         if (todo.id != payload) return todo;
         return {
             ...todo,
@@ -92,7 +95,7 @@ const todosArraySlice = store.createSlice("todoState").createSlice("todos");
 
 // create simpler reducer
 const markTodoAsDoneSimpleReducer: Reducer<Todo[], number> = (state: Todo[], payload: number) => {
-    return state.map(todo => {
+    return state.map((todo) => {
         if (todo.id != payload) return todo;
         return {
             ...todo,

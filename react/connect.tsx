@@ -87,7 +87,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
             const connectResult = this.connectResult!;
             if (connectResult.props) {
                 this.subscription.add(
-                    connectResult.props.pipe(takeUntil(this.parentDestroyed!)).subscribe(connectedProps => {
+                    connectResult.props.pipe(takeUntil(this.parentDestroyed!)).subscribe((connectedProps) => {
                         this.setState((prevState: ConnectState<TOriginalProps>) => {
                             return {
                                 ...prevState,
@@ -136,7 +136,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
                 return (
                     <ComponentToConnect
                         {...this.state.connectedProps}
-                        {...this.actionProps as TOriginalProps}
+                        {...(this.actionProps as TOriginalProps)}
                         {...props}
                     />
                 );
@@ -154,7 +154,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
         render() {
             return (
                 <StoreConsumer>
-                    {value => <ConnectedComponent reactiveStateStore={value} {...this.props as any} />}
+                    {(value) => <ConnectedComponent reactiveStateStore={value} {...(this.props as any)} />}
                 </StoreConsumer>
             );
         }

@@ -21,8 +21,8 @@ describe("Store .select() and .watch() tests", () => {
         };
         return newState;
     };
-    const noChangesReducer = state => state;
-    const shallowCopyReducer = state => ({ ...state });
+    const noChangesReducer = (state) => state;
+    const shallowCopyReducer = (state) => ({ ...state });
 
     const initialState = {
         counter: 0,
@@ -37,7 +37,7 @@ describe("Store .select() and .watch() tests", () => {
     beforeEach(() => {
         store = Store.create(initialState);
         incrementAction = new Subject<void>();
-        incrementReducer = state => ({ ...state, counter: state.counter + 1 });
+        incrementReducer = (state) => ({ ...state, counter: state.counter + 1 });
         store.addReducer(incrementAction, incrementReducer);
 
         mergeAction = new Subject<Partial<ExampleState>>();
@@ -53,28 +53,22 @@ describe("Store .select() and .watch() tests", () => {
     });
 
     describe("select(): ", () => {
-        it("should emit a state change on select", done => {
+        it("should emit a state change on select", (done) => {
             store
                 .select()
-                .pipe(
-                    skip(1),
-                    take(1),
-                )
-                .subscribe(state => {
+                .pipe(skip(1), take(1))
+                .subscribe((state) => {
                     expect(state.counter).to.equal(1);
                     done();
                 });
             incrementAction.next();
         });
 
-        it("should use the identity function as default if no selector function is passed", done => {
+        it("should use the identity function as default if no selector function is passed", (done) => {
             store
                 .select()
-                .pipe(
-                    skip(1),
-                    take(1),
-                )
-                .subscribe(state => {
+                .pipe(skip(1), take(1))
+                .subscribe((state) => {
                     expect(state).to.be.an("Object");
                     expect(state.counter).not.to.be.undefined;
                     done();
@@ -83,36 +77,33 @@ describe("Store .select() and .watch() tests", () => {
             incrementAction.next();
         });
 
-        it("should immediately emit the last-emitted (might be initial) state when subscription happens", done => {
+        it("should immediately emit the last-emitted (might be initial) state when subscription happens", (done) => {
             store
                 .select()
                 .pipe(take(1))
-                .subscribe(state => {
+                .subscribe((state) => {
                     expect(state.counter).to.equal(0);
                     done();
                 });
         });
 
-        it("should emit the last state immediately when selecting when its not initial state", done => {
+        it("should emit the last state immediately when selecting when its not initial state", (done) => {
             incrementAction.next();
 
             store
                 .select()
                 .pipe(take(1))
-                .subscribe(state => {
+                .subscribe((state) => {
                     expect(state.counter).to.equal(1);
                     done();
                 });
         });
 
-        it("should emit a state change when the state changes, even when the selector result is shallow-equal to the previous value", done => {
+        it("should emit a state change when the state changes, even when the selector result is shallow-equal to the previous value", (done) => {
             store
-                .select(state => state.message)
-                .pipe(
-                    skip(1),
-                    take(1),
-                )
-                .subscribe(msg => {
+                .select((state) => state.message)
+                .pipe(skip(1), take(1))
+                .subscribe((msg) => {
                     expect(msg).to.equal(initialState.message);
                     done();
                 });
@@ -121,14 +112,11 @@ describe("Store .select() and .watch() tests", () => {
     });
 
     describe(".watch(): ", () => {
-        it("should not emit a state change for .watch() when the reducer returns the unmofified, previous state or a shallow copy of it", done => {
+        it("should not emit a state change for .watch() when the reducer returns the unmofified, previous state or a shallow copy of it", (done) => {
             store
                 .watch()
-                .pipe(
-                    skip(1),
-                    toArray(),
-                )
-                .subscribe(state => {
+                .pipe(skip(1), toArray())
+                .subscribe((state) => {
                     expect(state.length).to.equal(0);
                     done();
                 });
@@ -137,14 +125,11 @@ describe("Store .select() and .watch() tests", () => {
             shallowCopyAction.next();
             store.destroy();
         });
-        it(".watch() should not emit a state change when a the state changes but not the selected value", done => {
+        it(".watch() should not emit a state change when a the state changes but not the selected value", (done) => {
             store
-                .watch(state => state.counter)
-                .pipe(
-                    skip(1),
-                    toArray(),
-                )
-                .subscribe(state => {
+                .watch((state) => state.counter)
+                .pipe(skip(1), toArray())
+                .subscribe((state) => {
                     expect(state.length).to.equal(0);
                     done();
                 });
@@ -154,14 +139,11 @@ describe("Store .select() and .watch() tests", () => {
             store.destroy();
         });
 
-        it(".watch() should emit a state change when a primitive type in a selector changes", done => {
+        it(".watch() should emit a state change when a primitive type in a selector changes", (done) => {
             store
-                .watch(state => state.counter)
-                .pipe(
-                    skip(1),
-                    toArray(),
-                )
-                .subscribe(state => {
+                .watch((state) => state.counter)
+                .pipe(skip(1), toArray())
+                .subscribe((state) => {
                     expect(state.length).to.equal(1);
                     done();
                 });
@@ -170,14 +152,11 @@ describe("Store .select() and .watch() tests", () => {
             store.destroy();
         });
 
-        it(".watch() should emit a state change when an array is changed immutably", done => {
+        it(".watch() should emit a state change when an array is changed immutably", (done) => {
             store
-                .watch(state => state.someArray)
-                .pipe(
-                    skip(1),
-                    take(1),
-                )
-                .subscribe(state => {
+                .watch((state) => state.someArray)
+                .pipe(skip(1), take(1))
+                .subscribe((state) => {
                     expect(state).to.deep.equal([...initialState.someArray, "Dades"]);
                     done();
                 });
@@ -185,14 +164,11 @@ describe("Store .select() and .watch() tests", () => {
             mergeAction.next({ someArray: ["Dades"] });
         });
 
-        it(".watch() should emit a state change when an object is changed immutably", done => {
+        it(".watch() should emit a state change when an object is changed immutably", (done) => {
             store
-                .watch(state => state.someObject)
-                .pipe(
-                    skip(1),
-                    take(1),
-                )
-                .subscribe(state => {
+                .watch((state) => state.someObject)
+                .pipe(skip(1), take(1))
+                .subscribe((state) => {
                     expect(state).to.deep.equal({ ...initialState.someObject, foo: "foo" });
                     done();
                 });

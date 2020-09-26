@@ -18,7 +18,7 @@ describe("Reducer tests", () => {
         store.destroy();
     });
 
-    it("should be possible to add a reducer", done => {
+    it("should be possible to add a reducer", (done) => {
         // This is a compile time test: we do not want to give a generic type argument to addReducer
         // but compiling with a incompatible reducer will result in compile errors
         // Note: type arguments not expressed on purpose for this test!
@@ -28,11 +28,8 @@ describe("Reducer tests", () => {
 
         slice
             .select()
-            .pipe(
-                take(2),
-                toArray(),
-            )
-            .subscribe(s => {
+            .pipe(take(2), toArray())
+            .subscribe((s) => {
                 expect(s).to.deep.equal([0, 1]);
                 done();
             });
@@ -40,18 +37,15 @@ describe("Reducer tests", () => {
         addAction.next(1);
     });
 
-    it("should be possible to add a reducer with an Observable as action", done => {
+    it("should be possible to add a reducer with an Observable as action", (done) => {
         // Note: type arguments not expressed on purpose for this test!
         const addAction = of(1);
         const addReducer: Reducer<number, number> = (state, n) => state + n;
 
         slice
             .select()
-            .pipe(
-                take(2),
-                toArray(),
-            )
-            .subscribe(s => {
+            .pipe(take(2), toArray())
+            .subscribe((s) => {
                 expect(s).to.deep.equal([0, 1]);
                 done();
             });
@@ -61,7 +55,7 @@ describe("Reducer tests", () => {
 
     it("should not be possible to pass anything else but observable/string as first argument to addReducer", () => {
         expect(() => {
-            store.addReducer(5 as any, state => state);
+            store.addReducer(5 as any, (state) => state);
         }).to.throw();
     });
 
@@ -71,7 +65,7 @@ describe("Reducer tests", () => {
         }).to.throw();
     });
 
-    it("should not invoke reducers which have been unsubscribed", done => {
+    it("should not invoke reducers which have been unsubscribed", (done) => {
         const incrementAction = new Subject<number>();
         const subscription = store.addReducer(incrementAction, (state, payload) => {
             return { ...state, counter: state.counter + payload };
@@ -79,11 +73,8 @@ describe("Reducer tests", () => {
 
         store
             .select()
-            .pipe(
-                skip(1),
-                toArray(),
-            )
-            .subscribe(states => {
+            .pipe(skip(1), toArray())
+            .subscribe((states) => {
                 expect(states[0].counter).to.equal(1);
                 expect(states.length).to.equal(1);
                 done();
@@ -95,23 +86,23 @@ describe("Reducer tests", () => {
         store.destroy();
     });
 
-    it("should be possible to omit the payload type argument in reducers", done => {
+    it("should be possible to omit the payload type argument in reducers", (done) => {
         // This is a compile-time only test to verify the API works nicely.
 
-        const incrementReducer: Reducer<number> = state => state + 1;
+        const incrementReducer: Reducer<number> = (state) => state + 1;
         const incrementAction = new Subject<void>();
         slice.addReducer(incrementAction, incrementReducer);
         slice
             .select()
             .pipe(skip(1))
-            .subscribe(n => {
+            .subscribe((n) => {
                 expect(n).to.equal(1);
                 done();
             });
         incrementAction.next();
     });
 
-    it("should be possible to have reducers on lots of slices and have each reducer act on a slice", done => {
+    it("should be possible to have reducers on lots of slices and have each reducer act on a slice", (done) => {
         const nestingLevel = 100;
         const rootStore = Store.create<SliceState>({ foo: "0", slice: undefined });
 
@@ -122,7 +113,7 @@ describe("Reducer tests", () => {
         };
 
         let currentStore = rootStore;
-        range(1, nestingLevel).subscribe(n => {
+        range(1, nestingLevel).subscribe((n) => {
             const nestedStore = currentStore.createSlice("slice", { foo: "" }) as Store<SliceState>;
 
             const nAsString = n.toString();
@@ -131,11 +122,8 @@ describe("Reducer tests", () => {
             nestedStore.addReducer(fooAction, fooReducer);
             nestedStore
                 .select()
-                .pipe(
-                    skip(1),
-                    take(1),
-                )
-                .subscribe(s => {
+                .pipe(skip(1), take(1))
+                .subscribe((s) => {
                     expect(s!.foo).to.equal(nAsString);
                     allDone();
                 });

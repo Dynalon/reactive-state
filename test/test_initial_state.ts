@@ -20,13 +20,13 @@ describe("initial state setting", () => {
     });
 
     // justification: Slices can have any type like "number" etc., so makes no sense to initialize with {}
-    it("should accept an initial state of undefined and create and empty object as initial root state", done => {
+    it("should accept an initial state of undefined and create and empty object as initial root state", (done) => {
         const store = Store.create<object>();
 
         store
             .select()
             .pipe(take(1))
-            .subscribe(state => {
+            .subscribe((state) => {
                 expect(state).to.be.an("Object");
                 expect(Object.getOwnPropertyNames(state)).to.have.lengthOf(0);
                 done();
@@ -34,18 +34,18 @@ describe("initial state setting", () => {
     });
 
     it("should set the initial state and have it available as currentState immediately", () => {
-        const initialState = {}
+        const initialState = {};
         const store = Store.create(initialState);
-        expect(store.currentState).to.equal(initialState)
-    })
+        expect(store.currentState).to.equal(initialState);
+    });
 
-    it("should accept an initial state of undefined and use undefined as initial state", done => {
+    it("should accept an initial state of undefined and use undefined as initial state", (done) => {
         const sliceStore = store.createSlice("slice", undefined);
 
         sliceStore
             .select()
             .pipe(take(1))
-            .subscribe(initialState => {
+            .subscribe((initialState) => {
                 expect(initialState).to.be.undefined;
                 done();
             });
@@ -57,20 +57,20 @@ describe("initial state setting", () => {
         sliceStore
             .select()
             .pipe(take(1))
-            .subscribe(slice => {
+            .subscribe((slice) => {
                 expect(slice).to.be.an("Object");
                 expect(Object.getOwnPropertyNames(slice)).to.deep.equal(["foo"]);
                 expect(slice!.foo).to.equal("bar");
             });
     });
 
-    it("should set the initial state for a slice-of-a-slice on the sliced state", done => {
+    it("should set the initial state for a slice-of-a-slice on the sliced state", (done) => {
         const sliceStore = store.createSlice("slice", { foo: "bar" }) as Store<SliceState>;
 
         store
-            .select(s => s)
+            .select((s) => s)
             .pipe(skip(1))
-            .subscribe(s => {
+            .subscribe((s) => {
                 if (!s.slice || !s.slice.slice) {
                     done("Error");
                     return;
@@ -130,14 +130,14 @@ describe("initial state setting", () => {
         expect(() => genericStore.createSlice("value", undefined, Symbol())).not.to.throw();
     });
 
-    it("does not clone the initialState object when creating the root store, so changes to it will be reflected in our root store", done => {
+    it("does not clone the initialState object when creating the root store, so changes to it will be reflected in our root store", (done) => {
         const initialState: ExampleState = {
             counter: 0,
         };
 
         const store = Store.create(initialState);
-        const counterAction = new Subject<number>();
-        const counterReducer: Reducer<ExampleState, number> = (state, payload = 1) => {
+        const counterAction = new Subject<void>();
+        const counterReducer: Reducer<ExampleState> = (state) => {
             // WARNING this is not immutable and should not be done in production code
             // we just do it here for the test...
             state.counter++;
@@ -148,48 +148,47 @@ describe("initial state setting", () => {
         counterAction.next();
 
         // verify currentState (=synchronous state access) works, too
-        expect(store.currentState.counter).to.equal(1)
+        expect(store.currentState.counter).to.equal(1);
 
-
-        store.select().subscribe(s => {
+        store.select().subscribe((s) => {
             expect(initialState.counter).to.equal(1);
             done();
         });
     });
 
-    it("should not create an immutable copy of the initialState object when creating a slice store, so changes to it will be noticed outside the slice", done => {
+    it("should not create an immutable copy of the initialState object when creating a slice store, so changes to it will be noticed outside the slice", (done) => {
         const initialState: ExampleState = {
             counter: 0,
         };
         const store = Store.create(initialState);
         const counterAction = new Subject<number>();
-        const counterReducer: Reducer<number, number> = (state, payload = 1) => state + payload;
+        const counterReducer: Reducer<number, number> = (state, payload) => state + payload;
 
         const slice = store.createSlice("counter");
         slice.addReducer(counterAction, counterReducer);
-        counterAction.next();
+        counterAction.next(1);
 
         slice
             .select()
             .pipe(take(2))
-            .subscribe(s => {
+            .subscribe((s) => {
                 expect(initialState.counter).to.equal(1);
                 done();
             });
     });
 
-    it("should be possible to create a lot of nested slices", done => {
+    it("should be possible to create a lot of nested slices", (done) => {
         const nestingLevel = 100;
         const rootStore = Store.create<SliceState>({ foo: "0", slice: undefined });
 
         let currentStore: Store<SliceState> = rootStore;
         range(1, nestingLevel).subscribe(
-            n => {
+            (n) => {
                 const nestedStore = currentStore.createSlice("slice", { foo: n.toString() });
                 nestedStore
                     .select()
                     .pipe(take(1))
-                    .subscribe(state => {
+                    .subscribe((state) => {
                         expect(state!.foo).to.equal(n.toString());
                     });
                 currentStore = nestedStore as Store<SliceState>;
@@ -199,14 +198,11 @@ describe("initial state setting", () => {
         );
     });
 
-    it("should trigger a state change on the root store when the initial state on the slice is created", done => {
+    it("should trigger a state change on the root store when the initial state on the slice is created", (done) => {
         store
-            .select(s => s)
-            .pipe(
-                skip(1),
-                take(1),
-            )
-            .subscribe(state => {
+            .select((s) => s)
+            .pipe(skip(1), take(1))
+            .subscribe((state) => {
                 expect(state.slice).not.to.be.undefined;
                 expect(state.slice).to.have.property("foo");
                 if (state.slice) {
@@ -218,53 +214,53 @@ describe("initial state setting", () => {
         store.createSlice("slice", { foo: "bar" });
     });
 
-    it("should overwrite an initial state on the slice if the slice key already has a value", done => {
+    it("should overwrite an initial state on the slice if the slice key already has a value", (done) => {
         const sliceStore = store.createSlice("slice", { foo: "bar" });
         sliceStore.destroy();
         const sliceStore2 = store.createSlice("slice", { foo: "different" });
-        sliceStore2.select().subscribe(state => {
+        sliceStore2.select().subscribe((state) => {
             expect(state!.foo).to.equal("different");
             done();
         });
     });
 
-    it("should set the state to the cleanup value undefined but keep the property on the object, when the slice store is destroyed for case 'undefined'", done => {
+    it("should set the state to the cleanup value undefined but keep the property on the object, when the slice store is destroyed for case 'undefined'", (done) => {
         const sliceStore = store.createSlice("slice", { foo: "bar" }, "undefined");
         sliceStore.destroy();
 
-        store.select().subscribe(state => {
+        store.select().subscribe((state) => {
             expect(state.hasOwnProperty("slice")).to.equal(true);
             expect(state.slice).to.be.undefined;
             done();
         });
     });
 
-    it("should remove the slice property on parent state altogether when the slice store is destroyed for case 'delete'", done => {
+    it("should remove the slice property on parent state altogether when the slice store is destroyed for case 'delete'", (done) => {
         const sliceStore = store.createSlice("slice", { foo: "bar" }, "delete");
         sliceStore.destroy();
 
-        store.select().subscribe(state => {
+        store.select().subscribe((state) => {
             expect(state.hasOwnProperty("slice")).to.equal(false);
             expect(Object.getOwnPropertyNames(state)).to.deep.equal([]);
             done();
         });
     });
 
-    it("should set the state to the cleanup value when the slice store is unsubscribed for case null", done => {
+    it("should set the state to the cleanup value when the slice store is unsubscribed for case null", (done) => {
         const sliceStore = store.createSlice("slice", { foo: "bar" }, null);
         sliceStore.destroy();
 
-        store.select().subscribe(state => {
+        store.select().subscribe((state) => {
             expect(state.slice).to.be.null;
             done();
         });
     });
 
-    it("should set the state to the cleanup value when the slice store is unsubscribed for case any object", done => {
+    it("should set the state to the cleanup value when the slice store is unsubscribed for case any object", (done) => {
         const sliceStore = store.createSlice("slice", { foo: "bar" }, { foo: "baz" });
         sliceStore.destroy();
 
-        store.select().subscribe(state => {
+        store.select().subscribe((state) => {
             expect(state.slice).to.be.deep.equal({ foo: "baz" });
             done();
         });

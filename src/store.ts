@@ -113,7 +113,7 @@ export class Store<S> {
         const store = new Store<S>(state, stateMutators, [], [], new Subject(), new Subject());
 
         // emit a single state mutation so that we emit the initial state on subscription
-        stateMutators.next(s => s);
+        stateMutators.next((s) => s);
         return store;
     }
 
@@ -160,7 +160,10 @@ export class Store<S> {
      * clone can not be dispatched by the original and vice versa.
      */
     clone() {
-        return this.createProjection((s: S) => s, (s: S, p: S) => s);
+        return this.createProjection(
+            (s: S) => s,
+            (s: S, p: S) => s,
+        );
     }
 
     /**
@@ -187,18 +190,18 @@ export class Store<S> {
             : forwardProjection((this.state as any).value);
 
         if (initial !== undefined) {
-            this.stateMutators.next(s => {
+            this.stateMutators.next((s) => {
                 const initialReducer = () => initialState;
                 return mutateRootState(s, forwardProjections, backwardProjections, initialReducer);
             });
         }
 
         const state = new BehaviorSubject<TProjectedState>(initialState);
-        this.state.pipe(map(state => forwardProjection(state))).subscribe(state);
+        this.state.pipe(map((state) => forwardProjection(state))).subscribe(state);
 
         const onDestroy = () => {
             if (cleanup !== undefined) {
-                this.stateMutators.next(s => {
+                this.stateMutators.next((s) => {
                     const backward = [cleanup, ...this.backwardProjections];
                     return mutateRootState(s, forwardProjections, backward, (s: any) => s);
                 });
@@ -249,13 +252,13 @@ export class Store<S> {
         const name = typeof action === "string" ? action : actionName!;
 
         const actionFromStringBasedDispatch = this.actionDispatch.pipe(
-            filter(s => s.actionName === name),
-            map(s => s.actionPayload),
+            filter((s) => s.actionName === name),
+            map((s) => s.actionPayload),
             merge(isObservable(action) ? action : EMPTY),
             takeUntil(this.destroyed),
         );
 
-        const rootReducer: RootReducer<S, P> = (payload: P) => rootState => {
+        const rootReducer: RootReducer<S, P> = (payload: P) => (rootState) => {
             // transform the rootstate to a slice by applying all forward projections
             const sliceReducer = (slice: any) => reducer(slice, payload);
             rootState = mutateRootState(rootState, this.forwardProjections, this.backwardProjections, sliceReducer);
@@ -271,9 +274,11 @@ export class Store<S> {
             return rootState;
         };
 
-        return actionFromStringBasedDispatch.pipe(map(payload => rootReducer(payload))).subscribe(rootStateMutation => {
-            this.stateMutators.next(rootStateMutation);
-        });
+        return actionFromStringBasedDispatch
+            .pipe(map((payload) => rootReducer(payload)))
+            .subscribe((rootStateMutation) => {
+                this.stateMutators.next(rootStateMutation);
+            });
     }
 
     /**
@@ -302,10 +307,7 @@ export class Store<S> {
     select<T = S>(selectorFn?: (state: S) => T): Observable<T> {
         if (!selectorFn) selectorFn = (state: S) => <T>(<any>state);
 
-        const mapped = this.state.pipe(
-            takeUntil(this._destroyed),
-            map(selectorFn),
-        );
+        const mapped = this.state.pipe(takeUntil(this._destroyed), map(selectorFn));
 
         return mapped;
     }
@@ -342,7 +344,7 @@ function mutateRootState<S, TSlice>(
     // transform the rootstate to a slice by applying all forward projections
     let forwardState: any = rootState;
     const intermediaryState = [rootState] as any[];
-    forwardProjections.map(fp => {
+    forwardProjections.map((fp) => {
         forwardState = fp.call(undefined, forwardState);
         intermediaryState.push(forwardState);
     });
