@@ -1,6 +1,6 @@
 import { ActionFunction, ActionMap } from "./actions";
 import { connect, ConnectResult } from "./connect";
-import { StoreProvider, StoreSlice, StoreProjection, WithStore, useStore } from "./provider";
+import { StoreProvider, StoreSlice, StoreProjection, WithStore, useStore, useStoreState, useStoreSlices } from "./provider";
 
 export {
     // action
@@ -15,4 +15,6 @@ export {
     StoreSlice,
     StoreProjection,
     WithStore,
+    useStoreState,
+    useStoreSlices,
 };
