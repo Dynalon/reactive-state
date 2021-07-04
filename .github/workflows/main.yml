@@ -5,13 +5,11 @@ name: Node.js CI
 
 on:
   push:
-    branches:
-      - master
+    branches: [ $default-branch ]
   pull_request:
-      - master
+    branches: [ $default-branch ]
   workflow_dispatch:
-    branches:
-      - master
+    branches: [ $default-branch ]
 
 jobs:
   build:
