@@ -88,7 +88,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
                     initialState={initialSliceState}
                     cleanupState={"delete"}
                 >
-                    <ConnectedTestComponent />
+                    <ConnectedTestComponent onClick={() => {}} />
                 </StoreSlice>
             </StoreProvider>,
         );
@@ -189,9 +189,9 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
 
         wrapper = Enzyme.mount(
             <StoreProvider store={store1}>
-                <ConnectedTestComponent />
+                <ConnectedTestComponent onClick={() => {}} />
                 <StoreProvider store={store2}>
-                    <ConnectedTestComponent />
+                    <ConnectedTestComponent onClick={() => {}} />
                 </StoreProvider>
             </StoreProvider>,
         );
@@ -220,7 +220,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         wrapper = Enzyme.mount(
             <StoreProvider store={store}>
                 <StoreSlice slice={(store: Store<TestState>) => "slice"}>
-                    <ConnectedTestComponent />
+                    <ConnectedTestComponent onClick={() => {}} message="Test" />
                 </StoreSlice>
             </StoreProvider>,
         );
@@ -244,7 +244,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         wrapper = Enzyme.mount(
             <StoreProvider store={store}>
                 <StoreSlice slice={(store: Store<TestState>) => "message"}>
-                    <ConnectedTestComponent />
+                    <ConnectedTestComponent onClick={() => {}} />
                 </StoreSlice>
             </StoreProvider>,
         );
@@ -270,7 +270,7 @@ describe("react bridge: StoreProvider and StoreSlice tests", () => {
         wrapper = Enzyme.mount(
             <StoreProvider store={store}>
                 <StoreProjection forwardProjection={forward} backwardProjection={backward}>
-                    <ConnectedTestComponent />
+                    <ConnectedTestComponent onClick={() => {}} />
                 </StoreProjection>
             </StoreProvider>,
         );

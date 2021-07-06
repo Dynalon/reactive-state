@@ -5,8 +5,17 @@ import * as React from "react";
 import { Subject, Subscription, Observable, of } from "rxjs";
 import { take, skip } from "rxjs/operators";
 import { ActionMap, connect, ConnectResult, StoreProvider } from "../react";
+import { ExtractProps } from "../react/connect";
 import { Store } from "../src/index";
 import { setupJSDomEnv } from "./test_enzyme_helper";
+
+// Utilities for testing typing
+// from https://github.com/type-challenges/type-challenges/blob/master/utils/index.d.ts
+export type Expect<T extends true> = T;
+export type ExpectTrue<T extends true> = T;
+export type ExpectFalse<T extends false> = T;
+export type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false;
+export type NotEqual<X, Y> = true extends Equal<X, Y> ? false : true;
 
 const globalClicked = new Subject<void>();
 const nextMessage = new Subject<string>();
@@ -38,7 +47,7 @@ export class TestComponent extends React.Component<TestComponentProps, {}> {
     componentDidCatch() {}
 }
 
-function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, TestComponentProps> | null) {
+function getConnectedComponent(connectResultOverride?: ConnectResult<TestState, TestComponentProps, {}> | null) {
     return connect(
         TestComponent,
         (store: Store<TestState>) => {
@@ -230,7 +239,7 @@ describe("react bridge: connect() tests", () => {
             },
         );
 
-        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent />);
+        const wrapper = mountInsideStoreProvider(<ConnectedTestComponent onClick={() => {}} />);
         const messageText = wrapper.find("h1").text();
         expect(messageText).to.equal("Blafoo");
     });
@@ -292,6 +301,24 @@ describe("react bridge: connect() tests", () => {
             },
         );
         console.info(ConnectedTestComponent);
+        done();
+    });
+
+    it("should not be possible to pass props that are already passed from the store", (done) => {
+        const ConnectedTestComponent = connect(TestComponent, (store: Store<TestState>) => {
+            const props = store.watch((state) => ({
+                message: state.message,
+            }));
+            return { props };
+        });
+        console.info(<ConnectedTestComponent onClick={() => {}} />);
+        type TypeTests = [
+            Expect<Equal<ExtractProps<typeof ConnectedTestComponent>, { onClick: (arg1: any) => void }>>,
+            Expect<NotEqual<ExtractProps<typeof ConnectedTestComponent>, TestComponentProps>>,
+            Expect<Equal<ExtractProps<typeof ConnectedTestComponent>, Omit<TestComponentProps, "message">>>,
+        ];
+        // To avoid error TS6196: 'TypeTests' is declared but never used.
+        console.log({} as TypeTests);
         done();
     });
 });

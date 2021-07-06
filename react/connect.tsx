@@ -12,18 +12,18 @@ export type ExtractProps<TComponentOrTProps> = TComponentOrTProps extends React.
     ? TProps
     : TComponentOrTProps;
 
-export interface ConnectResult<TAppState, TOriginalProps> {
-    props?: Observable<TOriginalProps>;
+export interface ConnectResult<TAppState, TOriginalProps, TConnectedProps> {
+    props?: Observable<TConnectedProps>;
     actionMap?: ActionMap<TOriginalProps>;
 }
 
-export type ConnectCallback<S, P, TInputProps> = (
-    store: Store<S>,
+export type ConnectCallback<TAppState, TOriginalProps, TConnectedProps, TInputProps> = (
+    store: Store<TAppState>,
     inputProps: Observable<TInputProps>,
-) => ConnectResult<S, P>;
+) => ConnectResult<TAppState, TOriginalProps, TConnectedProps>;
 
-export interface ConnectState<TOriginalProps> {
-    connectedProps?: Partial<TOriginalProps>;
+export interface ConnectState<TOriginalProps, TConnectedProps> {
+    connectedProps?: TConnectedProps;
     ready: boolean;
 }
 
@@ -32,17 +32,17 @@ export interface ConnectState<TOriginalProps> {
  */
 // TODO: earlier TS version could infer TOriginalProps, why is this not working anymore? Bug in TS?
 // possible candidate: https://github.com/Microsoft/TypeScript/issues/21734
-export function connect<TAppState, TOriginalProps extends {}, TInputProps extends {} = {}>(
+export function connect<TAppState, TOriginalProps extends {}, TConnectedProps extends {}, TInputProps extends {} = {}>(
     ComponentToConnect: React.ComponentType<TOriginalProps>,
-    connectCallback: ConnectCallback<TAppState, Partial<TOriginalProps>, TInputProps>,
+    connectCallback: ConnectCallback<TAppState, TOriginalProps, TConnectedProps, TInputProps>,
 ) {
     class ConnectedComponent extends React.Component<
-        Partial<TOriginalProps> & { reactiveStateStore: Store<TAppState> },
-        ConnectState<TOriginalProps>
+        Omit<TOriginalProps, keyof TConnectedProps> & { reactiveStateStore: Store<TAppState> },
+        ConnectState<TOriginalProps, TConnectedProps>
     > {
         private subscription: Subscription = new Subscription();
         private actionProps: Partial<TOriginalProps> = {};
-        private connectResult?: ConnectResult<TAppState, Partial<TOriginalProps>>;
+        private connectResult?: ConnectResult<TAppState, TOriginalProps, TConnectedProps>;
         private parentDestroyed?: Observable<void>;
         private inputProps = new ReplaySubject<TInputProps>(1);
 
@@ -52,7 +52,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
          */
         private store?: Store<TAppState>;
 
-        state: ConnectState<TOriginalProps> = {
+        state: ConnectState<TOriginalProps, TConnectedProps> = {
             connectedProps: undefined,
             ready: false,
         };
@@ -88,7 +88,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
             if (connectResult.props) {
                 this.subscription.add(
                     connectResult.props.pipe(takeUntil(this.parentDestroyed!)).subscribe(connectedProps => {
-                        this.setState((prevState: ConnectState<TOriginalProps>) => {
+                        this.setState((prevState: ConnectState<TOriginalProps, TConnectedProps>) => {
                             return {
                                 ...prevState,
                                 connectedProps,
@@ -98,7 +98,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
                     }),
                 );
             } else {
-                this.setState((prevState: ConnectState<TOriginalProps>) => ({ ready: true }));
+                this.setState((prevState: ConnectState<TOriginalProps, TConnectedProps>) => ({ ready: true }));
             }
         }
 
@@ -146,7 +146,7 @@ export function connect<TAppState, TOriginalProps extends {}, TInputProps extend
         }
     }
 
-    return class extends React.Component<TInputProps & Partial<TOriginalProps>, ConnectState<TOriginalProps>> {
+    return class extends React.Component<TInputProps & Omit<TOriginalProps, keyof TConnectedProps>, ConnectState<TOriginalProps, TConnectedProps>> {
         constructor(props: any) {
             super(props);
         }
