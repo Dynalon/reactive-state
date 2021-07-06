@@ -312,11 +312,13 @@ describe("react bridge: connect() tests", () => {
             return { props };
         });
         console.info(<ConnectedTestComponent onClick={() => {}} />);
-        type _typeTests = [
+        type TypeTests = [
             Expect<Equal<ExtractProps<typeof ConnectedTestComponent>, { onClick: (arg1: any) => void }>>,
             Expect<NotEqual<ExtractProps<typeof ConnectedTestComponent>, TestComponentProps>>,
             Expect<Equal<ExtractProps<typeof ConnectedTestComponent>, Omit<TestComponentProps, "message">>>,
         ];
+        // To avoid error TS6196: 'TypeTests' is declared but never used.
+        console.log({} as TypeTests);
         done();
     });
 });
